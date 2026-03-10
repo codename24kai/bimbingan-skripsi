@@ -1,7 +1,11 @@
 Kekurangan Website Portal Bimbingan Skripsi
 
 bagian login 
-- password masih default
+- fitur lupa password
 
 bagian admin
 - tambah akun masih manual
+
+bagian dashboard
+* dosen
+  - 
