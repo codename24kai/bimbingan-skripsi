@@ -12,29 +12,65 @@ $eid        = entityId();
 // Handle upload
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     if ($_POST['action'] === 'upload') {
+        // Validasi Sesi
+        if (!$eid) {
+            setFlash('danger', 'Sesi mahasiswa tidak valid atau data profil belum lengkap. Harap hubungi admin.');
+            header('Location: ' . BASE_URL . '/mahasiswa/dokumen.php');
+            exit;
+        }
+
         $nama   = trim($_POST['nama_dokumen'] ?? '');
         $jenis  = trim($_POST['jenis_bab'] ?? '');
 
         if (!$nama || !$jenis || empty($_FILES['file']['name'])) {
             setFlash('danger', 'Harap isi semua field dan pilih file.');
         } else {
-            $ext  = strtolower(pathinfo($_FILES['file']['name'], PATHINFO_EXTENSION));
-            $fname = 'dok_' . $eid . '_' . time() . '.' . $ext;
-            $size  = (int)ceil($_FILES['file']['size'] / 1024);
-            if (!is_dir(UPLOAD_DIR)) mkdir(UPLOAD_DIR, 0755, true);
-            move_uploaded_file($_FILES['file']['tmp_name'], UPLOAD_DIR . $fname);
+            try {
+                // Upload Error Check
+                if ($_FILES['file']['error'] !== UPLOAD_ERR_OK) {
+                    throw new Exception('Terjadi kesalahan saat mengunggah file (Kode: ' . $_FILES['file']['error'] . ').');
+                }
 
-            // Cek versi sebelumnya
-            $prev = fetchOne('SELECT MAX(versi) AS v FROM dokumen WHERE id_mahasiswa=? AND jenis_bab=?', [$eid, $jenis]);
-            $versi = ($prev['v'] ?? 0) + 1;
+                // Extension Check
+                $ext  = strtolower(pathinfo($_FILES['file']['name'], PATHINFO_EXTENSION));
+                $allowed = ['pdf', 'docx'];
+                if (!in_array($ext, $allowed)) {
+                    throw new Exception('Format file tidak didukung. Harap unggah PDF atau DOCX.');
+                }
 
-            execute('INSERT INTO dokumen (id_mahasiswa,nama_dokumen,jenis_bab,versi,file_path,ukuran_kb,format_file,status)
-                     VALUES (?,?,?,?,?,?,"pdf","menunggu")',
-                [$eid, $nama, $jenis, $versi, 'uploads/'.$fname, $size]);
+                // Size Check (max 10MB)
+                $maxSize = 10 * 1024 * 1024;
+                if ($_FILES['file']['size'] > $maxSize) {
+                    throw new Exception('Ukuran file terlalu besar. Maksimal 10 MB.');
+                }
 
-            setFlash('success', 'Dokumen berhasil diunggah.');
-            header('Location: ' . BASE_URL . '/mahasiswa/dokumen.php');
-            exit;
+                $fname = 'dok_' . $eid . '_' . time() . '.' . $ext;
+                $size  = (int)ceil($_FILES['file']['size'] / 1024);
+
+                if (!is_dir(UPLOAD_DIR)) {
+                    if (!mkdir(UPLOAD_DIR, 0755, true)) {
+                        throw new Exception('Gagal membuat direktori upload.');
+                    }
+                }
+
+                if (!move_uploaded_file($_FILES['file']['tmp_name'], UPLOAD_DIR . $fname)) {
+                    throw new Exception('Gagal menyimpan file ke server.');
+                }
+
+                // Cek versi sebelumnya
+                $prev = fetchOne('SELECT MAX(versi) AS v FROM dokumen WHERE id_mahasiswa=? AND jenis_bab=?', [$eid, $jenis]);
+                $versi = ($prev['v'] ?? 0) + 1;
+
+                execute('INSERT INTO dokumen (id_mahasiswa,nama_dokumen,jenis_bab,versi,file_path,ukuran_kb,format_file,status)
+                         VALUES (?,?,?,?,?,?,"pdf","menunggu")',
+                    [$eid, $nama, $jenis, $versi, 'uploads/'.$fname, $size]);
+
+                setFlash('success', 'Dokumen berhasil diunggah.');
+                header('Location: ' . BASE_URL . '/mahasiswa/dokumen.php');
+                exit;
+            } catch (Exception $e) {
+                setFlash('danger', $e->getMessage());
+            }
         }
     }
 }
@@ -152,7 +188,7 @@ include __DIR__ . '/../includes/sidebar.php';
           </select>
         </div>
         <div class="form-group">
-          <div class="upload-zone" style="position:relative;">
+          <div class="upload-zone">
             <div class="upload-icon">📤</div>
             <div class="upload-label">Klik atau seret file</div>
             <div class="upload-sub">PDF, DOCX maks. 10 MB</div>

@@ -22,6 +22,13 @@ $riwayat = fetchAll('SELECT * FROM judul_skripsi WHERE id_mahasiswa=? ORDER BY t
 
 // Handle POST
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // Validasi Sesi
+    if (!$eid) {
+        setFlash('danger', 'Sesi mahasiswa tidak valid atau profil Anda belum terdaftar. Harap hubungi admin akademik.');
+        header('Location: ' . BASE_URL . '/mahasiswa/pengajuan.php');
+        exit;
+    }
+
     $judul_id  = trim($_POST['judul_indonesia'] ?? '');
     $judul_en  = trim($_POST['judul_inggris'] ?? '');
     $bidang    = trim($_POST['bidang_penelitian'] ?? '');
@@ -41,12 +48,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             // Handle file upload
             $filePath = null;
-            if (!empty($_FILES['file_proposal']['name'])) {
+            if (isset($_FILES['file_proposal']) && $_FILES['file_proposal']['error'] === UPLOAD_ERR_OK) {
                 $ext  = strtolower(pathinfo($_FILES['file_proposal']['name'], PATHINFO_EXTENSION));
+                $allowed = ['pdf', 'docx', 'doc'];
+                
+                if (!in_array($ext, $allowed)) {
+                    throw new \Exception('Format file tidak didukung. Harap unggah tipe PDF atau DOCX.');
+                }
+                
+                if ($_FILES['file_proposal']['size'] > MAX_FILE_KB * 1024) {
+                    throw new \Exception('Ukuran file melebihi batas 10 MB.');
+                }
+
                 $name = 'proposal_' . $eid . '_' . time() . '.' . $ext;
                 if (!is_dir(UPLOAD_DIR)) mkdir(UPLOAD_DIR, 0755, true);
-                move_uploaded_file($_FILES['file_proposal']['tmp_name'], UPLOAD_DIR . $name);
+                
+                if (!move_uploaded_file($_FILES['file_proposal']['tmp_name'], UPLOAD_DIR . $name)) {
+                    throw new \Exception('Gagal menyimpan file yang diunggah ke server.');
+                }
                 $filePath = 'uploads/' . $name;
+            } elseif (isset($_FILES['file_proposal']) && $_FILES['file_proposal']['error'] !== UPLOAD_ERR_NO_FILE) {
+                throw new \Exception('Terjadi kesalahan saat mengunggah file. Kode error: ' . $_FILES['file_proposal']['error']);
             }
 
             // Insert judul
@@ -152,11 +174,11 @@ include __DIR__ . '/../includes/sidebar.php';
         </div>
         <div class="form-group">
           <label class="form-label">Lampiran Proposal (PDF/DOCX, maks 10MB)</label>
-          <div class="upload-zone">
+          <div class="upload-zone" id="uploadZone">
             <div class="upload-icon">📄</div>
-            <div class="upload-label">Klik atau seret file ke sini</div>
+            <div class="upload-label" id="fileLabel">Klik atau seret file ke sini</div>
             <div class="upload-sub">PDF, DOCX maks. 10 MB</div>
-            <input type="file" name="file_proposal" accept=".pdf,.docx" style="position:absolute;inset:0;opacity:0;cursor:pointer;">
+            <input type="file" name="file_proposal" accept=".pdf,.docx,.doc" style="position:absolute;inset:0;opacity:0;cursor:pointer;" onchange="document.getElementById('fileLabel').innerText = this.files[0] ? this.files[0].name : 'Klik atau seret file ke sini'">
           </div>
         </div>
         <div class="form-actions">

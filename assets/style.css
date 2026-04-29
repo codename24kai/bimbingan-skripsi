@@ -275,7 +275,7 @@ tbody tr:last-child td { border-bottom:none; }
 .search-input-wrap input:focus { border-color:var(--navy-light); }
 
 /* Upload zone */
-.upload-zone { border:2px dashed var(--cream-dark); border-radius:var(--radius); padding:36px; text-align:center; cursor:pointer; transition:all .2s; background:var(--cream); }
+.upload-zone { position:relative; border:2px dashed var(--cream-dark); border-radius:var(--radius); padding:36px; text-align:center; cursor:pointer; transition:all .2s; background:var(--cream); }
 .upload-zone:hover { border-color:var(--navy-light); background:rgba(30,58,95,.03); }
 .upload-icon { font-size:32px; margin-bottom:12px; }
 .upload-label { font-size:14px; font-weight:500; color:var(--navy); margin-bottom:4px; }

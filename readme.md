@@ -1,5 +1,5 @@
-Kekurangan Website Portal Bimbingan Skripsi
 
+<<<<<<< HEAD
 bagian login 
 - fitur lupa password
 
