@@ -56,6 +56,10 @@ $typeIcon = ['info'=>'ℹ️','sukses'=>'✅','peringatan'=>'⚠️','error'=>'�
     </div>
 
     <!-- Avatar -->
-    <div class="avatar" style="width:36px;height:36px;font-size:13px;cursor:pointer;"><?= e($initials) ?></div>
+    <div class="avatar" style="width:36px;height:36px;font-size:13px;cursor:pointer;">
+    <a href="<?= BASE_URL ?>/profil.php">
+    <?= e($initials) ?>
+    </a>
+    </div>
   </div>
 </header>

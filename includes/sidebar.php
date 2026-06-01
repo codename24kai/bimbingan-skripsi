@@ -1,4 +1,16 @@
 <?php
+// Letakkan blok PHP ini di Paling Atas file includes/sidebar.php
+$isBimbinganAktif = false;
+
+// Cek hanya untuk role mahasiswa
+if (isset($_SESSION['role']) && $_SESSION['role'] === 'mahasiswa') {
+    // Mencari apakah mahasiswa punya bimbingan yang aktif (SK Terbit)
+    $cekBimb = fetchOne("SELECT id_bimbingan FROM bimbingan WHERE id_mahasiswa=? AND status='aktif'", [$_SESSION['entity_id']]);
+    if ($cekBimb) {
+        $isBimbinganAktif = true;
+    }
+}
+
 // includes/sidebar.php
 require_once __DIR__ . '/../config/auth.php';
 
@@ -46,6 +58,7 @@ $navs = [
       ['href'=>'admin/dosen.php',           'icon'=>'👨‍🏫','label'=>'Kelola Dosen',         'id'=>'kelola_dosen'],
       ['href'=>'admin/relasi.php',          'icon'=>'🔗','label'=>'Relasi Pembimbingan',  'id'=>'relasi'],
       ['href'=>'admin/laporan.php',         'icon'=>'📈','label'=>'Laporan & Aktivitas',  'id'=>'laporan'],
+      ['href'=>'admin/validasi_judul.php',  'icon'=>'✅','label'=>'Validasi Judul',       'id'=>'validasi_judul'],
     ]],
     ['section'=>'Sistem','items'=>[
       ['href'=>'admin/pengaturan.php','icon'=>'⚙️','label'=>'Pengaturan','id'=>'pengaturan'],
@@ -53,6 +66,43 @@ $navs = [
   ],
 ];
 ?>
+
+<aside class="sidebar">
+    <div class="sidebar-logo">SkripsiKu</div>
+    <ul class="sidebar-menu">
+        
+        <li><a href="<?= BASE_URL ?>/dashboard.php">🏠 Dashboard</a></li>
+
+        <?php if ($_SESSION['role'] === 'mahasiswa'): ?>
+            
+            <li><a href="<?= BASE_URL ?>/mahasiswa/pengajuan.php">📝 Pengajuan Judul</a></li>
+            
+            <?php if ($isBimbinganAktif): ?>
+                <li><a href="<?= BASE_URL ?>/mahasiswa/dokumen.php">📁 Dokumen & Revisi</a></li>
+                <li><a href="<?= BASE_URL ?>/mahasiswa/jadwal.php">📅 Jadwal Bimbingan</a></li>
+                <li><a href="<?= BASE_URL ?>/mahasiswa/riwayat.php">⏳ Riwayat Bimbingan</a></li>
+            <?php else: ?>
+                <li>
+                    <a href="#" onclick="alert('🔒 Akses Terkunci!\n\nMenu ini baru akan terbuka setelah judul Anda disetujui dan Program Studi menerbitkan SK Bimbingan.')" style="opacity:0.5; cursor:not-allowed; background:#f8f9fa;">
+                        🔒 Dokumen & Revisi
+                    </a>
+                </li>
+                <li>
+                    <a href="#" onclick="alert('🔒 Akses Terkunci!\n\nMenu ini baru akan terbuka setelah judul Anda disetujui dan Program Studi menerbitkan SK Bimbingan.')" style="opacity:0.5; cursor:not-allowed; background:#f8f9fa;">
+                        🔒 Jadwal Bimbingan
+                    </a>
+                </li>
+                <li>
+                    <a href="#" onclick="alert('🔒 Akses Terkunci!\n\nMenu ini baru akan terbuka setelah judul Anda disetujui dan Program Studi menerbitkan SK Bimbingan.')" style="opacity:0.5; cursor:not-allowed; background:#f8f9fa;">
+                        🔒 Riwayat Bimbingan
+                    </a>
+                </li>
+            <?php endif; ?>
+
+        <?php endif; ?>
+        
+        </ul>
+</aside>
 
 <div class="sidebar-overlay" id="sidebarOverlay"></div>
 

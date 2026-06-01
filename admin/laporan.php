@@ -8,6 +8,7 @@ requireRole('admin');
 $pageTitle  = 'Laporan & Aktivitas';
 $activePage = 'laporan';
 
+// 1. AMBIL DATA STATISTIK UTAMA
 $totalSesi    = countRows('SELECT COUNT(*) FROM sesi_bimbingan WHERE status="selesai"');
 $totalSelesai = countRows('SELECT COUNT(*) FROM mahasiswa WHERE status_skripsi="selesai"');
 $avgSesi      = fetchOne('SELECT ROUND(AVG(total_sesi),1) AS avg FROM bimbingan WHERE status="selesai"')['avg'] ?? 0;
@@ -27,6 +28,92 @@ $rekapDosen = fetchAll(
      GROUP BY d.id_dosen ORDER BY total_sesi DESC'
 );
 
+// 2. HANDLE EXPORT LAPORAN (PDF & EXCEL)
+if (isset($_GET['export'])) {
+    $format = $_GET['export'];
+    $filename = "Rekap_Bimbingan_" . date('Ymd_Hi');
+
+    if ($format === 'excel') {
+        // Output sebagai CSV untuk Excel
+        header('Content-Type: text/csv; charset=utf-8');
+        header('Content-Disposition: attachment; filename="' . $filename . '.csv"');
+        
+        $output = fopen('php://output', 'w');
+        fputs($output, "\xEF\xBB\xBF"); // Tambahkan BOM agar Excel membaca UTF-8 dengan benar
+        
+        // Header Kolom
+        fputcsv($output, ['Nama Dosen', 'Jumlah Mahasiswa', 'Total Sesi', 'Sesi Selesai', 'Rata-rata Durasi (Menit)']);
+        
+        // Data Rows
+        foreach ($rekapDosen as $r) {
+            fputcsv($output, [
+                $r['nama_lengkap'], 
+                $r['jml_mhs'], 
+                $r['total_sesi'], 
+                $r['selesai'] ?? 0, 
+                $r['avg_durasi'] ?? 0
+            ]);
+        }
+        fclose($output);
+        exit;
+        
+    } elseif ($format === 'pdf') {
+        // Output sebagai halaman cetak PDF
+        ?>
+        <!DOCTYPE html>
+        <html lang="id">
+        <head>
+            <meta charset="UTF-8">
+            <title>Laporan Bimbingan Skripsi</title>
+            <style>
+                body { font-family: 'Segoe UI', Arial, sans-serif; color: #333; margin: 0; padding: 40px; }
+                .header { text-align: center; border-bottom: 2px solid #000; padding-bottom: 20px; margin-bottom: 30px; }
+                h1 { margin: 0 0 10px 0; font-size: 24px; }
+                p { margin: 0; font-size: 14px; color: #555; }
+                table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 14px; }
+                th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+                th { background-color: #f4f4f4; font-weight: 600; }
+                @media print {
+                    @page { margin: 1.5cm; }
+                    body { padding: 0; }
+                }
+            </style>
+        </head>
+        <body onload="window.print()">
+            <div class="header">
+                <h1>Laporan Rekapitulasi Bimbingan Dosen</h1>
+                <p>Dicetak pada: <?= date('d F Y H:i') ?></p>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Nama Dosen Pembimbing</th>
+                        <th>Jumlah Mahasiswa</th>
+                        <th>Total Sesi</th>
+                        <th>Sesi Selesai</th>
+                        <th>Rata-rata Durasi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($rekapDosen as $r): ?>
+                    <tr>
+                        <td><?= htmlspecialchars($r['nama_lengkap']) ?></td>
+                        <td><?= $r['jml_mhs'] ?> Mahasiswa</td>
+                        <td><?= $r['total_sesi'] ?> Sesi</td>
+                        <td><?= $r['selesai'] ?? 0 ?> Sesi</td>
+                        <td><?= $r['avg_durasi'] ?? 0 ?> Menit</td>
+                    </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+        </body>
+        </html>
+        <?php
+        exit;
+    }
+}
+
+// 3. AMBIL DATA LAINNYA UNTUK VIEW
 $distribusiJudul = fetchAll('SELECT status, COUNT(*) AS n FROM judul_skripsi GROUP BY status');
 
 $logAktivitas = fetchAll(
@@ -48,9 +135,25 @@ include __DIR__ . '/../includes/sidebar.php';
 <div class="layout"><main class="main">
 <?php include __DIR__ . '/../includes/topbar.php'; ?>
 <div class="content">
-  <div class="page-header">
-    <h1>Laporan & Aktivitas</h1>
-    <p>Pantau statistik dan aktivitas sistem secara keseluruhan — <?= date('d F Y') ?></p>
+  <div class="page-header" style="display:flex; justify-content:space-between; align-items:flex-end;">
+    <div>
+        <h1>Laporan & Aktivitas</h1>
+        <p>Pantau statistik dan aktivitas sistem secara keseluruhan — <?= date('d F Y') ?></p>
+    </div>
+    
+    <div style="position: relative; display: inline-block;">
+        <button class="btn btn-primary" onclick="toggleExportMenu()" style="display:flex; gap:8px; align-items:center;">
+            📥 Buat Laporan ▼
+        </button>
+        <div id="exportMenu" style="display:none; position:absolute; right:0; top:100%; margin-top:8px; background:var(--white); min-width:180px; box-shadow:var(--shadow-lg); border-radius:var(--radius-sm); border:1px solid var(--cream-dark); overflow:hidden; z-index:100;">
+            <a href="?export=pdf" target="_blank" style="display:block; padding:12px 16px; color:var(--navy); text-decoration:none; font-size:13px; border-bottom:1px solid var(--cream-dark); transition:background 0.2s;">
+                📄 Cetak Laporan (PDF)
+            </a>
+            <a href="?export=excel" style="display:block; padding:12px 16px; color:var(--navy); text-decoration:none; font-size:13px; transition:background 0.2s;">
+                📊 Unduh Data (Excel/CSV)
+            </a>
+        </div>
+    </div>
   </div>
 
   <div class="stats-grid">
@@ -140,4 +243,23 @@ include __DIR__ . '/../includes/sidebar.php';
     </div>
   </div>
 </div>
+
+<script>
+// Fungsi toggle dropdown export
+function toggleExportMenu() {
+    const menu = document.getElementById('exportMenu');
+    menu.style.display = (menu.style.display === 'none' || menu.style.display === '') ? 'block' : 'none';
+}
+
+// Menutup menu jika diklik di luar kotak
+window.onclick = function(event) {
+    if (!event.target.matches('.btn-primary') && !event.target.closest('.btn-primary')) {
+        const menu = document.getElementById('exportMenu');
+        if (menu && menu.style.display === 'block') {
+            menu.style.display = 'none';
+        }
+    }
+}
+</script>
+
 <?php include __DIR__ . '/../includes/footer.php'; ?>

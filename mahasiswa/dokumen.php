@@ -19,12 +19,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             exit;
         }
 
-        $nama   = trim($_POST['nama_dokumen'] ?? '');
-        $jenis  = trim($_POST['jenis_bab'] ?? '');
+        $nama  = trim($_POST['nama_dokumen'] ?? '');
+        $jenis = trim($_POST['jenis_bab'] ?? '');
 
         if (!$nama || !$jenis || empty($_FILES['file']['name'])) {
             setFlash('danger', 'Harap isi semua field dan pilih file.');
         } else {
+            $db = getDB();
+            $db->beginTransaction();
             try {
                 // Upload Error Check
                 if ($_FILES['file']['error'] !== UPLOAD_ERR_OK) {
@@ -32,7 +34,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 }
 
                 // Extension Check
-                $ext  = strtolower(pathinfo($_FILES['file']['name'], PATHINFO_EXTENSION));
+                $ext     = strtolower(pathinfo($_FILES['file']['name'], PATHINFO_EXTENSION));
                 $allowed = ['pdf', 'docx'];
                 if (!in_array($ext, $allowed)) {
                     throw new Exception('Format file tidak didukung. Harap unggah PDF atau DOCX.');
@@ -44,7 +46,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                     throw new Exception('Ukuran file terlalu besar. Maksimal 10 MB.');
                 }
 
-                $fname = 'dok_' . $eid . '_' . time() . '.' . $ext;
+                // Perbaikan 1: Menggunakan uniqid() untuk keamanan nama file
+                $fname = 'dok_' . $eid . '_' . uniqid() . '.' . $ext;
                 $size  = (int)ceil($_FILES['file']['size'] / 1024);
 
                 if (!is_dir(UPLOAD_DIR)) {
@@ -61,14 +64,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 $prev = fetchOne('SELECT MAX(versi) AS v FROM dokumen WHERE id_mahasiswa=? AND jenis_bab=?', [$eid, $jenis]);
                 $versi = ($prev['v'] ?? 0) + 1;
 
+                // Perbaikan 2: Ubah status dokumen versi lama menjadi "direvisi" secara otomatis
+                if ($versi > 1) {
+                    execute('UPDATE dokumen SET status="direvisi" WHERE id_mahasiswa=? AND jenis_bab=? AND versi < ?', [$eid, $jenis, $versi]);
+                }
+
+                // Insert dokumen baru
                 execute('INSERT INTO dokumen (id_mahasiswa,nama_dokumen,jenis_bab,versi,file_path,ukuran_kb,format_file,status)
                          VALUES (?,?,?,?,?,?,"pdf","menunggu")',
                     [$eid, $nama, $jenis, $versi, 'uploads/'.$fname, $size]);
 
-                setFlash('success', 'Dokumen berhasil diunggah.');
+                $db->commit();
+                setFlash('success', 'Dokumen berhasil diunggah. Versi telah diperbarui.');
                 header('Location: ' . BASE_URL . '/mahasiswa/dokumen.php');
                 exit;
             } catch (Exception $e) {
+                $db->rollBack();
                 setFlash('danger', $e->getMessage());
             }
         }
@@ -123,7 +134,7 @@ include __DIR__ . '/../includes/sidebar.php';
                       </td>
                       <td><span class="mono" style="font-size:12px;background:var(--cream);padding:3px 8px;border-radius:4px;">v<?= $d['versi'] ?></span></td>
                       <td style="font-size:13px;color:var(--slate);"><?= date('d M Y', strtotime($d['tgl_upload'])) ?></td>
-                      <td><span class="badge <?= badge($d['status']) ?>"><span class="badge-dot"></span><?= e($d['status']) ?></span></td>
+                      <td><span class="badge <?= badge($d['status']) ?>"><span class="badge-dot"></span><?= e(strtoupper($d['status'])) ?></span></td>
                       <td>
                         <?php if ($d['revisi_pending'] > 0): ?>
                           <span class="badge warning"><span class="badge-dot"></span><?= $d['revisi_pending'] ?> pending</span>
@@ -133,12 +144,12 @@ include __DIR__ . '/../includes/sidebar.php';
                       </td>
                       <td>
                         <div style="display:flex;gap:6px;">
-                          <a href="<?= BASE_URL . '/' . $d['file_path'] ?>" target="_blank" class="btn-icon" title="Unduh">⬇️</a>
+                          <a href="<?= BASE_URL . '/' . $d['file_path'] ?>" target="_blank" class="btn-icon" title="Unduh File">⬇️</a>
                         </div>
                       </td>
                     </tr>
                     <?php
-                    // Show revision notes if any
+                    // Menampilkan catatan revisi jika ada
                     $revisi = fetchAll('SELECT r.*,ud.nama_lengkap AS nama_dosen FROM revisi r
                                        JOIN dosen d ON d.id_dosen=r.id_dosen
                                        JOIN user ud ON ud.id_user=d.id_user
@@ -152,8 +163,8 @@ include __DIR__ . '/../includes/sidebar.php';
                             <div>
                               <strong><?= e($rv['nama_dosen']) ?></strong> ·
                               <span class="badge <?= badge($rv['prioritas']) ?>" style="font-size:10px;"><?= $rv['prioritas'] ?></span>
-                              <?php if ($rv['halaman_revisi']): ?> · <span style="color:var(--slate);"><?= e($rv['halaman_revisi']) ?></span><?php endif; ?>
-                              <div style="color:#4a5568;margin-top:3px;"><?= e($rv['catatan_revisi']) ?></div>
+                              <?php if ($rv['halaman_revisi']): ?> · <span style="color:var(--slate);">Hal: <?= e($rv['halaman_revisi']) ?></span><?php endif; ?>
+                              <div style="color:#4a5568;margin-top:3px; line-height:1.4;"><?= e($rv['catatan_revisi']) ?></div>
                             </div>
                           </div>
                         </td>
@@ -168,7 +179,6 @@ include __DIR__ . '/../includes/sidebar.php';
       </div>
     </div>
 
-    <!-- UPLOAD FORM -->
     <div class="form-card" style="height:fit-content;">
       <h2>Unggah Dokumen</h2>
       <p>Upload dokumen skripsi terbaru Anda</p>
@@ -176,23 +186,23 @@ include __DIR__ . '/../includes/sidebar.php';
         <input type="hidden" name="action" value="upload">
         <div class="form-group">
           <label class="form-label">Nama Dokumen</label>
-          <input class="form-input" name="nama_dokumen" required placeholder="cth: BAB I - Pendahuluan">
+          <input class="form-input" name="nama_dokumen" required placeholder="cth: Revisi BAB I - Pendahuluan">
         </div>
         <div class="form-group">
           <label class="form-label">Jenis / Bab</label>
           <select class="form-input" name="jenis_bab" required>
-            <option value="">Pilih bab...</option>
-            <?php foreach (['BAB I','BAB II','BAB III','BAB IV','BAB V','Proposal','Lampiran'] as $b): ?>
-              <option><?= $b ?></option>
+            <option value="" disabled selected>Pilih bab...</option>
+            <?php foreach (['BAB I','BAB II','BAB III','BAB IV','BAB V','Proposal','Lampiran', 'Lainnya'] as $b): ?>
+              <option value="<?= $b ?>"><?= $b ?></option>
             <?php endforeach; ?>
           </select>
         </div>
         <div class="form-group">
-          <div class="upload-zone">
+          <div class="upload-zone" id="uploadZone">
             <div class="upload-icon">📤</div>
-            <div class="upload-label">Klik atau seret file</div>
-            <div class="upload-sub">PDF, DOCX maks. 10 MB</div>
-            <input type="file" name="file" required accept=".pdf,.docx" style="position:absolute;inset:0;opacity:0;cursor:pointer;">
+            <div class="upload-label" id="fileLabelDok">Klik atau seret file PDF/DOCX</div>
+            <div class="upload-sub">Ukuran maksimal 10 MB</div>
+            <input type="file" name="file" required accept=".pdf,.docx,.doc" style="position:absolute;inset:0;opacity:0;cursor:pointer;" onchange="document.getElementById('fileLabelDok').innerText = this.files[0] ? this.files[0].name : 'Klik atau seret file PDF/DOCX'">
           </div>
         </div>
         <button type="submit" class="btn btn-gold btn-full">📤 Upload Dokumen</button>

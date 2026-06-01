@@ -90,30 +90,75 @@ include __DIR__ . '/../includes/sidebar.php';
   <div style="background:var(--white);border-radius:var(--radius);padding:32px;width:100%;max-width:520px;box-shadow:var(--shadow-lg);max-height:90vh;overflow-y:auto;">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
       <h2 style="font-family:'Playfair Display',serif;font-size:20px;">Tambah Dosen</h2>
-      <button onclick="document.getElementById('modalDosen').style.display='none'" style="background:none;border:none;font-size:20px;cursor:pointer;">×</button>
+      <button type="button" onclick="document.getElementById('modalDosen').style.display='none'" style="background:none;border:none;font-size:20px;cursor:pointer;">×</button>
     </div>
+    
     <form method="POST">
       <input type="hidden" name="aksi" value="tambah">
-      <div class="form-group"><label class="form-label">Nama Lengkap</label><input class="form-input" name="nama_lengkap" required></div>
-      <div class="form-row">
-        <div class="form-group"><label class="form-label">Email</label><input class="form-input" type="email" name="email" required></div>
-        <div class="form-group"><label class="form-label">NIP</label><input class="form-input" name="nip" required></div>
+      
+      <div class="form-group">
+          <label class="form-label">Nama Lengkap</label>
+          <input class="form-input" name="nama_lengkap" required>
       </div>
+      
       <div class="form-row">
-        <div class="form-group"><label class="form-label">Program Studi</label>
-          <select class="form-input" name="id_prodi" required>
-            <?php foreach ($prodi as $p): ?><option value="<?= $p['id_prodi'] ?>"><?= e($p['nama_prodi']) ?></option><?php endforeach; ?>
-          </select>
+        <div class="form-group">
+            <label class="form-label">Email</label>
+            <input class="form-input" type="email" name="email" required>
         </div>
-        <div class="form-group"><label class="form-label">Jabatan</label><input class="form-input" name="jabatan" placeholder="Lektor, Guru Besar..."></div>
+        <div class="form-group">
+            <label class="form-label">NIP</label>
+            <input class="form-input" name="nip" required>
+        </div>
       </div>
-      <div class="form-group"><label class="form-label">Keahlian</label><input class="form-input" name="keahlian" placeholder="AI, Machine Learning..."></div>
-      <div class="form-group"><label class="form-label">Kuota Bimbingan</label><input class="form-input" type="number" name="kuota" value="10" min="1" max="20"></div>
+      
+      <div class="form-row">
+        <div class="form-group">
+            <label class="form-label">Program Studi</label>
+            <select class="form-input" name="id_prodi" required>
+                <?php foreach ($prodi as $p): ?>
+                    <option value="<?= $p['id_prodi'] ?>"><?= e($p['nama_prodi']) ?></option>
+                <?php endforeach; ?>
+            </select>
+        </div>
+        <div class="form-group">
+            <label class="form-label">Jabatan Fungsional</label>
+            <select class="form-input" name="jabatan" required>
+                <option value="" disabled selected>-- Pilih Jabatan --</option>
+                <option value="Tenaga Pengajar">Tenaga Pengajar</option>
+                <option value="Asisten Ahli">Asisten Ahli</option>
+                <option value="Lektor">Lektor</option>
+                <option value="Lektor Kepala">Lektor Kepala</option>
+                <option value="Guru Besar">Guru Besar</option>
+            </select>
+        </div>
+      </div>
+      
+      <div class="form-group">
+          <label class="form-label">Bidang Keahlian</label>
+          <select class="form-input" name="keahlian" required>
+              <option value="" disabled selected>-- Pilih Keahlian --</option>
+              <option value="Rekayasa Perangkat Lunak & Web">Rekayasa Perangkat Lunak & Web</option>
+              <option value="Pemrograman Mobile">Pemrograman Mobile</option>
+              <option value="Kecerdasan Buatan & Machine Learning">Kecerdasan Buatan & Machine Learning</option>
+              <option value="Data Science & Analitik">Data Science & Analitik</option>
+              <option value="Internet of Things (IoT)">Internet of Things (IoT)</option>
+              <option value="Keamanan Siber & Jaringan">Keamanan Siber & Jaringan</option>
+              <option value="Manajemen Sistem Informasi">Manajemen Sistem Informasi</option>
+          </select>
+      </div>
+      
+      <div class="form-group">
+          <label class="form-label">Kuota Bimbingan</label>
+          <input class="form-input" type="number" name="kuota" value="10" min="1" max="20" required>
+      </div>
+      
       <div class="form-actions">
         <button type="button" class="btn btn-secondary" onclick="document.getElementById('modalDosen').style.display='none'">Batal</button>
         <button type="submit" class="btn btn-gold">Simpan</button>
       </div>
     </form>
+    
   </div>
 </div>
 

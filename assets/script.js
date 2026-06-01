@@ -12,7 +12,7 @@ function closeSidebar() {
 document.getElementById('sidebarOverlay')?.addEventListener('click', closeSidebar);
 
 // ── Notification panel ─────────────────────────
-const notifBtn   = document.getElementById('notifBtn');
+const notifBtn = document.getElementById('notifBtn');
 const notifPanel = document.getElementById('notifPanel');
 
 notifBtn?.addEventListener('click', (e) => {
@@ -64,10 +64,10 @@ document.querySelectorAll('.upload-zone').forEach(zone => {
     const label = zone.querySelector('.upload-label');
     if (label && input.files[0]) label.textContent = input.files[0].name;
   });
-  zone.addEventListener('dragover', e => { e.preventDefault(); zone.style.borderColor='var(--navy-light)'; });
-  zone.addEventListener('dragleave', () => { zone.style.borderColor=''; });
+  zone.addEventListener('dragover', e => { e.preventDefault(); zone.style.borderColor = 'var(--navy-light)'; });
+  zone.addEventListener('dragleave', () => { zone.style.borderColor = ''; });
   zone.addEventListener('drop', e => {
-    e.preventDefault(); zone.style.borderColor='';
+    e.preventDefault(); zone.style.borderColor = '';
     if (input && e.dataTransfer.files[0]) {
       const dt = new DataTransfer();
       dt.items.add(e.dataTransfer.files[0]);
@@ -76,4 +76,63 @@ document.querySelectorAll('.upload-zone').forEach(zone => {
       if (label) label.textContent = e.dataTransfer.files[0].name;
     }
   });
+});
+
+/* =========================================
+   TOGGLE PASSWORD VISIBILITY
+   ========================================= */
+document.addEventListener("DOMContentLoaded", function () {
+  const toggleBtn = document.getElementById('togglePasswordBtn');
+  const passwordInput = document.getElementById('password');
+  const eyeClosed = document.getElementById('eyeClosed');
+  const eyeOpen = document.getElementById('eyeOpen');
+
+  // Pengecekan ini memastikan script hanya berjalan jika elemennya ada di halaman tersebut
+  if (toggleBtn && passwordInput && eyeClosed && eyeOpen) {
+    toggleBtn.addEventListener('click', function () {
+      const isPassword = passwordInput.getAttribute('type') === 'password';
+
+      passwordInput.setAttribute('type', isPassword ? 'text' : 'password');
+
+      if (isPassword) {
+        eyeClosed.style.display = 'none';
+        eyeOpen.style.display = 'block';
+        toggleBtn.style.color = 'var(--navy)';
+      } else {
+        eyeClosed.style.display = 'block';
+        eyeOpen.style.display = 'none';
+        toggleBtn.style.color = 'var(--slate)';
+      }
+    });
+  }
+});
+
+/* =========================================
+   TOPBAR NOTIFICATION TOGGLE
+   ========================================= */
+document.addEventListener("DOMContentLoaded", function () {
+  const notifBtn = document.getElementById('notifBtn');
+  const notifPanel = document.getElementById('notifPanel');
+
+  if (notifBtn && notifPanel) {
+    // Secara default sembunyikan panel notifikasi
+    notifPanel.style.display = 'none';
+
+    // Tampilkan/Sembunyikan saat tombol lonceng diklik
+    notifBtn.addEventListener('click', function (e) {
+      e.stopPropagation(); // Mencegah klik menembus ke window
+      if (notifPanel.style.display === 'none' || notifPanel.style.display === '') {
+        notifPanel.style.display = 'block';
+      } else {
+        notifPanel.style.display = 'none';
+      }
+    });
+
+    // Sembunyikan panel jika user klik area kosong di luar panel
+    window.addEventListener('click', function (e) {
+      if (!notifPanel.contains(e.target) && e.target !== notifBtn) {
+        notifPanel.style.display = 'none';
+      }
+    });
+  }
 });

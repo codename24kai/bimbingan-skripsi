@@ -8,11 +8,100 @@ requireRole('admin');
 $pageTitle  = 'Pengaturan';
 $activePage = 'pengaturan';
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    setFlash('success', 'Pengaturan berhasil disimpan.');
-    header('Location: ' . BASE_URL . '/admin/pengaturan.php'); exit;
+$db = getDB();
+
+// 1. AUTO-CREATE TABEL PENGATURAN & NILAI DEFAULT (Jika belum ada)
+$db->exec("CREATE TABLE IF NOT EXISTS pengaturan (
+    nama_key VARCHAR(50) PRIMARY KEY,
+    nilai_value TEXT NOT NULL
+) ENGINE=InnoDB COMMENT='Tabel konfigurasi umum sistem';");
+
+$cekPengaturan = fetchOne("SELECT COUNT(*) as cnt FROM pengaturan");
+if ($cekPengaturan['cnt'] == 0) {
+    // Memberikan nilai default awal
+    $db->exec("INSERT INTO pengaturan (nama_key, nilai_value) VALUES 
+        ('nama_institusi', 'Universitas Pamulang (UNPAM)'),
+        ('tahun_akademik', '2025/2026'),
+        ('semester_aktif', 'Ganjil'),
+        ('default_kuota_dosen', '10')
+    ");
 }
 
+// 2. HANDLE REQUEST (POST ACTIONS)
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $aksi = $_POST['aksi'] ?? '';
+
+    if ($aksi === 'simpan_umum') {
+        // Update Pengaturan Umum
+        $settings = [
+            'nama_institusi'      => $_POST['nama_institusi'],
+            'tahun_akademik'      => $_POST['tahun_akademik'],
+            'semester_aktif'      => $_POST['semester_aktif'],
+            'default_kuota_dosen' => (int)$_POST['default_kuota_dosen']
+        ];
+        
+        $db->beginTransaction();
+        try {
+            foreach ($settings as $key => $val) {
+                execute("UPDATE pengaturan SET nilai_value = ? WHERE nama_key = ?", [$val, $key]);
+            }
+            $db->commit();
+            setFlash('success', 'Konfigurasi umum berhasil disimpan.');
+        } catch (\Exception $e) {
+            $db->rollBack();
+            setFlash('danger', 'Gagal menyimpan pengaturan: ' . $e->getMessage());
+        }
+
+    } elseif ($aksi === 'tambah_prodi') {
+        try {
+            execute("INSERT INTO program_studi (kode_prodi, nama_prodi, jenjang, fakultas, akreditasi) VALUES (?, ?, ?, ?, ?)", [
+                strtoupper($_POST['kode_prodi']), 
+                $_POST['nama_prodi'], 
+                $_POST['jenjang'], 
+                'Fakultas Ilmu Komputer', // Hardcode sesuai kebutuhan Anda
+                strtoupper($_POST['akreditasi'])
+            ]);
+            setFlash('success', 'Program Studi baru berhasil ditambahkan.');
+        } catch (\Exception $e) {
+            setFlash('danger', 'Gagal menambah Prodi. Pastikan Kode Prodi belum digunakan.');
+        }
+        
+    } elseif ($aksi === 'edit_prodi') {
+        try {
+            execute("UPDATE program_studi SET kode_prodi=?, nama_prodi=?, jenjang=?, akreditasi=? WHERE id_prodi=?", [
+                strtoupper($_POST['kode_prodi']), 
+                $_POST['nama_prodi'], 
+                $_POST['jenjang'], 
+                strtoupper($_POST['akreditasi']),
+                (int)$_POST['id_prodi']
+            ]);
+            setFlash('success', 'Data Program Studi berhasil diperbarui.');
+        } catch (\Exception $e) {
+            setFlash('danger', 'Gagal memperbarui Program Studi.');
+        }
+        
+    } elseif ($aksi === 'hapus_prodi') {
+        try {
+            execute('DELETE FROM program_studi WHERE id_prodi=?', [(int)$_POST['id_prodi']]);
+            setFlash('success', 'Program Studi berhasil dihapus.');
+        } catch (\Exception $e) {
+            setFlash('danger', 'Gagal menghapus: Program Studi ini masih terikat dengan data Dosen atau Mahasiswa.');
+        }
+    }
+    
+    header('Location: ' . BASE_URL . '/admin/pengaturan.php'); 
+    exit;
+}
+
+// 3. AMBIL DATA UNTUK DITAMPILKAN DI VIEW
+// Mengambil array asosiatif pengaturan
+$rawSettings = fetchAll("SELECT * FROM pengaturan");
+$opt = [];
+foreach ($rawSettings as $s) {
+    $opt[$s['nama_key']] = $s['nilai_value'];
+}
+
+// Mengambil list prodi
 $prodi = fetchAll('SELECT * FROM program_studi ORDER BY nama_prodi');
 
 include __DIR__ . '/../includes/header.php';
@@ -22,40 +111,80 @@ include __DIR__ . '/../includes/sidebar.php';
 <?php include __DIR__ . '/../includes/topbar.php'; ?>
 <div class="content">
   <?php $flash = getFlash(); if ($flash): ?><div class="alert <?= $flash['type'] ?>"><?= e($flash['msg']) ?></div><?php endif; ?>
-  <div class="page-header"><h1>Pengaturan Sistem</h1><p>Konfigurasi portal bimbingan skripsi</p></div>
+  
+  <div class="page-header">
+      <h1>Pengaturan Sistem</h1>
+      <p>Konfigurasi global portal bimbingan skripsi</p>
+  </div>
 
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px;">
-    <!-- Umum -->
-    <div class="form-card">
-      <h2>Konfigurasi Umum</h2>
-      <p>Setting dasar portal</p>
+  <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start;">
+    
+    <div class="form-card" style="background:var(--white); padding:24px; border-radius:var(--radius); box-shadow:0 1px 3px rgba(0,0,0,0.05);">
+      <h2 style="font-size:18px; font-family:'Playfair Display',serif; margin-bottom:8px;">Konfigurasi Umum</h2>
+      <p style="font-size:13px; color:var(--slate); margin-bottom:20px;">Pengaturan dasar sistem portal bimbingan.</p>
+      
       <form method="POST">
-        <div class="form-group"><label class="form-label">Nama Institusi</label><input class="form-input" value="Universitas Contoh" name="institusi"></div>
-        <div class="form-row">
-          <div class="form-group"><label class="form-label">Tahun Akademik</label><input class="form-input" value="2024/2025" name="tahun_akademik"></div>
-          <div class="form-group"><label class="form-label">Semester Aktif</label><select class="form-input" name="semester"><option>Genap</option><option>Ganjil</option></select></div>
+        <input type="hidden" name="aksi" value="simpan_umum">
+        
+        <div class="form-group">
+            <label class="form-label">Nama Institusi / Perguruan Tinggi</label>
+            <input class="form-input" name="nama_institusi" value="<?= e($opt['nama_institusi'] ?? '') ?>" required>
         </div>
-        <div class="form-group"><label class="form-label">Default Kuota Bimbingan</label><input class="form-input" type="number" value="10" name="default_kuota"></div>
-        <button type="submit" class="btn btn-gold">💾 Simpan</button>
+        
+        <div class="form-row">
+          <div class="form-group">
+              <label class="form-label">Tahun Akademik</label>
+              <input class="form-input" name="tahun_akademik" placeholder="Contoh: 2025/2026" value="<?= e($opt['tahun_akademik'] ?? '') ?>" required>
+          </div>
+          <div class="form-group">
+              <label class="form-label">Semester Aktif</label>
+              <select class="form-input" name="semester_aktif" required>
+                  <option value="Ganjil" <?= ($opt['semester_aktif'] === 'Ganjil') ? 'selected' : '' ?>>Ganjil</option>
+                  <option value="Genap" <?= ($opt['semester_aktif'] === 'Genap') ? 'selected' : '' ?>>Genap</option>
+              </select>
+          </div>
+        </div>
+        
+        <div class="form-group">
+            <label class="form-label">Default Kuota Dosen Pembimbing</label>
+            <input class="form-input" type="number" name="default_kuota_dosen" min="1" max="50" value="<?= e($opt['default_kuota_dosen'] ?? '10') ?>" required>
+            <small style="color:var(--slate); font-size:12px;">Angka ini akan otomatis mengisi kolom kuota saat menambah dosen baru.</small>
+        </div>
+        
+        <button type="submit" class="btn btn-gold" style="margin-top:10px; width:100%; justify-content:center;">💾 Simpan Konfigurasi</button>
       </form>
     </div>
 
-    <!-- Program Studi -->
     <div class="card">
-      <div class="card-header">
-        <div class="card-title">Program Studi</div>
+      <div class="card-header" style="display:flex; justify-content:space-between; align-items:center;">
+        <div class="card-title">Program Studi (Ilkom)</div>
+        <button class="btn btn-primary" style="padding:6px 12px; font-size:12px;" onclick="document.getElementById('modalTambahProdi').style.display='flex'">+ Tambah</button>
       </div>
       <div class="card-body">
         <div class="table-wrap">
           <table>
-            <thead><tr><th>Kode</th><th>Nama</th><th>Jenjang</th><th>Akreditasi</th></tr></thead>
+            <thead><tr><th>Kode</th><th>Program Studi</th><th>Akreditasi</th><th style="text-align:right;">Aksi</th></tr></thead>
             <tbody>
-              <?php foreach ($prodi as $p): ?>
+              <?php foreach ($prodi as $p): 
+                $jsonProdi = htmlspecialchars(json_encode($p), ENT_QUOTES, 'UTF-8');
+              ?>
                 <tr>
-                  <td class="mono" style="font-size:12px;"><?= e($p['kode_prodi']) ?></td>
-                  <td style="font-size:13px;"><?= e($p['nama_prodi']) ?></td>
-                  <td><span class="badge info"><?= e($p['jenjang']) ?></span></td>
-                  <td style="text-align:center;font-weight:700;"><?= e($p['akreditasi'] ?? '—') ?></td>
+                  <td class="mono" style="font-size:12px; font-weight:600;"><?= e($p['kode_prodi']) ?></td>
+                  <td>
+                      <div style="font-size:13px; font-weight:500;"><?= e($p['nama_prodi']) ?></div>
+                      <div style="font-size:11px; color:var(--slate);">Jenjang: <?= e($p['jenjang']) ?></div>
+                  </td>
+                  <td>
+                      <span class="badge info" style="font-weight:700;"><?= e($p['akreditasi'] ?? '—') ?></span>
+                  </td>
+                  <td style="text-align:right;">
+                      <button type="button" class="btn-icon" title="Edit Prodi" onclick="openEditProdi(<?= $jsonProdi ?>)">✏️</button>
+                      <form method="POST" style="display:inline;" onsubmit="return confirm('Hapus prodi ini? Aksi akan digagalkan jika ada Dosen/Mahasiswa aktif di prodi ini.')">
+                          <input type="hidden" name="aksi" value="hapus_prodi">
+                          <input type="hidden" name="id_prodi" value="<?= $p['id_prodi'] ?>">
+                          <button type="submit" class="btn-icon">🗑️</button>
+                      </form>
+                  </td>
                 </tr>
               <?php endforeach; ?>
             </tbody>
@@ -63,45 +192,98 @@ include __DIR__ . '/../includes/sidebar.php';
         </div>
       </div>
     </div>
-  </div>
-
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
-    <!-- Keamanan -->
-    <div class="form-card">
-      <h2>Keamanan</h2>
-      <p>Konfigurasi keamanan sistem</p>
-      <div class="form-group"><label class="form-label">Timeout Sesi (menit)</label><input class="form-input" type="number" value="120"></div>
-      <div class="form-group">
-        <label class="form-label">Panjang Minimum Password</label>
-        <input class="form-input" type="number" value="6">
-      </div>
-      <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--cream-dark);">
-        <span style="font-size:14px;">Log Audit Aktif</span>
-        <span class="badge success"><span class="badge-dot"></span>Aktif</span>
-      </div>
-      <button class="btn btn-gold" style="margin-top:20px;">💾 Simpan</button>
-    </div>
-
-    <!-- Info sistem -->
-    <div class="card">
-      <div class="card-header"><div class="card-title">Info Sistem</div></div>
-      <div class="card-body">
-        <?php foreach ([
-          ['Versi Aplikasi', APP_VERSION],
-          ['PHP Version', PHP_VERSION],
-          ['Database', DB_NAME],
-          ['Waktu Server', date('d M Y H:i:s')],
-        ] as [$k,$v]): ?>
-          <div style="display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--cream-dark);">
-            <span style="font-size:13px;color:var(--slate);"><?= $k ?></span>
-            <span class="mono" style="font-size:12px;"><?= e($v) ?></span>
-          </div>
-        <?php endforeach; ?>
-        <div style="margin-top:20px;">
-          <a href="<?= BASE_URL ?>/skripsi_portal.sql" class="btn btn-secondary btn-sm">📥 Export SQL Schema</a>
-        </div>
-      </div>
-    </div>
+    
   </div>
 </div>
+
+<div id="modalTambahProdi" style="display:none;position:fixed;inset:0;background:rgba(11,31,58,.6);z-index:1000;align-items:center;justify-content:center;">
+  <div style="background:var(--white);border-radius:var(--radius);padding:32px;width:100%;max-width:450px;box-shadow:var(--shadow-lg);">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+      <h2 style="font-family:'Playfair Display',serif;font-size:18px;">Tambah Program Studi</h2>
+      <button onclick="document.getElementById('modalTambahProdi').style.display='none'" style="background:none;border:none;font-size:20px;cursor:pointer;">×</button>
+    </div>
+    <form method="POST">
+      <input type="hidden" name="aksi" value="tambah_prodi">
+      <div class="form-group">
+          <label class="form-label">Nama Program Studi</label>
+          <input class="form-input" name="nama_prodi" placeholder="Misal: Teknik Komputer" required>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+            <label class="form-label">Kode (Maks 10)</label>
+            <input class="form-input" name="kode_prodi" placeholder="TK" required>
+        </div>
+        <div class="form-group">
+            <label class="form-label">Jenjang</label>
+            <select class="form-input" name="jenjang" required>
+                <option value="D3">D3</option>
+                <option value="S1" selected>S1</option>
+                <option value="S2">S2</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label class="form-label">Akreditasi</label>
+            <input class="form-input" name="akreditasi" placeholder="A/B/C/Unggul" maxlength="10">
+        </div>
+      </div>
+      <div class="form-actions">
+        <button type="button" class="btn btn-secondary" onclick="document.getElementById('modalTambahProdi').style.display='none'">Batal</button>
+        <button type="submit" class="btn btn-primary">Simpan</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div id="modalEditProdi" style="display:none;position:fixed;inset:0;background:rgba(11,31,58,.6);z-index:1000;align-items:center;justify-content:center;">
+  <div style="background:var(--white);border-radius:var(--radius);padding:32px;width:100%;max-width:450px;box-shadow:var(--shadow-lg);">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+      <h2 style="font-family:'Playfair Display',serif;font-size:18px;">Edit Program Studi</h2>
+      <button onclick="document.getElementById('modalEditProdi').style.display='none'" style="background:none;border:none;font-size:20px;cursor:pointer;">×</button>
+    </div>
+    <form method="POST">
+      <input type="hidden" name="aksi" value="edit_prodi">
+      <input type="hidden" name="id_prodi" id="edit_id_prodi">
+      <div class="form-group">
+          <label class="form-label">Nama Program Studi</label>
+          <input class="form-input" name="nama_prodi" id="edit_nama_prodi" required>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+            <label class="form-label">Kode</label>
+            <input class="form-input" name="kode_prodi" id="edit_kode_prodi" required>
+        </div>
+        <div class="form-group">
+            <label class="form-label">Jenjang</label>
+            <select class="form-input" name="jenjang" id="edit_jenjang" required>
+                <option value="D3">D3</option>
+                <option value="S1">S1</option>
+                <option value="S2">S2</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label class="form-label">Akreditasi</label>
+            <input class="form-input" name="akreditasi" id="edit_akreditasi" maxlength="10">
+        </div>
+      </div>
+      <div class="form-actions">
+        <button type="button" class="btn btn-secondary" onclick="document.getElementById('modalEditProdi').style.display='none'">Batal</button>
+        <button type="submit" class="btn btn-primary">Simpan Perubahan</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+// Menangani pengisian data ke dalam form modal edit prodi
+function openEditProdi(data) {
+    document.getElementById('edit_id_prodi').value = data.id_prodi;
+    document.getElementById('edit_nama_prodi').value = data.nama_prodi;
+    document.getElementById('edit_kode_prodi').value = data.kode_prodi;
+    document.getElementById('edit_jenjang').value = data.jenjang;
+    document.getElementById('edit_akreditasi').value = data.akreditasi;
+    
+    document.getElementById('modalEditProdi').style.display = 'flex';
+}
+</script>
+
 <?php include __DIR__ . '/../includes/footer.php'; ?>
