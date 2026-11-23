@@ -171,7 +171,7 @@ include __DIR__ . '/includes/sidebar.php';
                       </span>
                     </div>
                     <?php if ($d['jml_revisi'] > 0): ?>
-                      <div class="progress-sub" style="color:var(--warn);">⚠ <?= $d['jml_revisi'] ?> revisi belum diselesaikan</div>
+                      <div class="progress-sub" style="color:var(--warn-text);">⚠ <?= $d['jml_revisi'] ?> revisi belum diselesaikan</div>
                     <?php endif; ?>
                   </div>
                 <?php endforeach; ?>
@@ -212,7 +212,7 @@ include __DIR__ . '/includes/sidebar.php';
             </span>
           </div>
           <div class="card-body">
-            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:20px;padding-top:8px;">
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(200px,100%),1fr));gap:20px;padding-top:8px;">
               <?php foreach ([
                 ['Judul', $bimbingan['judul_indonesia']],
                 ['Dosen Pembimbing', $bimbingan['nama_dosen']],

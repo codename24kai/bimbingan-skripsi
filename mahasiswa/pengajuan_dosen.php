@@ -71,7 +71,7 @@ include __DIR__ . '/../includes/sidebar.php';
     </div>
   <?php else: ?>
   
-    <div style="display:grid; grid-template-columns:1fr 340px; gap:20px;">
+    <div class="split" style="--side:340px;">
         <div class="form-card">
             <?php if ($judulDisetujui['usulan_dosen']): ?>
                 <div class="alert info" style="margin-bottom:20px;">
@@ -85,13 +85,13 @@ include __DIR__ . '/../includes/sidebar.php';
                     <label class="form-label">Judul Skripsi (Disetujui)</label>
                     <div style="padding:10px; background:var(--cream); border-radius:6px; font-size:13px; font-weight:500; line-height:1.4;">
                         <?= e($judulDisetujui['judul_indonesia']) ?>
-                        <div style="font-size:11px; color:var(--info); margin-top:4px;">Bidang: <?= e($judulDisetujui['bidang_penelitian']) ?></div>
+                        <div style="font-size:11px; color:var(--info-text); margin-top:4px;">Bidang: <?= e($judulDisetujui['bidang_penelitian']) ?></div>
                     </div>
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label">Dosen Pembimbing Tersedia</label>
-                    <select class="form-input" name="id_dosen" required size="8" style="padding:10px;">
+                    <label for="f_id_dosen" class="form-label">Dosen Pembimbing Tersedia</label>
+                    <select id="f_id_dosen" class="form-input" name="id_dosen" required size="8" style="padding:10px;">
                         
                         <optgroup label="🌟 Rekomendasi Sesuai Bidang (<?= e($judulDisetujui['bidang_penelitian']) ?>)">
                             <?php 

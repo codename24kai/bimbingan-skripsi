@@ -46,7 +46,7 @@ include __DIR__ . '/../includes/sidebar.php';
             <div class="catatan-dosen">
               Bimbingan ke-<?= $sesi++ ?> — <?= e($r['topik']) ?>
             </div>
-            <div style="display:flex;gap:10px;align-items:center;margin-top:6px;">
+            <div style="display:flex;flex-wrap:wrap;gap:8px 10px;align-items:center;margin-top:6px;">
               <span class="badge <?= badge($r['status']) ?>"><span class="badge-dot"></span><?= e($r['status']) ?></span>
               <?php if ($r['keputusan']): ?>
                 <span class="badge <?= badge($r['keputusan']) ?>"><span class="badge-dot"></span><?= e($r['keputusan']) ?></span>

@@ -136,7 +136,7 @@ include __DIR__ . '/../includes/sidebar.php';
     <p>Kelola semua dokumen skripsi dan riwayat revisi Anda</p>
   </div>
 
-  <div style="display:grid;grid-template-columns:1fr 320px;gap:20px;">
+  <div class="split" style="--side:320px;">
     <div>
       <div class="card" style="margin-bottom:20px;">
         <div class="card-header"><div class="card-title">Daftar Dokumen</div></div>
@@ -220,12 +220,12 @@ include __DIR__ . '/../includes/sidebar.php';
       <form method="POST" enctype="multipart/form-data"><?= csrfField() ?>
         <input type="hidden" name="action" value="upload">
         <div class="form-group">
-          <label class="form-label">Nama Dokumen</label>
-          <input class="form-input" name="nama_dokumen" required placeholder="cth: Revisi BAB I - Pendahuluan">
+          <label for="f_nama_dokumen" class="form-label">Nama Dokumen</label>
+          <input id="f_nama_dokumen" class="form-input" name="nama_dokumen" required placeholder="cth: Revisi BAB I - Pendahuluan">
         </div>
         <div class="form-group">
-          <label class="form-label">Jenis / Bab</label>
-          <select class="form-input" name="jenis_bab" required>
+          <label for="f_jenis_bab" class="form-label">Jenis / Bab</label>
+          <select id="f_jenis_bab" class="form-input" name="jenis_bab" required>
             <option value="" disabled selected>Pilih bab...</option>
             <?php foreach (['BAB I','BAB II','BAB III','BAB IV','BAB V','Proposal','Lampiran', 'Lainnya'] as $b): ?>
               <option value="<?= $b ?>"><?= $b ?></option>
@@ -237,7 +237,7 @@ include __DIR__ . '/../includes/sidebar.php';
             <div class="upload-icon">📤</div>
             <div class="upload-label" id="fileLabelDok">Klik atau seret file PDF/DOCX</div>
             <div class="upload-sub">Ukuran maksimal 10 MB</div>
-            <input type="file" name="file" required accept=".pdf,.docx,.doc" style="position:absolute;inset:0;opacity:0;cursor:pointer;" onchange="document.getElementById('fileLabelDok').innerText = this.files[0] ? this.files[0].name : 'Klik atau seret file PDF/DOCX'">
+            <input type="file" name="file" aria-label="Pilih file dokumen" required accept=".pdf,.docx,.doc" style="position:absolute;inset:0;opacity:0;cursor:pointer;" onchange="document.getElementById('fileLabelDok').innerText = this.files[0] ? this.files[0].name : 'Klik atau seret file PDF/DOCX'">
           </div>
         </div>
         <button type="submit" class="btn btn-gold btn-full">📤 Upload Dokumen</button>
@@ -257,12 +257,12 @@ include __DIR__ . '/../includes/sidebar.php';
       <input type="hidden" name="id_dokumen" id="edit_id_dok">
       
       <div class="form-group">
-        <label class="form-label">Nama Dokumen</label>
+        <label for="edit_nama" class="form-label">Nama Dokumen</label>
         <input class="form-input" name="nama_dokumen" id="edit_nama" required>
       </div>
       
       <div class="form-group">
-        <label class="form-label">Jenis / Bab</label>
+        <label for="edit_jenis" class="form-label">Jenis / Bab</label>
         <select class="form-input" name="jenis_bab" id="edit_jenis" required>
           <?php foreach (['BAB I','BAB II','BAB III','BAB IV','BAB V','Proposal','Lampiran', 'Lainnya'] as $b): ?>
             <option value="<?= $b ?>"><?= $b ?></option>

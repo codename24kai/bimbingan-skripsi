@@ -107,8 +107,8 @@ include __DIR__ . '/../includes/sidebar.php';
   <div class="card" style="margin-bottom:20px;">
     <div class="card-body" style="padding:16px 24px;">
       <form method="GET" style="display:flex;gap:12px;align-items:center;">
-        <label class="form-label" style="margin:0;white-space:nowrap;">Pilih Mahasiswa:</label>
-        <select class="form-input" name="id_bimbingan" style="max-width:280px;" onchange="this.form.submit()">
+        <label for="f_id_bimbingan" class="form-label" style="margin:0;white-space:nowrap;">Pilih Mahasiswa:</label>
+        <select id="f_id_bimbingan" class="form-input" name="id_bimbingan" style="max-width:280px;" onchange="this.form.submit()">
           <option value="">-- Pilih --</option>
           <?php foreach ($listBimb as $lb): ?>
             <option value="<?= $lb['id_bimbingan'] ?>" <?= $id_bimb===$lb['id_bimbingan']?'selected':'' ?>>
@@ -121,7 +121,7 @@ include __DIR__ . '/../includes/sidebar.php';
   </div>
 
   <?php if ($id_bimb): ?>
-  <div style="display:grid;grid-template-columns:1fr 360px;gap:20px;">
+  <div class="split" style="--side:360px;">
     <div>
       <?php if (empty($catatan)): ?>
         <div class="card"><div class="card-body"><div class="empty-state"><div class="empty-sub">Belum ada catatan untuk mahasiswa ini.</div></div></div></div>
@@ -155,28 +155,28 @@ include __DIR__ . '/../includes/sidebar.php';
       <?php else: ?>
         <form method="POST"><?= csrfField() ?>
           <div class="form-group">
-            <label class="form-label">Pilih Sesi</label>
-            <select class="form-input" name="id_sesi" required>
+            <label for="f_id_sesi" class="form-label">Pilih Sesi</label>
+            <select id="f_id_sesi" class="form-input" name="id_sesi" required>
               <?php foreach ($sesiAvail as $s): ?>
                 <option value="<?= $s['id_sesi'] ?>"><?= date('d M Y', strtotime($s['tgl_sesi'])) ?> — <?= e(mb_strimwidth($s['topik'],0,40,'...')) ?></option>
               <?php endforeach; ?>
             </select>
           </div>
           <div class="form-group">
-            <label class="form-label">Keputusan</label>
-            <select class="form-input" name="keputusan" required>
+            <label for="f_keputusan" class="form-label">Keputusan</label>
+            <select id="f_keputusan" class="form-input" name="keputusan" required>
               <option value="disetujui">✅ Disetujui</option>
               <option value="revisi">✏️ Perlu Revisi</option>
               <option value="ditolak">❌ Ditolak</option>
             </select>
           </div>
           <div class="form-group">
-            <label class="form-label">Bab Terkait</label>
-            <input class="form-input" name="bab_terkait" placeholder="cth: BAB II">
+            <label for="f_bab_terkait" class="form-label">Bab Terkait</label>
+            <input id="f_bab_terkait" class="form-input" name="bab_terkait" placeholder="cth: BAB II">
           </div>
           <div class="form-group">
-            <label class="form-label">Isi Catatan</label>
-            <textarea class="form-input" name="isi_catatan" required placeholder="Tuliskan catatan bimbingan..."></textarea>
+            <label for="f_isi_catatan" class="form-label">Isi Catatan</label>
+            <textarea id="f_isi_catatan" class="form-input" name="isi_catatan" required placeholder="Tuliskan catatan bimbingan..."></textarea>
           </div>
           <button type="submit" class="btn btn-gold btn-full">💾 Simpan Catatan</button>
         </form>

@@ -36,7 +36,7 @@ include __DIR__ . '/../includes/sidebar.php';
     <form method="GET" style="display:contents;">
       <div class="search-input-wrap">
         <span class="search-icon">🔍</span>
-        <input name="q" placeholder="Cari nama atau NIM..." value="<?= e($q) ?>">
+        <input name="q" aria-label="Cari mahasiswa" placeholder="Cari nama atau NIM..." value="<?= e($q) ?>">
       </div>
       <button type="submit" class="btn btn-secondary">Cari</button>
     </form>

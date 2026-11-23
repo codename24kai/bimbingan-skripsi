@@ -80,7 +80,7 @@ include __DIR__ . '/includes/sidebar.php';
   <?php $flash = getFlash(); if ($flash): ?><div class="alert <?= $flash['type'] ?>"><?= e($flash['msg']) ?></div><?php endif; ?>
   <div class="page-header"><h1>Profil Saya</h1><p>Kelola informasi akun Anda</p></div>
 
-  <div style="display:grid;grid-template-columns:280px 1fr;gap:20px;">
+  <div class="split split--left" style="--side:280px;">
     <!-- Avatar Card -->
     <div class="card" style="text-align:center;padding:32px 24px;height:fit-content;">
       <div style="width:80px;height:80px;border-radius:50%;background:var(--gold);display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:700;color:var(--navy);margin:0 auto 16px;"><?= e($initials) ?></div>
@@ -110,33 +110,33 @@ include __DIR__ . '/includes/sidebar.php';
       <form method="POST"><?= csrfField() ?>
         <div class="form-row">
           <div class="form-group">
-            <label class="form-label">Nama Lengkap</label>
-            <input class="form-input" name="nama_lengkap" value="<?= e($userDB['nama_lengkap']) ?>" required>
+            <label for="f_nama_lengkap" class="form-label">Nama Lengkap</label>
+            <input id="f_nama_lengkap" class="form-input" name="nama_lengkap" value="<?= e($userDB['nama_lengkap']) ?>" required>
           </div>
           <div class="form-group">
-            <label class="form-label">Email</label>
-            <input class="form-input" value="<?= e($userDB['email']) ?>" readonly style="background:#f5f5f5;">
+            <label for="f_field" class="form-label">Email</label>
+            <input id="f_field" class="form-input" value="<?= e($userDB['email']) ?>" readonly style="background:#f5f5f5;">
           </div>
         </div>
         <?php if ($role === 'mahasiswa'): ?>
         <div class="form-row">
           <div class="form-group">
-            <label class="form-label">No. Telepon</label>
-            <input class="form-input" name="no_telepon" value="<?= e($extra['no_telepon'] ?? '') ?>">
+            <label for="f_no_telepon" class="form-label">No. Telepon</label>
+            <input id="f_no_telepon" class="form-input" name="no_telepon" value="<?= e($extra['no_telepon'] ?? '') ?>">
           </div>
           <div class="form-group">
-            <label class="form-label">NIM</label>
-            <input class="form-input" value="<?= e($extra['nim'] ?? '') ?>" readonly style="background:#f5f5f5;">
+            <label for="f_field_2" class="form-label">NIM</label>
+            <input id="f_field_2" class="form-input" value="<?= e($extra['nim'] ?? '') ?>" readonly style="background:#f5f5f5;">
           </div>
         </div>
         <div class="form-row">
           <div class="form-group">
-            <label class="form-label">Program Studi</label>
-            <input class="form-input" value="<?= e($extra['nama_prodi'] ?? '') ?>" readonly style="background:#f5f5f5;">
+            <label for="f_field_3" class="form-label">Program Studi</label>
+            <input id="f_field_3" class="form-input" value="<?= e($extra['nama_prodi'] ?? '') ?>" readonly style="background:#f5f5f5;">
           </div>
           <div class="form-group">
-            <label class="form-label">Angkatan</label>
-            <input class="form-input" value="<?= e($extra['angkatan'] ?? '') ?>" readonly style="background:#f5f5f5;">
+            <label for="f_field_4" class="form-label">Angkatan</label>
+            <input id="f_field_4" class="form-input" value="<?= e($extra['angkatan'] ?? '') ?>" readonly style="background:#f5f5f5;">
           </div>
         </div>
         <?php endif; ?>
@@ -145,17 +145,17 @@ include __DIR__ . '/includes/sidebar.php';
           <div style="font-size:14px;font-weight:600;color:var(--navy);margin-bottom:14px;">Ganti Password</div>
           <?php $mustChange = !empty($_SESSION['must_change_password']); ?>
           <div class="form-group">
-            <label class="form-label">Password Lama<?= $mustChange ? '' : ' (wajib jika mengganti password)' ?></label>
-            <input class="form-input" type="password" name="old_password" placeholder="••••••••" autocomplete="current-password"<?= $mustChange ? ' required' : '' ?>>
+            <label for="f_old_password" class="form-label">Password Lama<?= $mustChange ? '' : ' (wajib jika mengganti password)' ?></label>
+            <input id="f_old_password" class="form-input" type="password" name="old_password" placeholder="••••••••" autocomplete="current-password"<?= $mustChange ? ' required' : '' ?>>
           </div>
           <div class="form-row">
             <div class="form-group">
-              <label class="form-label">Password Baru<?= $mustChange ? '' : ' (kosongkan jika tidak diganti)' ?></label>
-              <input class="form-input" type="password" name="new_password" placeholder="Minimal <?= MIN_PASSWORD_LENGTH ?> karakter" minlength="<?= MIN_PASSWORD_LENGTH ?>" autocomplete="new-password"<?= $mustChange ? ' required' : '' ?>>
+              <label for="f_new_password" class="form-label">Password Baru<?= $mustChange ? '' : ' (kosongkan jika tidak diganti)' ?></label>
+              <input id="f_new_password" class="form-input" type="password" name="new_password" placeholder="Minimal <?= MIN_PASSWORD_LENGTH ?> karakter" minlength="<?= MIN_PASSWORD_LENGTH ?>" autocomplete="new-password"<?= $mustChange ? ' required' : '' ?>>
             </div>
             <div class="form-group">
-              <label class="form-label">Konfirmasi Password Baru</label>
-              <input class="form-input" type="password" name="confirm_password" placeholder="••••••••" autocomplete="new-password"<?= $mustChange ? ' required' : '' ?>>
+              <label for="f_confirm_password" class="form-label">Konfirmasi Password Baru</label>
+              <input id="f_confirm_password" class="form-input" type="password" name="confirm_password" placeholder="••••••••" autocomplete="new-password"<?= $mustChange ? ' required' : '' ?>>
             </div>
           </div>
         </div>

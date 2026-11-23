@@ -13,12 +13,19 @@
   --cream: #F7F3ED;
   --cream-dark: #EDE7DC;
   --white: #FFFFFF;
-  --slate: #8B9BB4;
+  --slate: #5B6B85;          /* teks sekunder, kontras 5.4:1 di putih */
+  --slate-on-dark: #8B9BB4;  /* teks sekunder di atas navy (sidebar) */
   --slate-light: #C2CEDF;
   --success: #2ECC8A;
   --warn: #F5A623;
   --danger: #E85454;
   --info: #4A90D9;
+  /* Varian teks yang lolos kontras WCAG AA (>= 4.5:1) di atas putih/latar terang */
+  --success-text: #12784C;
+  --warn-text: #94590A;
+  --danger-text: #B3261E;
+  --info-text: #1F5FA6;
+  --gold-text: #8A6914;
   --sidebar-w: 260px;
   --radius: 12px;
   --radius-sm: 8px;
@@ -364,18 +371,18 @@ select.form-input {
 }
 
 .btn-success {
-  background: var(--success);
+  background: #16865A;
   color: var(--white);
 }
 
 .btn-success:hover {
-  background: #1a9e65;
+  background: #12784C;
 }
 
 .btn-warn {
   background: rgba(245, 166, 35, .12);
   border: 1px solid rgba(245, 166, 35, .4);
-  color: #c07a00;
+  color: var(--warn-text);
 }
 
 .btn-warn:hover {
@@ -385,7 +392,7 @@ select.form-input {
 .btn-danger {
   background: rgba(232, 84, 84, .1);
   border: 1px solid rgba(232, 84, 84, .3);
-  color: #b52828;
+  color: var(--danger-text);
 }
 
 .btn-danger:hover {
@@ -518,7 +525,7 @@ select.form-input {
 
 .user-info-sub {
   font-size: 12px;
-  color: var(--slate);
+  color: var(--slate-on-dark);
 }
 
 .sidebar-nav {
@@ -529,7 +536,7 @@ select.form-input {
 .nav-section-label {
   font-size: 10px;
   font-weight: 700;
-  color: var(--slate);
+  color: var(--slate-on-dark);
   letter-spacing: 1.2px;
   text-transform: uppercase;
   padding: 8px 12px 6px;
@@ -593,7 +600,7 @@ select.form-input {
   padding: 10px 12px;
   border-radius: var(--radius-sm);
   cursor: pointer;
-  color: var(--slate);
+  color: var(--slate-on-dark);
   font-size: 14px;
   font-weight: 500;
   border: none;
@@ -757,7 +764,7 @@ select.form-input {
 
 .notif-panel-header a {
   font-size: 12px;
-  color: var(--info);
+  color: var(--info-text);
   font-weight: 500;
   text-decoration: none;
 }
@@ -965,11 +972,11 @@ select.form-input {
 }
 
 .stat-change.up {
-  color: var(--success);
+  color: var(--success-text);
 }
 
 .stat-change.warn {
-  color: var(--warn);
+  color: var(--warn-text);
 }
 
 /* Grid layouts */
@@ -1039,7 +1046,7 @@ tbody tr:last-child td {
   gap: 5px;
   padding: 4px 10px;
   border-radius: 100px;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 600;
   letter-spacing: .3px;
   white-space: nowrap;
@@ -1053,7 +1060,7 @@ tbody tr:last-child td {
 
 .badge.success {
   background: rgba(46, 204, 138, .12);
-  color: #1a9e65;
+  color: var(--success-text);
 }
 
 .badge.success .badge-dot {
@@ -1062,7 +1069,7 @@ tbody tr:last-child td {
 
 .badge.warning {
   background: rgba(245, 166, 35, .12);
-  color: #c07a00;
+  color: var(--warn-text);
 }
 
 .badge.warning .badge-dot {
@@ -1071,7 +1078,7 @@ tbody tr:last-child td {
 
 .badge.danger {
   background: rgba(232, 84, 84, .12);
-  color: #b52828;
+  color: var(--danger-text);
 }
 
 .badge.danger .badge-dot {
@@ -1080,7 +1087,7 @@ tbody tr:last-child td {
 
 .badge.info {
   background: rgba(74, 144, 217, .12);
-  color: #2665a8;
+  color: var(--info-text);
 }
 
 .badge.info .badge-dot {
@@ -1230,7 +1237,7 @@ tbody tr:last-child td {
 
 .timeline-time {
   font-size: 11px;
-  color: var(--slate-light);
+  color: var(--slate);
   margin-top: 4px;
   font-family: 'DM Mono', monospace;
 }
@@ -1576,4 +1583,125 @@ tbody tr:last-child td {
 a {
   text-decoration: none;
   color: #fff;
+}
+
+/* ════════════════════════════════════════════════════════════
+   RESPONSIF & KETERBACAAN
+   ════════════════════════════════════════════════════════════ */
+
+/* Flex/grid item default min-width:auto membuat tabel lebar
+   "mendorong" seluruh halaman melebar. Izinkan mereka menyusut. */
+.main,
+.content,
+.card,
+.form-card,
+.grid-2 > *,
+.grid-3 > *,
+.form-row > *,
+.split > * {
+  min-width: 0;
+}
+
+.grid-2 { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+.grid-3 { grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); }
+
+/* Layout dua kolom: konten utama + panel samping (lebar via --side) */
+.split {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) var(--side, 340px);
+  gap: 20px;
+  align-items: start;
+}
+
+.split--left {
+  grid-template-columns: var(--side, 280px) minmax(0, 1fr);
+}
+
+/* Baris detail label : nilai di modal pratinjau */
+.detail-row {
+  display: grid;
+  grid-template-columns: 140px minmax(0, 1fr);
+  gap: 8px;
+  border-bottom: 1px solid var(--cream-dark);
+  padding-bottom: 8px;
+  overflow-wrap: anywhere;
+}
+
+.detail-row--last { border-bottom: none; padding-bottom: 0; }
+
+/* Tabel selalu bisa digeser di dalam kartunya, bukan seluruh halaman */
+.table-wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  max-width: 100%;
+}
+
+
+/* Angka, ukuran file, tanggal, dan badge tidak dipecah ke 2 baris */
+td .badge,
+td .mono,
+.nowrap {
+  white-space: nowrap;
+}
+
+/* Badge status tidak ikut melar setinggi baris flex */
+.badge { align-self: center; flex-shrink: 0; line-height: 1.4; }
+
+/* Tanggal kecil: pakai font biasa agar lebih mudah dibaca */
+.timeline-time {
+  font-family: inherit;
+  font-size: 12px;
+}
+
+/* Teks keterangan minimum 12px */
+thead th { font-size: 12px; }
+
+/* Fokus keyboard yang terlihat jelas */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--info-text);
+  outline-offset: 2px;
+}
+
+/* Modal (div#modalXxx berisi kotak dialog) tidak boleh lebih besar dari layar */
+[id^="modal"] > div {
+  max-height: calc(100vh - 32px);
+  overflow-y: auto;
+}
+
+@media (max-width: 840px) {
+  [id^="modal"] > div { max-width: calc(100vw - 32px) !important; }
+}
+
+@media (max-width: 1280px) {
+  .split,
+  .split--left {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 900px) {
+  .grid-2,
+  .grid-3,
+  .form-row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .page-header h1 { font-size: 26px; }
+  .detail-row { grid-template-columns: minmax(0, 1fr); gap: 2px; }
+  [id^="modal"] > div { padding: 20px !important; }
+}
+
+.catatan-header { flex-wrap: wrap; gap: 8px; }
+
+/* Tabel di kolom utama layout split lebih rapat agar muat tanpa scroll di laptop */
+.split > * thead th,
+.split > * tbody td {
+  padding-left: 10px;
+  padding-right: 10px;
 }

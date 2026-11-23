@@ -90,8 +90,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
       <form method="POST" action=""><?= csrfField() ?>
         <div class="form-group">
-          <label class="form-label">Email Mahasiswa</label>
-          <input class="form-input" type="email" name="email" required
+          <label for="f_email" class="form-label">Email Mahasiswa</label>
+          <input id="f_email" class="form-input" type="email" name="email" required
             placeholder="nim@mahasiswa.ac.id"
             value="<?= htmlspecialchars($_POST['email'] ?? '') ?>">
         </div>

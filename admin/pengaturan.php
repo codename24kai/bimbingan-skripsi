@@ -131,7 +131,7 @@ include __DIR__ . '/../includes/sidebar.php';
       <p>Konfigurasi global portal bimbingan skripsi</p>
   </div>
 
-  <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start;">
+  <div class="grid-2" style="align-items:start; margin-bottom:0;">
     
     <div class="form-card" style="background:var(--white); padding:24px; border-radius:var(--radius); box-shadow:0 1px 3px rgba(0,0,0,0.05);">
       <h2 style="font-size:18px; font-family:'Playfair Display',serif; margin-bottom:8px;">Konfigurasi Umum</h2>
@@ -141,18 +141,18 @@ include __DIR__ . '/../includes/sidebar.php';
         <input type="hidden" name="aksi" value="simpan_umum">
         
         <div class="form-group">
-            <label class="form-label">Nama Institusi / Perguruan Tinggi</label>
-            <input class="form-input" name="nama_institusi" value="<?= e($opt['nama_institusi'] ?? '') ?>" required>
+            <label for="f_nama_institusi" class="form-label">Nama Institusi / Perguruan Tinggi</label>
+            <input id="f_nama_institusi" class="form-input" name="nama_institusi" value="<?= e($opt['nama_institusi'] ?? '') ?>" required>
         </div>
         
         <div class="form-row">
           <div class="form-group">
-              <label class="form-label">Tahun Akademik</label>
-              <input class="form-input" name="tahun_akademik" placeholder="Contoh: 2025/2026" value="<?= e($opt['tahun_akademik'] ?? '') ?>" required>
+              <label for="f_tahun_akademik" class="form-label">Tahun Akademik</label>
+              <input id="f_tahun_akademik" class="form-input" name="tahun_akademik" placeholder="Contoh: 2025/2026" value="<?= e($opt['tahun_akademik'] ?? '') ?>" required>
           </div>
           <div class="form-group">
-              <label class="form-label">Semester Aktif</label>
-              <select class="form-input" name="semester_aktif" required>
+              <label for="f_semester_aktif" class="form-label">Semester Aktif</label>
+              <select id="f_semester_aktif" class="form-input" name="semester_aktif" required>
                   <option value="Ganjil" <?= ($opt['semester_aktif'] === 'Ganjil') ? 'selected' : '' ?>>Ganjil</option>
                   <option value="Genap" <?= ($opt['semester_aktif'] === 'Genap') ? 'selected' : '' ?>>Genap</option>
               </select>
@@ -161,12 +161,12 @@ include __DIR__ . '/../includes/sidebar.php';
         
         <div class="form-row">
             <div class="form-group">
-                <label class="form-label">Default Kuota Dosen</label>
-                <input class="form-input" type="number" name="default_kuota_dosen" min="1" value="<?= e($opt['default_kuota_dosen'] ?? '10') ?>" required>
+                <label for="f_default_kuota_dosen" class="form-label">Default Kuota Dosen</label>
+                <input id="f_default_kuota_dosen" class="form-input" type="number" name="default_kuota_dosen" min="1" value="<?= e($opt['default_kuota_dosen'] ?? '10') ?>" required>
             </div>
             <div class="form-group">
-                <label class="form-label">Batas Maksimal Kuota</label>
-                <input class="form-input" type="number" name="maksimal_kuota_dosen" min="1" value="<?= e($opt['maksimal_kuota_dosen'] ?? '20') ?>" required>
+                <label for="f_maksimal_kuota_dosen" class="form-label">Batas Maksimal Kuota</label>
+                <input id="f_maksimal_kuota_dosen" class="form-input" type="number" name="maksimal_kuota_dosen" min="1" value="<?= e($opt['maksimal_kuota_dosen'] ?? '20') ?>" required>
             </div>
         </div>
         <small style="color:var(--slate); font-size:12px; display:block; margin-bottom:16px;">Angka default akan otomatis terisi saat menambah dosen baru, sedangkan Batas Maksimal adalah kuota tertinggi yang tidak dapat dilampaui.</small>
@@ -225,25 +225,25 @@ include __DIR__ . '/../includes/sidebar.php';
     <form method="POST"><?= csrfField() ?>
       <input type="hidden" name="aksi" value="tambah_prodi">
       <div class="form-group">
-          <label class="form-label">Nama Program Studi</label>
-          <input class="form-input" name="nama_prodi" required>
+          <label for="f_nama_prodi" class="form-label">Nama Program Studi</label>
+          <input id="f_nama_prodi" class="form-input" name="nama_prodi" required>
       </div>
       <div class="form-row">
         <div class="form-group">
-            <label class="form-label">Kode</label>
-            <input class="form-input" name="kode_prodi" required>
+            <label for="f_kode_prodi" class="form-label">Kode</label>
+            <input id="f_kode_prodi" class="form-input" name="kode_prodi" required>
         </div>
         <div class="form-group">
-            <label class="form-label">Jenjang</label>
-            <select class="form-input" name="jenjang" required>
+            <label for="f_jenjang" class="form-label">Jenjang</label>
+            <select id="f_jenjang" class="form-input" name="jenjang" required>
                 <option value="D3">D3</option>
                 <option value="S1" selected>S1</option>
                 <option value="S2">S2</option>
             </select>
         </div>
         <div class="form-group">
-            <label class="form-label">Akreditasi</label>
-            <input class="form-input" name="akreditasi" maxlength="10">
+            <label for="f_akreditasi" class="form-label">Akreditasi</label>
+            <input id="f_akreditasi" class="form-input" name="akreditasi" maxlength="10">
         </div>
       </div>
       <div class="form-actions">
@@ -264,16 +264,16 @@ include __DIR__ . '/../includes/sidebar.php';
       <input type="hidden" name="aksi" value="edit_prodi">
       <input type="hidden" name="id_prodi" id="edit_id_prodi">
       <div class="form-group">
-          <label class="form-label">Nama Program Studi</label>
+          <label for="edit_nama_prodi" class="form-label">Nama Program Studi</label>
           <input class="form-input" name="nama_prodi" id="edit_nama_prodi" required>
       </div>
       <div class="form-row">
         <div class="form-group">
-            <label class="form-label">Kode</label>
+            <label for="edit_kode_prodi" class="form-label">Kode</label>
             <input class="form-input" name="kode_prodi" id="edit_kode_prodi" required>
         </div>
         <div class="form-group">
-            <label class="form-label">Jenjang</label>
+            <label for="edit_jenjang" class="form-label">Jenjang</label>
             <select class="form-input" name="jenjang" id="edit_jenjang" required>
                 <option value="D3">D3</option>
                 <option value="S1">S1</option>
@@ -281,7 +281,7 @@ include __DIR__ . '/../includes/sidebar.php';
             </select>
         </div>
         <div class="form-group">
-            <label class="form-label">Akreditasi</label>
+            <label for="edit_akreditasi" class="form-label">Akreditasi</label>
             <input class="form-input" name="akreditasi" id="edit_akreditasi" maxlength="10">
         </div>
       </div>

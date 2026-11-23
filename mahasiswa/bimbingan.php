@@ -61,17 +61,17 @@ include __DIR__ . '/../includes/sidebar.php';
       <p>Pilih waktu yang tersedia sesuai slot dosen.</p>
       <form method="POST"><?= csrfField() ?>
         <div class="form-group">
-          <label class="form-label">Tanggal <span style="color:red">*</span></label>
-          <input class="form-input" type="date" name="tgl_sesi" required min="<?= date('Y-m-d') ?>">
+          <label for="f_tgl_sesi" class="form-label">Tanggal <span style="color:red">*</span></label>
+          <input id="f_tgl_sesi" class="form-input" type="date" name="tgl_sesi" required min="<?= date('Y-m-d') ?>">
         </div>
         <div class="form-row">
           <div class="form-group">
-            <label class="form-label">Waktu Mulai</label>
-            <input class="form-input" type="time" name="waktu_mulai" required value="09:00">
+            <label for="f_waktu_mulai" class="form-label">Waktu Mulai</label>
+            <input id="f_waktu_mulai" class="form-input" type="time" name="waktu_mulai" required value="09:00">
           </div>
           <div class="form-group">
-            <label class="form-label">Durasi (menit)</label>
-            <select class="form-input" name="durasi_menit">
+            <label for="f_durasi_menit" class="form-label">Durasi (menit)</label>
+            <select id="f_durasi_menit" class="form-input" name="durasi_menit">
               <option value="30">30 menit</option>
               <option value="45" selected>45 menit</option>
               <option value="60">60 menit</option>
@@ -79,12 +79,12 @@ include __DIR__ . '/../includes/sidebar.php';
           </div>
         </div>
         <div class="form-group">
-          <label class="form-label">Topik Bimbingan <span style="color:red">*</span></label>
-          <textarea class="form-input" name="topik" style="min-height:80px;" required placeholder="Topik yang akan dibahas..."></textarea>
+          <label for="f_topik" class="form-label">Topik Bimbingan <span style="color:red">*</span></label>
+          <textarea id="f_topik" class="form-input" name="topik" style="min-height:80px;" required placeholder="Topik yang akan dibahas..."></textarea>
         </div>
         <div class="form-group">
-          <label class="form-label">Metode</label>
-          <select class="form-input" name="metode">
+          <label for="f_metode" class="form-label">Metode</label>
+          <select id="f_metode" class="form-input" name="metode">
             <option value="tatap_muka">Tatap Muka</option>
             <option value="zoom">Online (Zoom)</option>
             <option value="gmeet">Online (Google Meet)</option>
