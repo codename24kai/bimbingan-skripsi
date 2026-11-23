@@ -127,7 +127,7 @@ include __DIR__ . '/../includes/sidebar.php';
     </div>
   <?php endif; ?>
 
-  <div style="display:grid;grid-template-columns:1fr 340px;gap:20px; margin-top:20px;">
+  <div class="split" style="--side:340px; margin-top:20px;">
     <div class="form-card">
       <?php if ($judulDisetujui): ?>
           <?php if (!$bimbinganAktif): ?>
@@ -141,25 +141,25 @@ include __DIR__ . '/../includes/sidebar.php';
           
           <form method="POST" enctype="multipart/form-data"><?= csrfField() ?>
             <div class="form-group">
-              <label class="form-label">Judul Utama <span style="color:red">*</span></label>
-              <input class="form-input" name="judul_indonesia" required placeholder="Judul Prioritas Pertama" value="<?= e($_POST['judul_indonesia'] ?? '') ?>">
+              <label for="f_judul_indonesia" class="form-label">Judul Utama <span style="color:red">*</span></label>
+              <input id="f_judul_indonesia" class="form-input" name="judul_indonesia" required placeholder="Judul Prioritas Pertama" value="<?= e($_POST['judul_indonesia'] ?? '') ?>">
             </div>
             
             <div class="form-row">
                 <div class="form-group">
-                  <label class="form-label">Alternatif Judul 1 <span style="color:red">*</span></label>
-                  <input class="form-input" name="judul_alternatif_1" required placeholder="Opsi Kedua">
+                  <label for="f_judul_alternatif_1" class="form-label">Alternatif Judul 1 <span style="color:red">*</span></label>
+                  <input id="f_judul_alternatif_1" class="form-input" name="judul_alternatif_1" required placeholder="Opsi Kedua">
                 </div>
                 <div class="form-group">
-                  <label class="form-label">Alternatif Judul 2</label>
-                  <input class="form-input" name="judul_alternatif_2" placeholder="Opsi Ketiga (Opsional)">
+                  <label for="f_judul_alternatif_2" class="form-label">Alternatif Judul 2</label>
+                  <input id="f_judul_alternatif_2" class="form-input" name="judul_alternatif_2" placeholder="Opsi Ketiga (Opsional)">
                 </div>
             </div>
 
             <div class="form-row">
               <div class="form-group">
-                <label class="form-label">Konsentrasi / Bidang Ilmu <span style="color:red">*</span></label>
-                <select class="form-input" name="bidang_penelitian" required>
+                <label for="f_bidang_penelitian" class="form-label">Konsentrasi / Bidang Ilmu <span style="color:red">*</span></label>
+                <select id="f_bidang_penelitian" class="form-input" name="bidang_penelitian" required>
                   <option value="" disabled selected>Pilih Bidang...</option>
                   <?php foreach (['Rekayasa Perangkat Lunak & Web','Pemrograman Mobile','Kecerdasan Buatan & Machine Learning','Data Science & Analitik','Internet of Things (IoT)','Keamanan Siber & Jaringan','Manajemen Sistem Informasi'] as $b): ?>
                     <option value="<?= $b ?>"><?= $b ?></option>
@@ -167,8 +167,8 @@ include __DIR__ . '/../includes/sidebar.php';
                 </select>
               </div>
               <div class="form-group">
-                <label class="form-label">Metode Penelitian <span style="color:red">*</span></label>
-                <select class="form-input" name="metode_penelitian" required>
+                <label for="f_metode_penelitian" class="form-label">Metode Penelitian <span style="color:red">*</span></label>
+                <select id="f_metode_penelitian" class="form-input" name="metode_penelitian" required>
                   <option value="" disabled selected>Pilih Metode...</option>
                   <?php foreach (['Agile Software Development','Waterfall Model','RAD (Rapid Application Development)','Prototyping','CRISP-DM (Data Science)','Riset Eksperimental','Kuantitatif','Kualitatif','Lainnya'] as $m): ?>
                     <option value="<?= $m ?>"><?= $m ?></option>
@@ -178,19 +178,19 @@ include __DIR__ . '/../includes/sidebar.php';
             </div>
 
             <div class="form-group">
-              <label class="form-label">Ringkasan Latar Belakang (Untuk ke-3 Judul) <span style="color:red">*</span></label>
-              <textarea class="form-input" name="latar_belakang" required rows="5" placeholder="Gambarkan secara singkat urgensi masalah dari judul-judul di atas..."></textarea>
+              <label for="f_latar_belakang" class="form-label">Ringkasan Latar Belakang (Untuk ke-3 Judul) <span style="color:red">*</span></label>
+              <textarea id="f_latar_belakang" class="form-input" name="latar_belakang" required rows="5" placeholder="Gambarkan secara singkat urgensi masalah dari judul-judul di atas..."></textarea>
             </div>
 
             <div class="form-row">
                 <div class="form-group">
-                  <label class="form-label">Berkas Syarat (Transkrip/KRS) <span style="color:red">*</span></label>
-                  <input type="file" name="file_transkrip" accept=".pdf" class="form-input" style="padding:8px;" required>
+                  <label for="f_file_transkrip" class="form-label">Berkas Syarat (Transkrip/KRS) <span style="color:red">*</span></label>
+                  <input id="f_file_transkrip" type="file" name="file_transkrip" accept=".pdf" class="form-input" style="padding:8px;" required>
                   <span style="font-size:11px;color:var(--slate);">Wajib PDF, Maks 5MB.</span>
                 </div>
                 <div class="form-group">
-                  <label class="form-label">Draft Proposal (Bila ada)</label>
-                  <input type="file" name="file_proposal" accept=".pdf,.docx,.doc" class="form-input" style="padding:8px;">
+                  <label for="f_file_proposal" class="form-label">Draft Proposal (Bila ada)</label>
+                  <input id="f_file_proposal" type="file" name="file_proposal" accept=".pdf,.docx,.doc" class="form-input" style="padding:8px;">
                   <span style="font-size:11px;color:var(--slate);">Opsional. PDF/DOCX.</span>
                 </div>
             </div>
@@ -224,10 +224,10 @@ include __DIR__ . '/../includes/sidebar.php';
 
                 <div style="display:flex; gap:10px; margin-top:12px; border-top:1px dashed var(--cream-dark); padding-top:10px;">
                     <?php if($r['file_transkrip']): ?>
-                        <a href="<?= e(fileUrl($r['file_transkrip'])) ?>" target="_blank" style="font-size:11px; color:var(--info); text-decoration:none;">📄 Transkrip</a>
+                        <a href="<?= e(fileUrl($r['file_transkrip'])) ?>" target="_blank" style="font-size:11px; color:var(--info-text); text-decoration:none;">📄 Transkrip</a>
                     <?php endif; ?>
                     <?php if($r['file_proposal']): ?>
-                        <a href="<?= e(fileUrl($r['file_proposal'])) ?>" target="_blank" style="font-size:11px; color:var(--info); text-decoration:none;">📄 Proposal</a>
+                        <a href="<?= e(fileUrl($r['file_proposal'])) ?>" target="_blank" style="font-size:11px; color:var(--info-text); text-decoration:none;">📄 Proposal</a>
                     <?php endif; ?>
                 </div>
               </div>

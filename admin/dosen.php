@@ -142,33 +142,33 @@ include __DIR__ . '/../includes/sidebar.php';
       <input type="hidden" name="aksi" value="tambah">
       
       <div class="form-group">
-          <label class="form-label">Nama Lengkap</label>
-          <input class="form-input" name="nama_lengkap" required>
+          <label for="f_nama_lengkap" class="form-label">Nama Lengkap</label>
+          <input id="f_nama_lengkap" class="form-input" name="nama_lengkap" required>
       </div>
       
       <div class="form-row">
         <div class="form-group">
-            <label class="form-label">Email</label>
-            <input class="form-input" type="email" name="email" required>
+            <label for="f_email" class="form-label">Email</label>
+            <input id="f_email" class="form-input" type="email" name="email" required>
         </div>
         <div class="form-group">
-            <label class="form-label">NIP</label>
-            <input class="form-input" name="nip" required>
+            <label for="f_nip" class="form-label">NIP</label>
+            <input id="f_nip" class="form-input" name="nip" required>
         </div>
       </div>
       
       <div class="form-row">
         <div class="form-group">
-            <label class="form-label">Program Studi</label>
-            <select class="form-input" name="id_prodi" required>
+            <label for="f_id_prodi" class="form-label">Program Studi</label>
+            <select id="f_id_prodi" class="form-input" name="id_prodi" required>
                 <?php foreach ($prodi as $p): ?>
                     <option value="<?= $p['id_prodi'] ?>"><?= e($p['nama_prodi']) ?></option>
                 <?php endforeach; ?>
             </select>
         </div>
         <div class="form-group">
-            <label class="form-label">Jabatan Fungsional</label>
-            <select class="form-input" name="jabatan" required>
+            <label for="f_jabatan" class="form-label">Jabatan Fungsional</label>
+            <select id="f_jabatan" class="form-input" name="jabatan" required>
                 <option value="" disabled selected>-- Pilih Jabatan --</option>
                 <option value="Tenaga Pengajar">Tenaga Pengajar</option>
                 <option value="Asisten Ahli">Asisten Ahli</option>
@@ -180,8 +180,8 @@ include __DIR__ . '/../includes/sidebar.php';
       </div>
       
       <div class="form-group">
-          <label class="form-label">Bidang Keahlian</label>
-          <select class="form-input" name="keahlian" required>
+          <label for="f_keahlian" class="form-label">Bidang Keahlian</label>
+          <select id="f_keahlian" class="form-input" name="keahlian" required>
               <option value="" disabled selected>-- Pilih Keahlian --</option>
               <option value="Rekayasa Perangkat Lunak & Web">Rekayasa Perangkat Lunak & Web</option>
               <option value="Pemrograman Mobile">Pemrograman Mobile</option>
@@ -194,8 +194,8 @@ include __DIR__ . '/../includes/sidebar.php';
       </div>
       
       <div class="form-group">
-          <label class="form-label">Kuota Bimbingan</label>
-          <input class="form-input" type="number" name="kuota" value="10" min="1" max="50" required>
+          <label for="f_kuota" class="form-label">Kuota Bimbingan</label>
+          <input id="f_kuota" class="form-input" type="number" name="kuota" value="10" min="1" max="50" required>
       </div>
       
       <div class="form-actions">
@@ -218,24 +218,24 @@ include __DIR__ . '/../includes/sidebar.php';
       <input type="hidden" name="id_user" id="edit_id_user">
       
       <div class="form-group">
-          <label class="form-label">Nama Lengkap</label>
+          <label for="edit_nama_lengkap" class="form-label">Nama Lengkap</label>
           <input class="form-input" name="nama_lengkap" id="edit_nama_lengkap" required>
       </div>
       
       <div class="form-row">
         <div class="form-group">
-            <label class="form-label">Email</label>
+            <label for="edit_email" class="form-label">Email</label>
             <input class="form-input" type="email" name="email" id="edit_email" required>
         </div>
         <div class="form-group">
-            <label class="form-label">NIP</label>
+            <label for="edit_nip" class="form-label">NIP</label>
             <input class="form-input" name="nip" id="edit_nip" required>
         </div>
       </div>
       
       <div class="form-row">
         <div class="form-group">
-            <label class="form-label">Program Studi</label>
+            <label for="edit_id_prodi" class="form-label">Program Studi</label>
             <select class="form-input" name="id_prodi" id="edit_id_prodi" required>
                 <?php foreach ($prodi as $p): ?>
                     <option value="<?= $p['id_prodi'] ?>"><?= e($p['nama_prodi']) ?></option>
@@ -243,7 +243,7 @@ include __DIR__ . '/../includes/sidebar.php';
             </select>
         </div>
         <div class="form-group">
-            <label class="form-label">Jabatan Fungsional</label>
+            <label for="edit_jabatan" class="form-label">Jabatan Fungsional</label>
             <select class="form-input" name="jabatan" id="edit_jabatan" required>
                 <option value="Tenaga Pengajar">Tenaga Pengajar</option>
                 <option value="Asisten Ahli">Asisten Ahli</option>
@@ -255,7 +255,7 @@ include __DIR__ . '/../includes/sidebar.php';
       </div>
       
       <div class="form-group">
-          <label class="form-label">Bidang Keahlian</label>
+          <label for="edit_keahlian" class="form-label">Bidang Keahlian</label>
           <select class="form-input" name="keahlian" id="edit_keahlian" required>
               <option value="Rekayasa Perangkat Lunak & Web">Rekayasa Perangkat Lunak & Web</option>
               <option value="Pemrograman Mobile">Pemrograman Mobile</option>
@@ -268,7 +268,7 @@ include __DIR__ . '/../includes/sidebar.php';
       </div>
       
       <div class="form-group">
-          <label class="form-label">Kuota Bimbingan</label>
+          <label for="edit_kuota" class="form-label">Kuota Bimbingan</label>
           <input class="form-input" type="number" name="kuota" id="edit_kuota" min="1" max="50" required>
       </div>
       
@@ -288,37 +288,37 @@ include __DIR__ . '/../includes/sidebar.php';
     </div>
     
     <div style="display:flex; flex-direction:column; gap:16px;">
-        <div style="display:grid; grid-template-columns: 140px 1fr; border-bottom: 1px solid var(--cream-dark); padding-bottom: 8px;">
+        <div class="detail-row">
             <span style="color:var(--slate); font-size:13px;">Nama Lengkap</span>
             <strong id="prev_nama" style="font-size:14px;">-</strong>
         </div>
-        <div style="display:grid; grid-template-columns: 140px 1fr; border-bottom: 1px solid var(--cream-dark); padding-bottom: 8px;">
+        <div class="detail-row">
             <span style="color:var(--slate); font-size:13px;">Email</span>
             <span id="prev_email" style="font-size:14px;">-</span>
         </div>
-        <div style="display:grid; grid-template-columns: 140px 1fr; border-bottom: 1px solid var(--cream-dark); padding-bottom: 8px;">
+        <div class="detail-row">
             <span style="color:var(--slate); font-size:13px;">NIP</span>
             <span id="prev_nip" class="mono" style="font-size:14px;">-</span>
         </div>
-        <div style="display:grid; grid-template-columns: 140px 1fr; border-bottom: 1px solid var(--cream-dark); padding-bottom: 8px;">
+        <div class="detail-row">
             <span style="color:var(--slate); font-size:13px;">Program Studi</span>
             <span id="prev_prodi" style="font-size:14px;">-</span>
         </div>
-        <div style="display:grid; grid-template-columns: 140px 1fr; border-bottom: 1px solid var(--cream-dark); padding-bottom: 8px;">
+        <div class="detail-row">
             <span style="color:var(--slate); font-size:13px;">Jabatan Fungsional</span>
             <span id="prev_jabatan" style="font-size:14px;">-</span>
         </div>
-        <div style="display:grid; grid-template-columns: 140px 1fr; border-bottom: 1px solid var(--cream-dark); padding-bottom: 8px;">
+        <div class="detail-row">
             <span style="color:var(--slate); font-size:13px;">Bidang Keahlian</span>
             <strong id="prev_keahlian" style="font-size:14px; color:var(--navy);">-</strong>
         </div>
-        <div style="display:grid; grid-template-columns: 140px 1fr; border-bottom: 1px solid var(--cream-dark); padding-bottom: 8px;">
+        <div class="detail-row">
             <span style="color:var(--slate); font-size:13px;">Kuota Maksimal</span>
             <span id="prev_kuota" style="font-size:14px;">-</span>
         </div>
-        <div style="display:grid; grid-template-columns: 140px 1fr;">
+        <div class="detail-row detail-row--last">
             <span style="color:var(--slate); font-size:13px;">Mahasiswa Bimbingan</span>
-            <strong id="prev_terisi" style="font-size:14px; color:var(--info);">-</strong>
+            <strong id="prev_terisi" style="font-size:14px; color:var(--info-text);">-</strong>
         </div>
     </div>
 

@@ -90,7 +90,7 @@ include __DIR__ . '/../includes/sidebar.php';
 
   <div class="search-bar">
     <form method="GET" style="display:contents;">
-      <div class="search-input-wrap"><span class="search-icon">🔍</span><input name="q" placeholder="Cari nama atau NIM..." value="<?= e($q) ?>"></div>
+      <div class="search-input-wrap"><span class="search-icon">🔍</span><input name="q" aria-label="Cari mahasiswa" placeholder="Cari nama atau NIM..." value="<?= e($q) ?>"></div>
       <button type="submit" class="btn btn-secondary">Cari</button>
     </form>
     <button class="btn btn-primary" onclick="document.getElementById('modalTambah').style.display='flex'">+ Tambah Mahasiswa</button>
@@ -166,19 +166,19 @@ include __DIR__ . '/../includes/sidebar.php';
     </div>
     <form method="POST"><?= csrfField() ?>
       <input type="hidden" name="aksi" value="tambah">
-      <div class="form-group"><label class="form-label">Nama Lengkap</label><input class="form-input" name="nama_lengkap" required></div>
+      <div class="form-group"><label for="f_nama_lengkap" class="form-label">Nama Lengkap</label><input id="f_nama_lengkap" class="form-input" name="nama_lengkap" required></div>
       <div class="form-row">
-        <div class="form-group"><label class="form-label">Email</label><input class="form-input" type="email" name="email" required></div>
-        <div class="form-group"><label class="form-label">NIM</label><input class="form-input" name="nim" required></div>
+        <div class="form-group"><label for="f_email" class="form-label">Email</label><input id="f_email" class="form-input" type="email" name="email" required></div>
+        <div class="form-group"><label for="f_nim" class="form-label">NIM</label><input id="f_nim" class="form-input" name="nim" required></div>
       </div>
       <div class="form-row">
         <div class="form-group">
-          <label class="form-label">Program Studi</label>
-          <select class="form-input" name="id_prodi" required>
+          <label for="f_id_prodi" class="form-label">Program Studi</label>
+          <select id="f_id_prodi" class="form-input" name="id_prodi" required>
             <?php foreach ($prodi as $p): ?><option value="<?= $p['id_prodi'] ?>"><?= e($p['nama_prodi']) ?></option><?php endforeach; ?>
           </select>
         </div>
-        <div class="form-group"><label class="form-label">Angkatan</label><input class="form-input" name="angkatan" type="number" value="<?= date('Y') ?>" required></div>
+        <div class="form-group"><label for="f_angkatan" class="form-label">Angkatan</label><input id="f_angkatan" class="form-input" name="angkatan" type="number" value="<?= date('Y') ?>" required></div>
       </div>
       <div class="form-actions">
         <button type="button" class="btn btn-secondary" onclick="document.getElementById('modalTambah').style.display='none'">Batal</button>
@@ -197,19 +197,19 @@ include __DIR__ . '/../includes/sidebar.php';
     <form method="POST"><?= csrfField() ?>
       <input type="hidden" name="aksi" value="edit">
       <input type="hidden" name="id_user" id="edit_id_user">
-      <div class="form-group"><label class="form-label">Nama Lengkap</label><input class="form-input" name="nama_lengkap" id="edit_nama_lengkap" required></div>
+      <div class="form-group"><label for="edit_nama_lengkap" class="form-label">Nama Lengkap</label><input class="form-input" name="nama_lengkap" id="edit_nama_lengkap" required></div>
       <div class="form-row">
-        <div class="form-group"><label class="form-label">Email</label><input class="form-input" type="email" name="email" id="edit_email" required></div>
-        <div class="form-group"><label class="form-label">NIM</label><input class="form-input" name="nim" id="edit_nim" required></div>
+        <div class="form-group"><label for="edit_email" class="form-label">Email</label><input class="form-input" type="email" name="email" id="edit_email" required></div>
+        <div class="form-group"><label for="edit_nim" class="form-label">NIM</label><input class="form-input" name="nim" id="edit_nim" required></div>
       </div>
       <div class="form-row">
         <div class="form-group">
-          <label class="form-label">Program Studi</label>
+          <label for="edit_id_prodi" class="form-label">Program Studi</label>
           <select class="form-input" name="id_prodi" id="edit_id_prodi" required>
             <?php foreach ($prodi as $p): ?><option value="<?= $p['id_prodi'] ?>"><?= e($p['nama_prodi']) ?></option><?php endforeach; ?>
           </select>
         </div>
-        <div class="form-group"><label class="form-label">Angkatan</label><input class="form-input" name="angkatan" id="edit_angkatan" type="number" required></div>
+        <div class="form-group"><label for="edit_angkatan" class="form-label">Angkatan</label><input class="form-input" name="angkatan" id="edit_angkatan" type="number" required></div>
       </div>
       <div class="form-actions">
         <button type="button" class="btn btn-secondary" onclick="document.getElementById('modalEdit').style.display='none'">Batal</button>
@@ -227,37 +227,37 @@ include __DIR__ . '/../includes/sidebar.php';
     </div>
     
     <div style="display:flex; flex-direction:column; gap:16px;">
-        <div style="display:grid; grid-template-columns: 140px 1fr; border-bottom: 1px solid var(--cream-dark); padding-bottom: 8px;">
+        <div class="detail-row">
             <span style="color:var(--slate); font-size:13px;">Nama Lengkap</span>
             <strong id="prev_nama" style="font-size:14px;">-</strong>
         </div>
-        <div style="display:grid; grid-template-columns: 140px 1fr; border-bottom: 1px solid var(--cream-dark); padding-bottom: 8px;">
+        <div class="detail-row">
             <span style="color:var(--slate); font-size:13px;">Email</span>
             <span id="prev_email" style="font-size:14px;">-</span>
         </div>
-        <div style="display:grid; grid-template-columns: 140px 1fr; border-bottom: 1px solid var(--cream-dark); padding-bottom: 8px;">
+        <div class="detail-row">
             <span style="color:var(--slate); font-size:13px;">NIM</span>
             <span id="prev_nim" class="mono" style="font-size:14px;">-</span>
         </div>
-        <div style="display:grid; grid-template-columns: 140px 1fr; border-bottom: 1px solid var(--cream-dark); padding-bottom: 8px;">
+        <div class="detail-row">
             <span style="color:var(--slate); font-size:13px;">Program Studi</span>
             <span id="prev_prodi" style="font-size:14px;">-</span>
         </div>
-        <div style="display:grid; grid-template-columns: 140px 1fr; border-bottom: 1px solid var(--cream-dark); padding-bottom: 8px;">
+        <div class="detail-row">
             <span style="color:var(--slate); font-size:13px;">Angkatan</span>
             <span id="prev_angkatan" style="font-size:14px;">-</span>
         </div>
-        <div style="display:grid; grid-template-columns: 140px 1fr; border-bottom: 1px solid var(--cream-dark); padding-bottom: 8px;">
+        <div class="detail-row">
             <span style="color:var(--slate); font-size:13px;">No. Telepon</span>
             <span id="prev_notelp" style="font-size:14px;">-</span>
         </div>
-        <div style="display:grid; grid-template-columns: 140px 1fr; border-bottom: 1px solid var(--cream-dark); padding-bottom: 8px;">
+        <div class="detail-row">
             <span style="color:var(--slate); font-size:13px;">Status Skripsi</span>
             <span id="prev_status" style="font-size:14px; text-transform:uppercase;">-</span>
         </div>
-        <div style="display:grid; grid-template-columns: 140px 1fr;">
+        <div class="detail-row detail-row--last">
             <span style="color:var(--slate); font-size:13px;">Dosen Pembimbing</span>
-            <strong id="prev_dosen" style="font-size:14px; color:var(--info);">Belum ada</strong>
+            <strong id="prev_dosen" style="font-size:14px; color:var(--info-text);">Belum ada</strong>
         </div>
     </div>
 

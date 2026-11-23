@@ -121,7 +121,7 @@ include __DIR__ . '/includes/sidebar.php';
                                             <form method="POST" onsubmit="return confirm('Hapus notifikasi ini?')" style="margin: 0;"><?= csrfField() ?>
                                                 <input type="hidden" name="aksi" value="hapus">
                                                 <input type="hidden" name="id_notif" value="<?= $n['id_notif'] ?>">
-                                                <button type="submit" style="background: none; border: none; color: var(--danger); font-size: 12px; cursor: pointer; text-decoration: underline; padding:0;">
+                                                <button type="submit" style="background: none; border: none; color:var(--danger-text); font-size: 12px; cursor: pointer; text-decoration: underline; padding:0;">
                                                     Hapus Pesan
                                                 </button>
                                             </form>
@@ -129,7 +129,7 @@ include __DIR__ . '/includes/sidebar.php';
                                     </div>
                                     
                                     <?php if ($isUnread): ?>
-                                        <div style="width: 8px; height: 8px; background-color: var(--info); border-radius: 50%; flex-shrink: 0; margin-top: 8px;"></div>
+                                        <div style="width: 8px; height: 8px; background-color:var(--info-text); border-radius: 50%; flex-shrink: 0; margin-top: 8px;"></div>
                                     <?php endif; ?>
                                     
                                 </div>

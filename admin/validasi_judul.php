@@ -151,7 +151,7 @@ include __DIR__ . '/../includes/sidebar.php';
                           <td>
                               <div style="font-weight:600; font-size:13px;"><?= e($p['nama_lengkap']) ?></div>
                               <div class="mono" style="font-size:11px; color:var(--slate);">NIM: <?= e($p['nim']) ?></div>
-                              <div style="font-size:11px; color:var(--info); margin-top:4px;">Iterasi ke-<?= $p['iterasi'] ?></div>
+                              <div style="font-size:11px; color:var(--info-text); margin-top:4px;">Iterasi ke-<?= $p['iterasi'] ?></div>
                           </td>
                           <td>
                               <div style="font-size:12px; font-weight:500; color:var(--navy);"><?= e($p['bidang_penelitian']) ?></div>
@@ -160,9 +160,9 @@ include __DIR__ . '/../includes/sidebar.php';
                           <td>
                               <div style="display:flex; gap:8px; flex-direction:column;">
                                   <?php if($p['file_transkrip']): ?>
-                                      <a href="<?= e(fileUrl($p['file_transkrip'])) ?>" target="_blank" style="font-size:11px; color:var(--info); text-decoration:none;">📄 Cek Transkrip/KRS</a>
+                                      <a href="<?= e(fileUrl($p['file_transkrip'])) ?>" target="_blank" style="font-size:11px; color:var(--info-text); text-decoration:none;">📄 Cek Transkrip/KRS</a>
                                   <?php else: ?>
-                                      <span style="font-size:11px; color:var(--danger);">❌ Syarat Kurang</span>
+                                      <span style="font-size:11px; color:var(--danger-text);">❌ Syarat Kurang</span>
                                   <?php endif; ?>
                                   
                                   <?php if($p['file_proposal']): ?>
@@ -267,8 +267,8 @@ include __DIR__ . '/../includes/sidebar.php';
             </div>
 
             <div id="alasanTolak" style="display:none; margin-bottom:24px;">
-                <label class="form-label" style="color:var(--danger);">Catatan Penolakan (Hanya diisi jika menolak)</label>
-                <textarea class="form-input" name="catatan_penolakan" rows="3" placeholder="Contoh: Judul kurang spesifik, IPK belum memenuhi syarat, dll..."></textarea>
+                <label for="f_catatan_penolakan" class="form-label" style="color:var(--danger-text);">Catatan Penolakan (Hanya diisi jika menolak)</label>
+                <textarea id="f_catatan_penolakan" class="form-input" name="catatan_penolakan" rows="3" placeholder="Contoh: Judul kurang spesifik, IPK belum memenuhi syarat, dll..."></textarea>
             </div>
     </div>
     

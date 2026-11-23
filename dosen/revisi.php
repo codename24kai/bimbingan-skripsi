@@ -202,15 +202,15 @@ include __DIR__ . '/../includes/sidebar.php';
         
         <div class="form-row">
             <div class="form-group">
-                <label class="form-label">Keputusan Dokumen</label>
-                <select class="form-input" name="status_dokumen" required>
+                <label for="f_status_dokumen" class="form-label">Keputusan Dokumen</label>
+                <select id="f_status_dokumen" class="form-input" name="status_dokumen" required>
                     <option value="direvisi">⚠️ Perlu Revisi / Perbaikan</option>
                     <option value="disetujui">✅ Dokumen Disetujui</option>
                 </select>
             </div>
             <div class="form-group">
-                <label class="form-label">Tingkat Prioritas</label>
-                <select class="form-input" name="prioritas" required>
+                <label for="f_prioritas" class="form-label">Tingkat Prioritas</label>
+                <select id="f_prioritas" class="form-input" name="prioritas" required>
                     <option value="Tinggi">Tinggi (Major)</option>
                     <option value="Sedang" selected>Sedang (Minor)</option>
                     <option value="Rendah">Rendah (Saran)</option>
@@ -219,13 +219,13 @@ include __DIR__ . '/../includes/sidebar.php';
         </div>
 
         <div class="form-group">
-            <label class="form-label">Halaman / Bab (Opsional)</label>
-            <input class="form-input" name="halaman_revisi" placeholder="Cth: Hal 12-14 atau Bab 2.3">
+            <label for="f_halaman_revisi" class="form-label">Halaman / Bab (Opsional)</label>
+            <input id="f_halaman_revisi" class="form-input" name="halaman_revisi" placeholder="Cth: Hal 12-14 atau Bab 2.3">
         </div>
 
         <div class="form-group">
-            <label class="form-label">Catatan Revisi / Masukan</label>
-            <textarea class="form-input" name="catatan_revisi" rows="4" required placeholder="Tuliskan detail perbaikan yang harus dilakukan mahasiswa..."></textarea>
+            <label for="f_catatan_revisi" class="form-label">Catatan Revisi / Masukan</label>
+            <textarea id="f_catatan_revisi" class="form-input" name="catatan_revisi" rows="4" required placeholder="Tuliskan detail perbaikan yang harus dilakukan mahasiswa..."></textarea>
         </div>
 
         <div class="form-actions" style="margin-top:24px;">

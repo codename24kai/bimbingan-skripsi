@@ -197,11 +197,11 @@ include __DIR__ . '/../includes/sidebar.php';
                                   <td style="font-size:13px;">
                                       <?= e($ap['judul_indonesia']) ?>
                                       <div style="display:flex; gap:8px; align-items:center; margin-top:6px;">
-                                          <div style="font-size:11px; color:var(--info);">ACC: <?= date('d M Y', strtotime($ap['tgl_pengajuan'])) ?></div>
+                                          <div style="font-size:11px; color:var(--info-text);">ACC: <?= date('d M Y', strtotime($ap['tgl_pengajuan'])) ?></div>
                                           <span class="badge info" style="font-size:10px;"><?= e($ap['bidang_penelitian']) ?></span>
                                       </div>
                                       <?php if ($ap['usulan_dosen']): ?>
-                                          <div style="font-size:11px; font-weight:600; color:var(--gold); margin-top:8px;">
+                                          <div style="font-size:11px; font-weight:600; color:var(--gold-text); margin-top:8px;">
                                               ⭐ Usulan Mhs: <?= e($ap['nama_dosen_usulan']) ?>
                                           </div>
                                       <?php endif; ?>
@@ -269,22 +269,22 @@ include __DIR__ . '/../includes/sidebar.php';
                   <form method="POST" enctype="multipart/form-data"><?= csrfField() ?>
                     <input type="hidden" name="aksi" value="buat">
                     <div class="form-group">
-                      <label class="form-label">1. Pilih Mahasiswa (Tanpa Bimbingan Aktif)</label>
-                      <select class="form-input" name="id_mahasiswa" required>
+                      <label for="f_id_mahasiswa" class="form-label">1. Pilih Mahasiswa (Tanpa Bimbingan Aktif)</label>
+                      <select id="f_id_mahasiswa" class="form-input" name="id_mahasiswa" required>
                         <option value="" disabled selected>Pilih mahasiswa...</option>
                         <?php foreach ($mhsTanpaBimb as $m): ?><option value="<?= $m['id_mahasiswa'] ?>">[<?= $m['nim'] ?>] <?= e($m['nama_lengkap']) ?></option><?php endforeach; ?>
                       </select>
                     </div>
                     <div class="form-group">
-                      <label class="form-label">2. Pilih Dosen Pembimbing</label>
-                      <select class="form-input" name="id_dosen" required>
+                      <label for="f_id_dosen" class="form-label">2. Pilih Dosen Pembimbing</label>
+                      <select id="f_id_dosen" class="form-input" name="id_dosen" required>
                         <option value="" disabled selected>Pilih dosen...</option>
                         <?php foreach ($dosenList as $d): ?><option value="<?= $d['id_dosen'] ?>"><?= e($d['nama_lengkap']) ?> (Kuota Sisa: <?= $d['sisa'] ?>)</option><?php endforeach; ?>
                       </select>
                     </div>
                     <div class="form-group">
-                      <label class="form-label">3. Tautkan Judul Skripsi (Yang Disetujui)</label>
-                      <select class="form-input" name="id_judul" required>
+                      <label for="f_id_judul" class="form-label">3. Tautkan Judul Skripsi (Yang Disetujui)</label>
+                      <select id="f_id_judul" class="form-input" name="id_judul" required>
                         <option value="" disabled selected>Pilih judul disetujui...</option>
                         <?php foreach ($judulList as $j): ?><option value="<?= $j['id_judul'] ?>">NIM: <?= $j['nim'] ?> - <?= e(mb_strimwidth($j['judul_indonesia'],0,60,'...')) ?></option><?php endforeach; ?>
                       </select>
@@ -292,18 +292,18 @@ include __DIR__ . '/../includes/sidebar.php';
                     
                     <div class="form-row">
                         <div class="form-group">
-                          <label class="form-label">Nomor Surat Keputusan (SK)</label>
-                          <input class="form-input" name="no_sk" placeholder="Cth: 001/SK/ILKOM/2026" required>
+                          <label for="f_no_sk" class="form-label">Nomor Surat Keputusan (SK)</label>
+                          <input id="f_no_sk" class="form-input" name="no_sk" placeholder="Cth: 001/SK/ILKOM/2026" required>
                         </div>
                         <div class="form-group">
-                          <label class="form-label">Upload File SK (PDF)</label>
-                          <input class="form-input" type="file" name="file_sk" accept=".pdf" required style="padding: 7px;">
+                          <label for="f_file_sk" class="form-label">Upload File SK (PDF)</label>
+                          <input id="f_file_sk" class="form-input" type="file" name="file_sk" accept=".pdf" required style="padding: 7px;">
                         </div>
                     </div>
                     
                     <div class="form-group">
-                      <label class="form-label">Semester Eksekusi</label>
-                      <input class="form-input" name="semester" value="<?= $semesterDefault ?>" required>
+                      <label for="f_semester" class="form-label">Semester Eksekusi</label>
+                      <input id="f_semester" class="form-input" name="semester" value="<?= $semesterDefault ?>" required>
                     </div>
                     
                     <button type="submit" class="btn btn-gold">🔗 Terbitkan & Buat Relasi</button>
@@ -333,7 +333,7 @@ include __DIR__ . '/../includes/sidebar.php';
                     <?php if(!empty($r['no_sk'])): ?>
                         <div style="font-size:11px; font-weight:600; color:var(--navy);"><?= e($r['no_sk']) ?></div>
                         <?php if(!empty($r['file_sk'])): ?>
-                            <a href="<?= e(fileUrl($r['file_sk'])) ?>" target="_blank" style="font-size:11px; color:var(--info); text-decoration:underline;">Lihat PDF</a>
+                            <a href="<?= e(fileUrl($r['file_sk'])) ?>" target="_blank" style="font-size:11px; color:var(--info-text); text-decoration:underline;">Lihat PDF</a>
                         <?php endif; ?>
                     <?php else: ?>
                         <span style="font-size:11px; color:var(--slate);">-</span>
