@@ -23,8 +23,15 @@ if ($cekPengaturan['cnt'] == 0) {
         ('nama_institusi', 'Universitas Pamulang (UNPAM)'),
         ('tahun_akademik', '2025/2026'),
         ('semester_aktif', 'Ganjil'),
-        ('default_kuota_dosen', '10')
+        ('default_kuota_dosen', '10'),
+        ('maksimal_kuota_dosen', '20')
     ");
+} else {
+    // Patching: Cek dan tambahkan key maksimal_kuota_dosen jika tabel sudah ada tapi key ini belum ada
+    $cekMax = fetchOne("SELECT COUNT(*) as cnt FROM pengaturan WHERE nama_key='maksimal_kuota_dosen'");
+    if ($cekMax['cnt'] == 0) {
+        $db->exec("INSERT INTO pengaturan (nama_key, nilai_value) VALUES ('maksimal_kuota_dosen', '20')");
+    }
 }
 
 // 2. HANDLE REQUEST (POST ACTIONS)
@@ -32,24 +39,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $aksi = $_POST['aksi'] ?? '';
 
     if ($aksi === 'simpan_umum') {
-        // Update Pengaturan Umum
-        $settings = [
-            'nama_institusi'      => $_POST['nama_institusi'],
-            'tahun_akademik'      => $_POST['tahun_akademik'],
-            'semester_aktif'      => $_POST['semester_aktif'],
-            'default_kuota_dosen' => (int)$_POST['default_kuota_dosen']
-        ];
-        
-        $db->beginTransaction();
-        try {
-            foreach ($settings as $key => $val) {
-                execute("UPDATE pengaturan SET nilai_value = ? WHERE nama_key = ?", [$val, $key]);
+        $default_kuota = (int)$_POST['default_kuota_dosen'];
+        $max_kuota     = (int)$_POST['maksimal_kuota_dosen'];
+
+        // Validasi agar default tidak melebihi maksimal
+        if ($default_kuota > $max_kuota) {
+            setFlash('danger', 'Gagal: Nilai Default Kuota tidak boleh melebihi Batas Maksimal Kuota.');
+        } else {
+            // Update Pengaturan Umum
+            $settings = [
+                'nama_institusi'       => $_POST['nama_institusi'],
+                'tahun_akademik'       => $_POST['tahun_akademik'],
+                'semester_aktif'       => $_POST['semester_aktif'],
+                'default_kuota_dosen'  => $default_kuota,
+                'maksimal_kuota_dosen' => $max_kuota
+            ];
+            
+            $db->beginTransaction();
+            try {
+                foreach ($settings as $key => $val) {
+                    execute("UPDATE pengaturan SET nilai_value = ? WHERE nama_key = ?", [$val, $key]);
+                }
+                $db->commit();
+                setFlash('success', 'Konfigurasi umum berhasil disimpan.');
+            } catch (\Exception $e) {
+                $db->rollBack();
+                setFlash('danger', 'Gagal menyimpan pengaturan: ' . $e->getMessage());
             }
-            $db->commit();
-            setFlash('success', 'Konfigurasi umum berhasil disimpan.');
-        } catch (\Exception $e) {
-            $db->rollBack();
-            setFlash('danger', 'Gagal menyimpan pengaturan: ' . $e->getMessage());
         }
 
     } elseif ($aksi === 'tambah_prodi') {
@@ -58,7 +74,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 strtoupper($_POST['kode_prodi']), 
                 $_POST['nama_prodi'], 
                 $_POST['jenjang'], 
-                'Fakultas Ilmu Komputer', // Hardcode sesuai kebutuhan Anda
+                'Fakultas Ilmu Komputer', 
                 strtoupper($_POST['akreditasi'])
             ]);
             setFlash('success', 'Program Studi baru berhasil ditambahkan.');
@@ -94,14 +110,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 // 3. AMBIL DATA UNTUK DITAMPILKAN DI VIEW
-// Mengambil array asosiatif pengaturan
 $rawSettings = fetchAll("SELECT * FROM pengaturan");
 $opt = [];
 foreach ($rawSettings as $s) {
     $opt[$s['nama_key']] = $s['nilai_value'];
 }
 
-// Mengambil list prodi
 $prodi = fetchAll('SELECT * FROM program_studi ORDER BY nama_prodi');
 
 include __DIR__ . '/../includes/header.php';
@@ -145,13 +159,19 @@ include __DIR__ . '/../includes/sidebar.php';
           </div>
         </div>
         
-        <div class="form-group">
-            <label class="form-label">Default Kuota Dosen Pembimbing</label>
-            <input class="form-input" type="number" name="default_kuota_dosen" min="1" max="50" value="<?= e($opt['default_kuota_dosen'] ?? '10') ?>" required>
-            <small style="color:var(--slate); font-size:12px;">Angka ini akan otomatis mengisi kolom kuota saat menambah dosen baru.</small>
+        <div class="form-row">
+            <div class="form-group">
+                <label class="form-label">Default Kuota Dosen</label>
+                <input class="form-input" type="number" name="default_kuota_dosen" min="1" value="<?= e($opt['default_kuota_dosen'] ?? '10') ?>" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Batas Maksimal Kuota</label>
+                <input class="form-input" type="number" name="maksimal_kuota_dosen" min="1" value="<?= e($opt['maksimal_kuota_dosen'] ?? '20') ?>" required>
+            </div>
         </div>
+        <small style="color:var(--slate); font-size:12px; display:block; margin-bottom:16px;">Angka default akan otomatis terisi saat menambah dosen baru, sedangkan Batas Maksimal adalah kuota tertinggi yang tidak dapat dilampaui.</small>
         
-        <button type="submit" class="btn btn-gold" style="margin-top:10px; width:100%; justify-content:center;">💾 Simpan Konfigurasi</button>
+        <button type="submit" class="btn btn-gold" style="width:100%; justify-content:center;">💾 Simpan Konfigurasi</button>
       </form>
     </div>
 
@@ -179,7 +199,7 @@ include __DIR__ . '/../includes/sidebar.php';
                   </td>
                   <td style="text-align:right;">
                       <button type="button" class="btn-icon" title="Edit Prodi" onclick="openEditProdi(<?= $jsonProdi ?>)">✏️</button>
-                      <form method="POST" style="display:inline;" onsubmit="return confirm('Hapus prodi ini? Aksi akan digagalkan jika ada Dosen/Mahasiswa aktif di prodi ini.')">
+                      <form method="POST" style="display:inline;" onsubmit="return confirm('Hapus prodi ini?')">
                           <input type="hidden" name="aksi" value="hapus_prodi">
                           <input type="hidden" name="id_prodi" value="<?= $p['id_prodi'] ?>">
                           <button type="submit" class="btn-icon">🗑️</button>
@@ -206,12 +226,12 @@ include __DIR__ . '/../includes/sidebar.php';
       <input type="hidden" name="aksi" value="tambah_prodi">
       <div class="form-group">
           <label class="form-label">Nama Program Studi</label>
-          <input class="form-input" name="nama_prodi" placeholder="Misal: Teknik Komputer" required>
+          <input class="form-input" name="nama_prodi" required>
       </div>
       <div class="form-row">
         <div class="form-group">
-            <label class="form-label">Kode (Maks 10)</label>
-            <input class="form-input" name="kode_prodi" placeholder="TK" required>
+            <label class="form-label">Kode</label>
+            <input class="form-input" name="kode_prodi" required>
         </div>
         <div class="form-group">
             <label class="form-label">Jenjang</label>
@@ -223,7 +243,7 @@ include __DIR__ . '/../includes/sidebar.php';
         </div>
         <div class="form-group">
             <label class="form-label">Akreditasi</label>
-            <input class="form-input" name="akreditasi" placeholder="A/B/C/Unggul" maxlength="10">
+            <input class="form-input" name="akreditasi" maxlength="10">
         </div>
       </div>
       <div class="form-actions">
@@ -274,7 +294,6 @@ include __DIR__ . '/../includes/sidebar.php';
 </div>
 
 <script>
-// Menangani pengisian data ke dalam form modal edit prodi
 function openEditProdi(data) {
     document.getElementById('edit_id_prodi').value = data.id_prodi;
     document.getElementById('edit_nama_prodi').value = data.nama_prodi;

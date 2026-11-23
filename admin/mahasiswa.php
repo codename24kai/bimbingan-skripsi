@@ -235,10 +235,6 @@ include __DIR__ . '/../includes/sidebar.php';
             <span id="prev_angkatan" style="font-size:14px;">-</span>
         </div>
         <div style="display:grid; grid-template-columns: 140px 1fr; border-bottom: 1px solid var(--cream-dark); padding-bottom: 8px;">
-            <span style="color:var(--slate); font-size:13px;">IPK Saat Ini</span>
-            <strong id="prev_ipk" style="font-size:14px;">-</strong>
-        </div>
-        <div style="display:grid; grid-template-columns: 140px 1fr; border-bottom: 1px solid var(--cream-dark); padding-bottom: 8px;">
             <span style="color:var(--slate); font-size:13px;">No. Telepon</span>
             <span id="prev_notelp" style="font-size:14px;">-</span>
         </div>
@@ -278,7 +274,6 @@ function openPreviewModal(data) {
     document.getElementById('prev_nim').innerText = data.nim;
     document.getElementById('prev_prodi').innerText = data.nama_prodi;
     document.getElementById('prev_angkatan').innerText = data.angkatan;
-    document.getElementById('prev_ipk').innerText = data.ipk ? data.ipk : '-';
     document.getElementById('prev_notelp').innerText = data.no_telepon ? data.no_telepon : 'Belum diisi';
     document.getElementById('prev_status').innerText = data.status_skripsi;
     document.getElementById('prev_dosen').innerText = data.nama_dosen ? data.nama_dosen : 'Belum ada pembimbing aktif';

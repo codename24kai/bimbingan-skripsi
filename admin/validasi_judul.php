@@ -10,8 +10,8 @@ $activePage = 'validasi_judul';
 
 // Handle aksi validasi (Setujui / Tolak)
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $aksi     = $_POST['aksi'] ?? '';
-    $id_judul = (int)$_POST['id_judul'];
+    $aksi        = $_POST['aksi'] ?? '';
+    $id_judul    = (int)$_POST['id_judul'];
     $id_user_mhs = (int)$_POST['id_user_mhs']; // Untuk kirim notifikasi
 
     $db = getDB();
@@ -27,12 +27,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
 
             // Update status menjadi disetujui, dan timpa judul_indonesia dengan judul yang dipilih
-            // (Agar sistem relasi dan dokumen selanjutnya tetap membaca kolom utama)
             execute('UPDATE judul_skripsi SET status="disetujui", judul_indonesia=? WHERE id_judul=?', [$judul_terpilih, $id_judul]);
             
-            // Kirim Notifikasi
-            execute('INSERT INTO notifikasi (id_user, judul, pesan, tipe, modul) VALUES (?, ?, ?, "sukses", "judul")', 
-                    [$id_user_mhs, 'Judul Skripsi Disetujui!', 'Selamat! Judul Anda telah disetujui. Silakan tunggu penetapan Dosen Pembimbing.', 'judul']);
+            // PERBAIKAN ERROR HY093: Sinkronisasi 5 tanda tanya (?) dengan 5 parameter array
+            execute('INSERT INTO notifikasi (id_user, judul, pesan, tipe, modul) VALUES (?, ?, ?, ?, ?)', 
+                    [$id_user_mhs, 'Judul Skripsi Disetujui!', 'Selamat! Judul Anda telah disetujui. Silakan tunggu penetapan Dosen Pembimbing.', 'sukses', 'judul']);
             
             setFlash('success', 'Judul berhasil disetujui dan diteruskan ke antrean plotting pembimbing.');
 
@@ -42,9 +41,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Update status
             execute('UPDATE judul_skripsi SET status="ditolak" WHERE id_judul=?', [$id_judul]);
             
-            // Kirim Notifikasi
-            execute('INSERT INTO notifikasi (id_user, judul, pesan, tipe, modul) VALUES (?, ?, ?, "danger", "judul")', 
-                    [$id_user_mhs, 'Pengajuan Judul Ditolak', 'Pengajuan Anda ditolak. Catatan: ' . $catatan, 'judul']);
+            // PERBAIKAN ERROR HY093: Sinkronisasi 5 tanda tanya (?) dengan 5 parameter array
+            execute('INSERT INTO notifikasi (id_user, judul, pesan, tipe, modul) VALUES (?, ?, ?, ?, ?)', 
+                    [$id_user_mhs, 'Pengajuan Judul Ditolak', 'Pengajuan Anda ditolak. Catatan: ' . $catatan, 'danger', 'judul']);
             
             setFlash('warning', 'Pengajuan judul telah ditolak.');
         }
