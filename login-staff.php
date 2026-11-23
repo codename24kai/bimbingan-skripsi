@@ -116,7 +116,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     </div>
 
                     <div class="form-group">
-                        <label for="password" class="form-label">Kata Sandi</label>
+                        <div class="label-baris"><label for="password" class="form-label">Kata Sandi</label><a class="link fs-12" href="lupa-sandi.php">Lupa kata sandi?</a></div>
 
                         <div style="position: relative; width: 100%;">
                             <input id="password" name="password" type="password" class="form-input" placeholder="••••••••" required style="padding-right: 42px;">

@@ -77,7 +77,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['aksi'])) {
 // Diurutkan berdasarkan status "menunggu" agar berada di paling atas
 $dokumenList = fetchAll(
     'SELECT d.*, m.nim, u.nama_lengkap AS nama_mhs,
-            COUNT(r.id_revisi) AS total_revisi
+            COUNT(r.id_revisi) AS total_revisi,
+            (SELECT COUNT(*) FROM komentar_dokumen k WHERE k.id_dokumen = d.id_dokumen) AS jml_pesan,
+            (SELECT COUNT(*) FROM dokumen d2 WHERE d2.id_mahasiswa = d.id_mahasiswa AND d2.jenis_bab = d.jenis_bab) AS jml_versi
      FROM dokumen d
      JOIN mahasiswa m ON d.id_mahasiswa = m.id_mahasiswa
      JOIN user u ON m.id_user = u.id_user
@@ -149,6 +151,10 @@ include __DIR__ . '/../includes/sidebar.php';
                   <td class="text-right">
                     <div style="display:flex;gap:6px; justify-content:flex-end;">
                       <a href="<?= e(fileUrl($d['file_path'])) ?>" target="_blank" class="btn btn-secondary" style="padding:4px 8px; font-size:11px;" title="Unduh File">⬇️ Unduh</a>
+                      <a href="<?= BASE_URL ?>/diskusi.php?dok=<?= (int)$d['id_dokumen'] ?>" class="btn btn-secondary" style="padding:4px 8px; font-size:11px;" title="Diskusi dengan mahasiswa"><?= icon('chat', 14) ?> Diskusi<?= $d['jml_pesan'] ? ' (' . (int)$d['jml_pesan'] . ')' : '' ?></a>
+                      <?php if ($d['jml_versi'] > 1): ?>
+                        <a href="<?= BASE_URL ?>/bandingkan.php?dok=<?= (int)$d['id_dokumen'] ?>" class="btn btn-secondary" style="padding:4px 8px; font-size:11px;" title="Bandingkan dengan versi sebelumnya"><?= icon('columns', 14) ?> Bandingkan</a>
+                      <?php endif; ?>
                       <button type="button" class="btn btn-primary" style="padding:4px 8px; font-size:11px;" onclick="openReviewModal(<?= $jsonData ?>)">✍️ Beri Revisi</button>
                     </div>
                   </td>
@@ -211,9 +217,9 @@ include __DIR__ . '/../includes/sidebar.php';
             <div class="form-group">
                 <label for="f_prioritas" class="form-label">Tingkat Prioritas</label>
                 <select id="f_prioritas" class="form-input" name="prioritas" required>
-                    <option value="Tinggi">Tinggi (Major)</option>
-                    <option value="Sedang" selected>Sedang (Minor)</option>
-                    <option value="Rendah">Rendah (Saran)</option>
+                    <option value="kritis">Kritis</option>
+                    <option value="mayor">Mayor</option>
+                    <option value="minor" selected>Minor (saran)</option>
                 </select>
             </div>
         </div>

@@ -115,7 +115,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
 
 $dokumen = fetchAll(
     'SELECT d.*, COUNT(r.id_revisi) AS total_revisi,
-            SUM(CASE WHEN r.status="belum" THEN 1 ELSE 0 END) AS revisi_pending
+            SUM(CASE WHEN r.status="belum" THEN 1 ELSE 0 END) AS revisi_pending,
+            (SELECT COUNT(*) FROM komentar_dokumen k WHERE k.id_dokumen = d.id_dokumen) AS jml_pesan,
+            (SELECT COUNT(*) FROM dokumen d2 WHERE d2.id_mahasiswa = d.id_mahasiswa AND d2.jenis_bab = d.jenis_bab) AS jml_versi
      FROM dokumen d
      LEFT JOIN revisi r ON r.id_dokumen=d.id_dokumen
      WHERE d.id_mahasiswa=?
@@ -174,6 +176,10 @@ include __DIR__ . '/../includes/sidebar.php';
                       <td class="text-right">
                         <div style="display:flex;gap:6px; justify-content:flex-end;">
                           <a href="<?= e(fileUrl($d['file_path'])) ?>" target="_blank" class="btn-icon" title="Unduh File" aria-label="Unduh <?= e($d['nama_dokumen']) ?>"><?= icon('download') ?></a>
+                          <a href="<?= BASE_URL ?>/diskusi.php?dok=<?= (int)$d['id_dokumen'] ?>" class="btn-icon btn-icon--hitung" title="Diskusi dengan dosen" aria-label="Diskusi <?= e($d['nama_dokumen']) ?>"><?= icon('chat') ?><?php if ($d['jml_pesan']): ?><span class="hitung"><?= (int)$d['jml_pesan'] ?></span><?php endif; ?></a>
+                          <?php if ($d['jml_versi'] > 1): ?>
+                            <a href="<?= BASE_URL ?>/bandingkan.php?dok=<?= (int)$d['id_dokumen'] ?>" class="btn-icon" title="Bandingkan versi" aria-label="Bandingkan versi <?= e($d['nama_dokumen']) ?>"><?= icon('columns') ?></a>
+                          <?php endif; ?>
                           <button type="button" class="btn-icon" title="Edit Dokumen" aria-label="Edit Dokumen <?= e($d['nama_dokumen']) ?>" onclick="openEditModal(<?= $jsonData ?>)"><?= icon('pencil') ?></button>
                           <form method="POST" style="display:inline;" data-confirm="Hapus dokumen <?= e($d['nama_dokumen']) ?> (v<?= (int)$d['versi'] ?>)? File akan dihapus permanen." data-confirm-ok="Hapus"><?= csrfField() ?>
                               <input type="hidden" name="action" value="hapus">

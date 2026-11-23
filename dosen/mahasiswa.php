@@ -46,7 +46,7 @@ include __DIR__ . '/../includes/sidebar.php';
     <div class="card-body">
       <div class="table-wrap">
         <table>
-          <thead><tr><th>Mahasiswa</th><th>NIM</th><th>Prodi</th><th>Judul</th><th>Sesi</th><th>Status</th><th>Aksi</th></tr></thead>
+          <thead><tr><th>Mahasiswa</th><th>NIM</th><th>Prodi</th><th>Judul</th><th>Sesi</th><th>Progres</th><th>Aksi</th></tr></thead>
           <tbody>
             <?php if (empty($list)): ?>
               <tr><td colspan="7" style="text-align:center;padding:32px;color:var(--slate);">Tidak ada data.</td></tr>
@@ -63,10 +63,12 @@ include __DIR__ . '/../includes/sidebar.php';
                   <td class="fs-13"><?= e($m['nama_prodi']) ?></td>
                   <td style="max-width:220px;font-size:13px;"><?= e(mb_strimwidth($m['judul_indonesia'],0,60,'...')) ?></td>
                   <td class="text-center"><?= $m['total_sesi'] ?></td>
-                  <td><span class="badge <?= badge($m['status_skripsi']) ?>"><span class="badge-dot"></span><?= e(label($m['status_skripsi'])) ?></span></td>
+                  <?php $pg = progresSkripsi((int)$m['id_mahasiswa']); ?>
+                  <td style="min-width:150px;"><?= barProgres($pg['persen']) ?><div class="meta-sm" style="margin-top:4px;">Sekarang: <?= e($pg['sekarang']) ?></div></td>
                   <td>
                     <div style="display:flex;gap:6px;">
                       <a href="<?= BASE_URL ?>/dosen/catatan.php?id_bimbingan=<?= $m['id_bimbingan'] ?>" class="btn-icon" title="Catatan bimbingan" aria-label="Catatan bimbingan <?= e($m['nama_lengkap']) ?>"><?= icon('clipboard') ?></a>
+                      <a href="<?= BASE_URL ?>/cetak/kartu-bimbingan.php?id=<?= (int)$m['id_bimbingan'] ?>" class="btn-icon" title="Cetak kartu bimbingan" aria-label="Cetak kartu bimbingan <?= e($m['nama_lengkap']) ?>"><?= icon('printer') ?></a>
                     </div>
                   </td>
                 </tr>

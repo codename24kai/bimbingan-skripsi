@@ -43,13 +43,14 @@ $typeIcon = ['info'=>'ℹ️','sukses'=>'✅','peringatan'=>'⚠️','error'=>'�
         </div>
       <?php else: ?>
         <?php foreach ($notifs as $n): ?>
-          <div class="notif-list-item <?= $n['is_read'] ? '' : 'unread' ?>">
+          <?php $tn = tautanNotif($n['tautan'] ?? null); ?>
+          <<?= $tn ? 'a href="' . e($tn[0]) . '"' : 'div' ?> class="notif-list-item <?= $n['is_read'] ? '' : 'unread' ?>">
             <div style="font-size:18px;flex-shrink:0;"><?= $typeIcon[$n['tipe']] ?? 'ℹ️' ?></div>
             <div>
               <div class="notif-msg"><strong><?= e($n['judul']) ?></strong><br><?= e(mb_strimwidth($n['pesan'],0,80,'...')) ?></div>
               <div class="notif-time"><?= tgl($n['created_at'], 'jam') ?></div>
             </div>
-          </div>
+          </<?= $tn ? 'a' : 'div' ?>>
         <?php endforeach; ?>
       <?php endif; ?>
     </div>

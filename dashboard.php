@@ -11,6 +11,10 @@ $role       = role();
 $uid        = userId();
 $eid        = entityId();
 
+// Pengingat otomatis (H-1 jadwal, mahasiswa tidak aktif). Maksimal sekali per jam.
+jalankanPengingat();
+$pengumuman = pengumumanUntukSaya(3);
+
 /* ── DATA PER ROLE ─────────────────────────── */
 if ($role === 'mahasiswa') {
     $mhs = fetchOne('SELECT m.*,ps.nama_prodi FROM mahasiswa m
@@ -59,6 +63,8 @@ if ($role === 'mahasiswa') {
     ];
     $langkahAktif = 0;
     foreach ($langkah as $i => $l) { if (!$l[1]) { $langkahAktif = $i; break; } $langkahAktif = $i + 1; }
+
+    $progres = progresSkripsi($eid);
 
     $dokumen = fetchAll('SELECT d.jenis_bab,d.status,COUNT(r.id_revisi) AS jml_revisi
                          FROM dokumen d
@@ -113,6 +119,19 @@ if ($role === 'mahasiswa') {
                              LEFT JOIN mahasiswa m ON m.id_prodi=ps.id_prodi
                              GROUP BY ps.id_prodi ORDER BY ps.nama_prodi');
 
+    // Grafik: pengajuan judul 6 bulan terakhir & beban bimbingan per dosen (D14)
+    $perBulan = [];
+    for ($i = 5; $i >= 0; $i--) $perBulan[date('Y-m', strtotime("first day of -$i month"))] = 0;
+    foreach (fetchAll('SELECT DATE_FORMAT(tgl_pengajuan, "%Y-%m") AS bln, COUNT(*) AS n FROM judul_skripsi
+                       WHERE tgl_pengajuan >= ? GROUP BY bln', [array_key_first($perBulan) . '-01']) as $r) {
+        if (isset($perBulan[$r['bln']])) $perBulan[$r['bln']] = (int)$r['n'];
+    }
+    $bebanDosen = fetchAll('SELECT u.nama_lengkap, d.kuota_bimbingan,
+                              (SELECT COUNT(*) FROM bimbingan b WHERE b.id_dosen=d.id_dosen AND b.status="aktif") AS aktif
+                            FROM dosen d JOIN user u ON u.id_user=d.id_user ORDER BY aktif DESC, u.nama_lengkap LIMIT 8');
+    $ujianMenunggu = countRows('SELECT COUNT(*) FROM ujian WHERE status="disetujui_pembimbing"');
+    $resetMenunggu = countRows('SELECT COUNT(*) FROM permintaan_reset WHERE status="menunggu"');
+
     $logAktivitas = fetchAll('SELECT n.created_at,u.nama_lengkap,u.role,n.judul,n.tipe
                               FROM notifikasi n JOIN user u ON u.id_user=n.id_user
                               ORDER BY n.created_at DESC LIMIT 8');
@@ -129,6 +148,24 @@ include __DIR__ . '/includes/sidebar.php';
 
       <?php $flash = getFlash(); if ($flash): ?>
         <div class="alert <?= $flash['type'] ?>"><?= e($flash['msg']) ?></div>
+      <?php endif; ?>
+
+      <?php if (!empty($pengumuman)): ?>
+        <section class="card pengumuman-ringkas mb-20" aria-label="Pengumuman">
+          <div class="card-header">
+            <div class="card-title"><?= icon('megaphone', 18) ?> Pengumuman</div>
+            <a class="link fs-13" href="<?= BASE_URL ?>/info/pengumuman.php">Lihat semua</a>
+          </div>
+          <div class="card-body">
+            <?php foreach ($pengumuman as $p): ?>
+              <a class="pengumuman-baris" href="<?= BASE_URL ?>/info/pengumuman.php#p<?= (int)$p['id_pengumuman'] ?>">
+                <?php if ($p['disematkan']): ?><span class="badge warning"><span class="badge-dot"></span>Penting</span><?php endif; ?>
+                <span class="fw-500"><?= e($p['judul']) ?></span>
+                <span class="meta"><?= tgl($p['created_at'], 'tglbln') ?></span>
+              </a>
+            <?php endforeach; ?>
+          </div>
+        </section>
       <?php endif; ?>
 
       <!-- ════════════ MAHASISWA DASHBOARD ════════════ -->
@@ -193,6 +230,25 @@ include __DIR__ . '/includes/sidebar.php';
             <?php elseif ($bimbingan): ?>
               <a class="stat-change" href="<?= BASE_URL ?>/mahasiswa/bimbingan.php" style="color:var(--info-text);text-decoration:underline;">Ajukan jadwal bimbingan</a>
             <?php endif; ?>
+          </div>
+        </div>
+
+        <div class="card mb-20">
+          <div class="card-header">
+            <div class="card-title">Progres Skripsi</div>
+            <span class="badge info"><span class="badge-dot"></span><?= $progres['persen'] ?>% · Sekarang: <?= e($progres['sekarang']) ?></span>
+          </div>
+          <div class="card-body">
+            <div class="progress-bar" style="height:10px;"><div class="progress-fill" style="width:<?= $progres['persen'] ?>%"></div></div>
+            <ol class="tahap-strip">
+              <?php foreach ($progres['tahap'] as [$nm, $ok, $ket]): ?>
+                <li class="<?= $ok ? 'done' : ($nm === $progres['sekarang'] ? 'now' : '') ?>" title="<?= e($ket) ?>">
+                  <span class="tahap-dot" aria-hidden="true"><?= $ok ? '✓' : '' ?></span>
+                  <span class="tahap-nama"><?= e($nm) ?></span>
+                  <span class="tahap-ket"><?= e($ket) ?></span>
+                </li>
+              <?php endforeach; ?>
+            </ol>
           </div>
         </div>
 
@@ -353,6 +409,44 @@ include __DIR__ . '/includes/sidebar.php';
           <div class="stat-card green"><div class="stat-icon" aria-hidden="true"><?= icon('user', 22) ?></div><div class="stat-num"><?= $totalDosen ?></div><div class="stat-label">Dosen Pembimbing</div></div>
           <div class="stat-card gold"><div class="stat-icon" aria-hidden="true"><?= icon('clipboard', 22) ?></div><div class="stat-num"><?= $aktifSkrpsi ?></div><div class="stat-label">Skripsi Aktif</div></div>
           <div class="stat-card red"><div class="stat-icon" aria-hidden="true"><?= icon('clock', 22) ?></div><div class="stat-num"><?= $pending ?></div><div class="stat-label">Akun Non-aktif</div></div>
+        </div>
+
+        <?php if ($ujianMenunggu || $resetMenunggu): ?>
+          <div class="tugas-admin mb-20">
+            <?php if ($ujianMenunggu): ?><a class="status-card" href="<?= BASE_URL ?>/admin/ujian.php"><?= icon('award', 18) ?> <b><?= $ujianMenunggu ?></b> seminar/sidang perlu dijadwalkan</a><?php endif; ?>
+            <?php if ($resetMenunggu): ?><a class="status-card" href="<?= BASE_URL ?>/admin/reset_sandi.php"><?= icon('key', 18) ?> <b><?= $resetMenunggu ?></b> permintaan reset kata sandi</a><?php endif; ?>
+          </div>
+        <?php endif; ?>
+
+        <div class="grid-2 mb-20">
+          <div class="card">
+            <div class="card-header"><div class="card-title">Pengajuan judul per bulan</div><span class="meta">6 bulan terakhir</span></div>
+            <div class="card-body">
+              <?php $maxB = max(1, max($perBulan)); ?>
+              <div class="grafik-kolom" role="img" aria-label="Pengajuan judul per bulan: <?= e(implode(', ', array_map(fn($k, $v) => NAMA_BULAN[(int)substr($k, 5)] . ' ' . $v, array_keys($perBulan), $perBulan))) ?>">
+                <?php foreach ($perBulan as $bln => $n): ?>
+                  <div class="grafik-kolom__item">
+                    <span class="grafik-kolom__nilai"><?= $n ?></span>
+                    <div class="grafik-kolom__batang" style="height:<?= round($n / $maxB * 100) ?>%"></div>
+                    <span class="grafik-kolom__label"><?= BULAN_PENDEK[(int)substr($bln, 5)] ?></span>
+                  </div>
+                <?php endforeach; ?>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header"><div class="card-title">Beban bimbingan dosen</div><span class="meta">aktif / kuota</span></div>
+            <div class="card-body">
+              <?php foreach ($bebanDosen as $d): $pct = $d['kuota_bimbingan'] ? min(100, round($d['aktif'] / $d['kuota_bimbingan'] * 100)) : 0; ?>
+                <div class="grafik-baris">
+                  <div class="grafik-baris__label"><?= e($d['nama_lengkap']) ?></div>
+                  <div class="progress-bar"><div class="progress-fill <?= $pct >= 100 ? 'penuh' : '' ?>" style="width:<?= $pct ?>%"></div></div>
+                  <div class="grafik-baris__nilai mono"><?= (int)$d['aktif'] ?>/<?= (int)$d['kuota_bimbingan'] ?></div>
+                </div>
+              <?php endforeach; ?>
+              <?php if (!$bebanDosen): ?><div class="empty-state"><div class="empty-sub">Belum ada data dosen.</div></div><?php endif; ?>
+            </div>
+          </div>
         </div>
 
         <div class="grid-2 mb-20">

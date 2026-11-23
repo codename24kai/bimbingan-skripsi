@@ -233,17 +233,20 @@ include __DIR__ . '/../includes/sidebar.php';
           <form method="POST" enctype="multipart/form-data"><?= csrfField() ?>
             <div class="form-group">
               <label for="f_judul_indonesia" class="form-label">Judul Utama <span class="req" aria-hidden="true">*</span></label>
-              <input id="f_judul_indonesia" class="form-input" name="judul_indonesia" required placeholder="Judul yang paling Anda pilih" value="<?= e($_POST['judul_indonesia'] ?? '') ?>">
+              <input id="f_judul_indonesia" class="form-input" name="judul_indonesia" required placeholder="Judul yang paling Anda pilih" value="<?= e($_POST['judul_indonesia'] ?? '') ?>" data-cek-judul="cekJudulHasil">
+              <div id="cekJudulHasil" class="cek-judul" aria-live="polite"></div>
             </div>
             
             <div class="form-row">
                 <div class="form-group">
                   <label for="f_judul_alternatif_1" class="form-label">Judul Cadangan 1 <span class="req" aria-hidden="true">*</span></label>
-                  <input id="f_judul_alternatif_1" class="form-input" name="judul_alternatif_1" required placeholder="Pilihan judul kedua">
+                  <input id="f_judul_alternatif_1" class="form-input" name="judul_alternatif_1" required placeholder="Pilihan judul kedua" data-cek-judul="cekJudulAlt1">
+                  <div id="cekJudulAlt1" class="cek-judul" aria-live="polite"></div>
                 </div>
                 <div class="form-group">
                   <label for="f_judul_alternatif_2" class="form-label">Judul Cadangan 2 <span style="font-weight:400;color:var(--slate);">(opsional)</span></label>
-                  <input id="f_judul_alternatif_2" class="form-input" name="judul_alternatif_2" placeholder="Pilihan judul ketiga">
+                  <input id="f_judul_alternatif_2" class="form-input" name="judul_alternatif_2" placeholder="Pilihan judul ketiga" data-cek-judul="cekJudulAlt2">
+                  <div id="cekJudulAlt2" class="cek-judul" aria-live="polite"></div>
                 </div>
             </div>
 

@@ -28,6 +28,12 @@ if ($role === 'mahasiswa') {
     }
 }
 
+// Jumlah permintaan reset kata sandi yang menunggu (badge menu admin)
+$jmlReset = 0;
+if ($role === 'admin' && tabelAda('permintaan_reset')) {
+    $jmlReset = countRows('SELECT COUNT(*) FROM permintaan_reset WHERE status="menunggu"');
+}
+
 // Nav per role
 $navs = [
   'mahasiswa' => [
@@ -41,6 +47,15 @@ $navs = [
       ['href'=>'mahasiswa/dokumen.php',  'icon'=>'folder','label'=>'Dokumen & Revisi',  'id'=>'dokumen',   'locked'=>!$isBimbinganAktif, 'hint'=>'Terbuka setelah SK bimbingan terbit'],
       ['href'=>'mahasiswa/bimbingan.php','icon'=>'calendar','label'=>'Jadwal Bimbingan',  'id'=>'bimbingan', 'locked'=>!$isBimbinganAktif, 'hint'=>'Terbuka setelah SK bimbingan terbit'],
       ['href'=>'mahasiswa/riwayat.php',  'icon'=>'clipboard','label'=>'Riwayat Bimbingan', 'id'=>'riwayat',   'locked'=>!$isBimbinganAktif, 'hint'=>'Terbuka setelah SK bimbingan terbit'],
+      ['href'=>'mahasiswa/ujian.php',    'icon'=>'award','label'=>'Seminar & Sidang', 'id'=>'ujian',   'locked'=>!$isBimbinganAktif, 'hint'=>'Terbuka setelah SK bimbingan terbit'],
+    ]],
+    ['section'=>'Informasi','items'=>[
+      ['href'=>'info/pengumuman.php','icon'=>'megaphone','label'=>'Pengumuman','id'=>'pengumuman'],
+      ['href'=>'kalender.php','icon'=>'calendar','label'=>'Kalender','id'=>'kalender'],
+      ['href'=>'info/panduan.php','icon'=>'map','label'=>'Panduan','id'=>'panduan'],
+      ['href'=>'info/template.php','icon'=>'download','label'=>'Template Dokumen','id'=>'template'],
+      ['href'=>'info/faq.php','icon'=>'help','label'=>'FAQ & Bantuan','id'=>'faq'],
+      ['href'=>'info/dosen.php','icon'=>'users','label'=>'Direktori Dosen','id'=>'direktori_dosen'],
     ]],
     ['section'=>'Akun','items'=>[
       ['href'=>'profil.php','icon'=>'user','label'=>'Profil Saya','id'=>'profil', 'locked'=>false],
@@ -54,6 +69,16 @@ $navs = [
       ['href'=>'dosen/revisi.php',       'icon'=>'book','label'=>'Review Dokumen',         'id'=>'revisi_dokumen'],
       ['href'=>'dosen/catatan.php',      'icon'=>'file','label'=>'Catatan Bimbingan',      'id'=>'catatan'],
       ['href'=>'dosen/jadwal.php',       'icon'=>'calendar','label'=>'Jadwal Konsultasi',     'id'=>'jadwal_dosen'],
+      ['href'=>'dosen/slot.php',         'icon'=>'clock-plus','label'=>'Slot Konsultasi',     'id'=>'slot_dosen'],
+      ['href'=>'dosen/ujian.php',        'icon'=>'award','label'=>'Seminar & Sidang',     'id'=>'ujian_dosen'],
+    ]],
+    ['section'=>'Informasi','items'=>[
+      ['href'=>'info/pengumuman.php','icon'=>'megaphone','label'=>'Pengumuman','id'=>'pengumuman'],
+      ['href'=>'kalender.php','icon'=>'calendar','label'=>'Kalender','id'=>'kalender'],
+      ['href'=>'info/panduan.php','icon'=>'map','label'=>'Panduan','id'=>'panduan'],
+      ['href'=>'info/template.php','icon'=>'download','label'=>'Template Dokumen','id'=>'template'],
+      ['href'=>'info/faq.php','icon'=>'help','label'=>'FAQ & Bantuan','id'=>'faq'],
+      ['href'=>'info/dosen.php','icon'=>'users','label'=>'Direktori Dosen','id'=>'direktori_dosen'],
     ]],
     ['section'=>'Akun','items'=>[
       ['href'=>'profil.php','icon'=>'user','label'=>'Profil Saya','id'=>'profil'],
@@ -66,9 +91,19 @@ $navs = [
       ['href'=>'admin/relasi.php',          'icon'=>'link','label'=>'Relasi & SK',          'id'=>'relasi'],
       ['href'=>'admin/mahasiswa.php',       'icon'=>'users','label'=>'Kelola Mahasiswa',     'id'=>'kelola_mahasiswa'],
       ['href'=>'admin/dosen.php',           'icon'=>'user','label'=>'Kelola Dosen',         'id'=>'kelola_dosen'],
+      ['href'=>'admin/ujian.php',           'icon'=>'award','label'=>'Seminar & Sidang',     'id'=>'ujian_admin'],
       ['href'=>'admin/laporan.php',         'icon'=>'chart','label'=>'Laporan & Aktivitas',  'id'=>'laporan'],
     ]],
+    ['section'=>'Informasi','items'=>[
+      ['href'=>'info/pengumuman.php','icon'=>'megaphone','label'=>'Pengumuman','id'=>'pengumuman'],
+      ['href'=>'kalender.php','icon'=>'calendar','label'=>'Kalender','id'=>'kalender'],
+      ['href'=>'info/panduan.php','icon'=>'map','label'=>'Panduan','id'=>'panduan'],
+      ['href'=>'info/template.php','icon'=>'download','label'=>'Template Dokumen','id'=>'template'],
+      ['href'=>'info/faq.php','icon'=>'help','label'=>'FAQ & Bantuan','id'=>'faq'],
+    ]],
     ['section'=>'Sistem','items'=>[
+      ['href'=>'admin/impor.php','icon'=>'import','label'=>'Impor Data','id'=>'impor'],
+      ['href'=>'admin/reset_sandi.php','icon'=>'key','label'=>'Reset Kata Sandi','id'=>'reset_sandi','badge'=>$jmlReset],
       ['href'=>'admin/pengaturan.php','icon'=>'settings','label'=>'Pengaturan','id'=>'pengaturan'],
     ]],
   ],
@@ -113,6 +148,7 @@ $navs = [
           <a href="<?= BASE_URL . '/' . $item['href'] ?>" class="nav-item <?= $isActive ? 'active' : '' ?>"<?= $isActive ? ' aria-current="page"' : '' ?>>
             <span class="nav-icon" aria-hidden="true"><?= icon($item['icon']) ?></span>
             <?= e($item['label']) ?>
+            <?php if (!empty($item['badge'])): ?><span class="nav-badge"><?= (int)$item['badge'] ?></span><?php endif; ?>
           </a>
         <?php endif; ?>
       <?php endforeach; ?>

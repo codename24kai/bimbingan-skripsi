@@ -9,7 +9,7 @@ requireLogin();
 $path = (string)($_GET['f'] ?? '');
 
 // Hanya izinkan nama file sederhana di dalam folder uploads/
-if (!preg_match('#^uploads/([A-Za-z0-9_\-]+\.(pdf|docx|doc))$#', $path, $m)) {
+if (!preg_match('#^uploads/([A-Za-z0-9_\-]+\.(pdf|docx|doc|xlsx|pptx|zip))$#', $path, $m)) {
     http_response_code(404);
     exit('File tidak ditemukan.');
 }
@@ -19,16 +19,24 @@ if (!is_file($fullPath)) {
     exit('File tidak ditemukan.');
 }
 
-// Cari mahasiswa pemilik file
-$owner = fetchOne(
-    'SELECT id_mahasiswa FROM judul_skripsi WHERE file_proposal = ? OR file_transkrip = ?
-     UNION SELECT id_mahasiswa FROM dokumen WHERE file_path = ?
-     UNION SELECT id_mahasiswa FROM bimbingan WHERE file_sk = ?
-     LIMIT 1',
-    [$path, $path, $path, $path]
-);
+// Template dokumen boleh diunduh semua pengguna yang login
+$isTemplate = tabelAda('template_dokumen')
+    && countRows('SELECT COUNT(*) FROM template_dokumen WHERE file_path = ?', [$path]) > 0;
 
-$allowed = false;
+// Cari mahasiswa pemilik file
+$sqlOwner = 'SELECT id_mahasiswa FROM judul_skripsi WHERE file_proposal = ? OR file_transkrip = ?
+     UNION SELECT id_mahasiswa FROM dokumen WHERE file_path = ?
+     UNION SELECT id_mahasiswa FROM bimbingan WHERE file_sk = ?';
+$paramsOwner = [$path, $path, $path, $path];
+$idUjian = 0;
+if (tabelAda('ujian')) {
+    $uj = fetchOne('SELECT u.id_ujian, b.id_mahasiswa FROM ujian u JOIN bimbingan b ON b.id_bimbingan = u.id_bimbingan WHERE u.file_berkas = ?', [$path]);
+    if ($uj) $idUjian = (int)$uj['id_ujian'];
+}
+$owner = $isTemplate ? null : fetchOne($sqlOwner . ' LIMIT 1', $paramsOwner);
+if (!$owner && !empty($uj)) $owner = ['id_mahasiswa' => $uj['id_mahasiswa']];
+
+$allowed = $isTemplate;
 if ($owner) {
     $idMhs = (int)$owner['id_mahasiswa'];
     switch (role()) {
@@ -43,6 +51,10 @@ if ($owner) {
                 'SELECT COUNT(*) FROM bimbingan WHERE id_mahasiswa = ? AND id_dosen = ?',
                 [$idMhs, entityId()]
             ) > 0;
+            // Dosen penguji boleh membuka berkas ujian yang ia uji
+            if (!$allowed && $idUjian) {
+                $allowed = countRows('SELECT COUNT(*) FROM penguji_ujian WHERE id_ujian = ? AND id_dosen = ?', [$idUjian, entityId()]) > 0;
+            }
             break;
     }
 }
@@ -57,6 +69,9 @@ $mime = [
     'pdf'  => 'application/pdf',
     'docx' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
     'doc'  => 'application/msword',
+    'xlsx' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    'pptx' => 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+    'zip'  => 'application/zip',
 ][$ext];
 
 header('Content-Type: ' . $mime);
