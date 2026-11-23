@@ -19,7 +19,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         try {
             $idUser = execute(
                 'INSERT INTO user (nama_lengkap,email,password_hash,role,status) VALUES (?,?,?,?,?)',
-                [$_POST['nama_lengkap'], $_POST['email'], hash('sha256','mhs123'), 'mahasiswa', 'aktif']
+                [$_POST['nama_lengkap'], $_POST['email'], hashPassword('mhs123'), 'mahasiswa', 'aktif']
             );
             execute('INSERT INTO mahasiswa (id_user,id_prodi,nim,angkatan,status_skripsi) VALUES (?,?,?,?,"belum")',
                 [$idUser, $_POST['id_prodi'], $_POST['nim'], $_POST['angkatan']]);
@@ -52,6 +52,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif ($aksi === 'hapus') {
         execute('DELETE FROM user WHERE id_user=?', [(int)$_POST['id_user']]);
         setFlash('success', 'Data mahasiswa berhasil dihapus.');
+    } elseif ($aksi === 'reset_password') {
+        $temp = resetUserPassword((int)($_POST['id_user'] ?? 0), 'mahasiswa');
+        if ($temp === null) {
+            setFlash('danger', 'Mahasiswa tidak ditemukan.');
+        } else {
+            setFlash('success', 'Password direset. Password sementara: ' . $temp . ' (catat sekarang, tidak ditampilkan lagi). Pengguna wajib menggantinya saat login.');
+        }
     } elseif ($aksi === 'toggle_status') {
         $user = fetchOne('SELECT status FROM user WHERE id_user=?', [(int)$_POST['id_user']]);
         $newStatus = ($user['status'] === 'aktif') ? 'nonaktif' : 'aktif';
@@ -114,7 +121,7 @@ include __DIR__ . '/../includes/sidebar.php';
                 <td style="font-size:13px;"><?= e($m['nama_dosen'] ?? '—') ?></td>
                 <td><span class="badge <?= badge($m['status_skripsi']) ?>"><span class="badge-dot"></span><?= $m['status_skripsi'] ?></span></td>
                 <td>
-                  <form method="POST" style="display:inline;">
+                  <form method="POST" style="display:inline;"><?= csrfField() ?>
                     <input type="hidden" name="aksi" value="toggle_status">
                     <input type="hidden" name="id_user" value="<?= $m['id_user'] ?>">
                     <button type="submit" class="badge <?= $m['status_user']==='aktif' ? 'success' : 'danger' ?>" style="cursor:pointer;border:none;" title="Klik untuk mengubah status">
@@ -127,7 +134,13 @@ include __DIR__ . '/../includes/sidebar.php';
                   
                   <button type="button" class="btn-icon" title="Edit Data" onclick="openEditModal(<?= $jsonData ?>)">✏️</button>
                   
-                  <form method="POST" style="display:inline;" onsubmit="return confirm('Hapus mahasiswa ini? Semua data terkait (bimbingan, dokumen) akan ikut terhapus.')">
+                  <form method="POST" style="display:inline;" onsubmit="return confirm('Reset password mahasiswa ini? Password lama tidak akan berlaku lagi.')"><?= csrfField() ?>
+                    <input type="hidden" name="aksi" value="reset_password">
+                    <input type="hidden" name="id_user" value="<?= $m['id_user'] ?>">
+                    <button type="submit" class="btn-icon" title="Reset Password">🔑</button>
+                  </form>
+
+                  <form method="POST" style="display:inline;" onsubmit="return confirm('Hapus mahasiswa ini? Semua data terkait (bimbingan, dokumen) akan ikut terhapus.')"><?= csrfField() ?>
                     <input type="hidden" name="aksi" value="hapus">
                     <input type="hidden" name="id_user" value="<?= $m['id_user'] ?>">
                     <button type="submit" class="btn-icon" title="Hapus Data">🗑️</button>
@@ -151,7 +164,7 @@ include __DIR__ . '/../includes/sidebar.php';
       <h2 style="font-family:'Playfair Display',serif;font-size:20px;">Tambah Mahasiswa</h2>
       <button onclick="document.getElementById('modalTambah').style.display='none'" style="background:none;border:none;font-size:20px;cursor:pointer;">×</button>
     </div>
-    <form method="POST">
+    <form method="POST"><?= csrfField() ?>
       <input type="hidden" name="aksi" value="tambah">
       <div class="form-group"><label class="form-label">Nama Lengkap</label><input class="form-input" name="nama_lengkap" required></div>
       <div class="form-row">
@@ -181,7 +194,7 @@ include __DIR__ . '/../includes/sidebar.php';
       <h2 style="font-family:'Playfair Display',serif;font-size:20px;">Edit Mahasiswa</h2>
       <button onclick="document.getElementById('modalEdit').style.display='none'" style="background:none;border:none;font-size:20px;cursor:pointer;">×</button>
     </div>
-    <form method="POST">
+    <form method="POST"><?= csrfField() ?>
       <input type="hidden" name="aksi" value="edit">
       <input type="hidden" name="id_user" id="edit_id_user">
       <div class="form-group"><label class="form-label">Nama Lengkap</label><input class="form-input" name="nama_lengkap" id="edit_nama_lengkap" required></div>

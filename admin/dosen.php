@@ -15,7 +15,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $db = getDB(); $db->beginTransaction();
         try {
             $idUser = execute('INSERT INTO user (nama_lengkap,email,password_hash,role,status) VALUES (?,?,?,?,?)',
-                [$_POST['nama_lengkap'],$_POST['email'],hash('sha256','dosen123'),'dosen','aktif']);
+                [$_POST['nama_lengkap'],$_POST['email'],hashPassword('dosen123'),'dosen','aktif']);
             execute('INSERT INTO dosen (id_user,id_prodi,nip,jabatan_fungsional,keahlian,kuota_bimbingan) VALUES (?,?,?,?,?,?)',
                 [$idUser,$_POST['id_prodi'],$_POST['nip'],$_POST['jabatan'],$_POST['keahlian'],(int)$_POST['kuota']]);
             $db->commit();
@@ -42,6 +42,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             setFlash('danger', 'Gagal memperbarui: '.$e->getMessage()); 
         }
         
+    } elseif ($aksi === 'reset_password') {
+        $temp = resetUserPassword((int)($_POST['id_user'] ?? 0), 'dosen');
+        if ($temp === null) {
+            setFlash('danger','Dosen tidak ditemukan.');
+        } else {
+            setFlash('success','Password direset. Password sementara: '.$temp.' (catat sekarang, tidak ditampilkan lagi). Pengguna wajib menggantinya saat login.');
+        }
     } elseif ($aksi === 'hapus') {
         execute('DELETE FROM user WHERE id_user=?',[(int)$_POST['id_user']]);
         setFlash('success','Data dosen berhasil dihapus.');
@@ -95,12 +102,18 @@ include __DIR__ . '/../includes/sidebar.php';
                   <?php $sisa = $d['kuota_bimbingan'] - $d['terisi']; ?>
                   <span class="badge <?= $sisa===0?'danger':($sisa<=2?'warning':'success') ?>"><span class="badge-dot"></span><?= $sisa ?></span>
                 </td>
-                <td style="text-align:right;">
+                <td style="text-align:right;white-space:nowrap;">
                   <button type="button" class="btn-icon" title="Pratinjau Data" onclick="openPreviewModal(<?= $jsonData ?>)">👁️</button>
-                  
+
                   <button type="button" class="btn-icon" title="Edit Data" onclick="openEditModal(<?= $jsonData ?>)">✏️</button>
-                  
-                  <form method="POST" onsubmit="return confirm('Hapus dosen ini? Semua data bimbingan terkait akan ikut terhapus.')" style="display:inline;">
+
+                  <form method="POST" style="display:inline;" onsubmit="return confirm('Reset password dosen ini? Password lama tidak akan berlaku lagi.')"><?= csrfField() ?>
+                    <input type="hidden" name="aksi" value="reset_password">
+                    <input type="hidden" name="id_user" value="<?= $d['id_user'] ?>">
+                    <button type="submit" class="btn-icon" title="Reset Password">🔑</button>
+                  </form>
+
+                  <form method="POST" onsubmit="return confirm('Hapus dosen ini? Semua data bimbingan terkait akan ikut terhapus.')" style="display:inline;"><?= csrfField() ?>
                     <input type="hidden" name="aksi" value="hapus">
                     <input type="hidden" name="id_user" value="<?= $d['id_user'] ?>">
                     <button type="submit" class="btn-icon" title="Hapus Data">🗑️</button>
@@ -125,7 +138,7 @@ include __DIR__ . '/../includes/sidebar.php';
       <button type="button" onclick="document.getElementById('modalDosen').style.display='none'" style="background:none;border:none;font-size:20px;cursor:pointer;">×</button>
     </div>
     
-    <form method="POST">
+    <form method="POST"><?= csrfField() ?>
       <input type="hidden" name="aksi" value="tambah">
       
       <div class="form-group">
@@ -200,7 +213,7 @@ include __DIR__ . '/../includes/sidebar.php';
       <button type="button" onclick="document.getElementById('modalEdit').style.display='none'" style="background:none;border:none;font-size:20px;cursor:pointer;">×</button>
     </div>
     
-    <form method="POST">
+    <form method="POST"><?= csrfField() ?>
       <input type="hidden" name="aksi" value="edit">
       <input type="hidden" name="id_user" id="edit_id_user">
       

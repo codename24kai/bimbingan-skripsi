@@ -59,7 +59,7 @@ include __DIR__ . '/../includes/sidebar.php';
     <div class="form-card">
       <h2>Ajukan Jadwal</h2>
       <p>Pilih waktu yang tersedia sesuai slot dosen.</p>
-      <form method="POST">
+      <form method="POST"><?= csrfField() ?>
         <div class="form-group">
           <label class="form-label">Tanggal <span style="color:red">*</span></label>
           <input class="form-input" type="date" name="tgl_sesi" required min="<?= date('Y-m-d') ?>">

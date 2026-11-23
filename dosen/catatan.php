@@ -21,10 +21,28 @@ $listBimb = fetchAll(
 
 // Handle POST: add catatan
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $id_sesi   = (int)$_POST['id_sesi'];
+    $id_sesi   = (int)($_POST['id_sesi'] ?? 0);
     $isi       = trim($_POST['isi_catatan'] ?? '');
     $keputusan = $_POST['keputusan'] ?? 'disetujui';
     $bab       = trim($_POST['bab_terkait'] ?? '');
+    $backUrl   = BASE_URL . '/dosen/catatan.php' . ($id_bimb ? '?id_bimbingan='.$id_bimb : '');
+
+    // Pastikan sesi ini milik mahasiswa bimbingan dosen yang sedang login
+    $sesiMilik = fetchOne(
+        'SELECT sb.id_sesi FROM sesi_bimbingan sb
+         JOIN bimbingan b ON b.id_bimbingan = sb.id_bimbingan
+         WHERE sb.id_sesi = ? AND b.id_dosen = ?', [$id_sesi, $eid]
+    );
+    if (!$sesiMilik) {
+        setFlash('danger', 'Sesi bimbingan tidak ditemukan atau bukan milik mahasiswa bimbingan Anda.');
+        header('Location: ' . $backUrl);
+        exit;
+    }
+    if ($isi === '' || !in_array($keputusan, ['disetujui', 'revisi', 'ditolak'], true)) {
+        setFlash('danger', 'Isi catatan dan keputusan wajib diisi dengan benar.');
+        header('Location: ' . $backUrl);
+        exit;
+    }
 
     // Also update sesi status to selesai
     execute('UPDATE sesi_bimbingan SET status="selesai" WHERE id_sesi=?', [$id_sesi]);
@@ -46,7 +64,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
     setFlash('success', 'Catatan bimbingan berhasil disimpan.');
-    header('Location: ' . BASE_URL . '/dosen/catatan.php' . ($id_bimb ? '?id_bimbingan='.$id_bimb : ''));
+    header('Location: ' . $backUrl);
     exit;
 }
 
@@ -135,7 +153,7 @@ include __DIR__ . '/../includes/sidebar.php';
       <?php if (empty($sesiAvail)): ?>
         <div class="alert info">Tidak ada sesi yang perlu dicatat saat ini.</div>
       <?php else: ?>
-        <form method="POST">
+        <form method="POST"><?= csrfField() ?>
           <div class="form-group">
             <label class="form-label">Pilih Sesi</label>
             <select class="form-input" name="id_sesi" required>

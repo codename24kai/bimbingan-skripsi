@@ -31,6 +31,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['id_dosen'])) {
         setFlash('danger', 'Gagal: SK Bimbingan Anda sudah terbit, tidak dapat mengubah usulan dosen lagi.');
     } else {
         $id_dosen_usul = (int)$_POST['id_dosen'];
+        if (!fetchOne('SELECT id_dosen FROM dosen WHERE id_dosen=?', [$id_dosen_usul])) {
+            setFlash('danger', 'Dosen yang dipilih tidak ditemukan.');
+            header('Location: ' . BASE_URL . '/mahasiswa/pengajuan_dosen.php');
+            exit;
+        }
         execute('UPDATE judul_skripsi SET usulan_dosen=? WHERE id_judul=?', [$id_dosen_usul, $judulDisetujui['id_judul']]);
         setFlash('success', 'Usulan dosen pembimbing berhasil dikirim dan akan ditinjau oleh Kaprodi.');
         
@@ -75,7 +80,7 @@ include __DIR__ . '/../includes/sidebar.php';
             <?php endif; ?>
 
             <h2 style="font-size:16px; margin-bottom:16px;">Pilih Rekomendasi Dosen</h2>
-            <form method="POST">
+            <form method="POST"><?= csrfField() ?>
                 <div class="form-group">
                     <label class="form-label">Judul Skripsi (Disetujui)</label>
                     <div style="padding:10px; background:var(--cream); border-radius:6px; font-size:13px; font-weight:500; line-height:1.4;">

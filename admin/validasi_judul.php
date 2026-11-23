@@ -10,9 +10,22 @@ $activePage = 'validasi_judul';
 
 // Handle aksi validasi (Setujui / Tolak)
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $aksi        = $_POST['aksi'] ?? '';
-    $id_judul    = (int)$_POST['id_judul'];
-    $id_user_mhs = (int)$_POST['id_user_mhs']; // Untuk kirim notifikasi
+    $aksi     = $_POST['aksi'] ?? '';
+    $id_judul = (int)$_POST['id_judul'];
+
+    // Ambil data judul dari database (jangan percaya id_user dari form)
+    $pengajuan = fetchOne(
+        'SELECT j.*, u.id_user AS id_user_mhs FROM judul_skripsi j
+         JOIN mahasiswa m ON m.id_mahasiswa = j.id_mahasiswa
+         JOIN user u ON u.id_user = m.id_user
+         WHERE j.id_judul = ?', [$id_judul]
+    );
+    if (!$pengajuan || $pengajuan['status'] !== 'diajukan') {
+        setFlash('danger', 'Pengajuan judul tidak ditemukan atau sudah divalidasi.');
+        header('Location: ' . BASE_URL . '/admin/validasi_judul.php');
+        exit;
+    }
+    $id_user_mhs = (int)$pengajuan['id_user_mhs'];
 
     $db = getDB();
     $db->beginTransaction();
@@ -25,13 +38,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if (empty($judul_terpilih)) {
                 throw new \Exception('Anda harus memilih salah satu judul untuk disetujui.');
             }
+            $opsiJudul = array_filter([
+                trim((string)$pengajuan['judul_indonesia']),
+                trim((string)$pengajuan['judul_alternatif_1']),
+                trim((string)$pengajuan['judul_alternatif_2']),
+            ]);
+            if (!in_array($judul_terpilih, $opsiJudul, true)) {
+                throw new \Exception('Judul yang dipilih tidak sesuai dengan opsi yang diajukan mahasiswa.');
+            }
 
             // Update status menjadi disetujui, dan timpa judul_indonesia dengan judul yang dipilih
             execute('UPDATE judul_skripsi SET status="disetujui", judul_indonesia=? WHERE id_judul=?', [$judul_terpilih, $id_judul]);
             
-            // PERBAIKAN ERROR HY093: Sinkronisasi 5 tanda tanya (?) dengan 5 parameter array
-            execute('INSERT INTO notifikasi (id_user, judul, pesan, tipe, modul) VALUES (?, ?, ?, ?, ?)', 
-                    [$id_user_mhs, 'Judul Skripsi Disetujui!', 'Selamat! Judul Anda telah disetujui. Silakan tunggu penetapan Dosen Pembimbing.', 'sukses', 'judul']);
+            // Kirim Notifikasi
+            execute('INSERT INTO notifikasi (id_user, judul, pesan, tipe, modul) VALUES (?, ?, ?, "sukses", "judul")', 
+                    [$id_user_mhs, 'Judul Skripsi Disetujui!', 'Selamat! Judul Anda telah disetujui. Silakan tunggu penetapan Dosen Pembimbing.']);
             
             setFlash('success', 'Judul berhasil disetujui dan diteruskan ke antrean plotting pembimbing.');
 
@@ -41,14 +62,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Update status
             execute('UPDATE judul_skripsi SET status="ditolak" WHERE id_judul=?', [$id_judul]);
             
-            // PERBAIKAN ERROR HY093: Sinkronisasi 5 tanda tanya (?) dengan 5 parameter array
-            execute('INSERT INTO notifikasi (id_user, judul, pesan, tipe, modul) VALUES (?, ?, ?, ?, ?)', 
-                    [$id_user_mhs, 'Pengajuan Judul Ditolak', 'Pengajuan Anda ditolak. Catatan: ' . $catatan, 'danger', 'judul']);
+            // Kirim Notifikasi
+            execute('INSERT INTO notifikasi (id_user, judul, pesan, tipe, modul) VALUES (?, ?, ?, "error", "judul")', 
+                    [$id_user_mhs, 'Pengajuan Judul Ditolak', 'Pengajuan Anda ditolak. Catatan: ' . $catatan]);
             
             setFlash('warning', 'Pengajuan judul telah ditolak.');
         }
 
         $db->commit();
+    } catch (\PDOException $e) {
+        $db->rollBack();
+        error_log('validasi_judul: ' . $e->getMessage());
+        setFlash('danger', 'Gagal memproses validasi. Silakan coba lagi.');
     } catch (\Exception $e) {
         $db->rollBack();
         setFlash('danger', 'Gagal memproses validasi: ' . $e->getMessage());
@@ -135,13 +160,13 @@ include __DIR__ . '/../includes/sidebar.php';
                           <td>
                               <div style="display:flex; gap:8px; flex-direction:column;">
                                   <?php if($p['file_transkrip']): ?>
-                                      <a href="<?= BASE_URL ?>/<?= e($p['file_transkrip']) ?>" target="_blank" style="font-size:11px; color:var(--info); text-decoration:none;">📄 Cek Transkrip/KRS</a>
+                                      <a href="<?= e(fileUrl($p['file_transkrip'])) ?>" target="_blank" style="font-size:11px; color:var(--info); text-decoration:none;">📄 Cek Transkrip/KRS</a>
                                   <?php else: ?>
                                       <span style="font-size:11px; color:var(--danger);">❌ Syarat Kurang</span>
                                   <?php endif; ?>
                                   
                                   <?php if($p['file_proposal']): ?>
-                                      <a href="<?= BASE_URL ?>/<?= e($p['file_proposal']) ?>" target="_blank" style="font-size:11px; color:var(--slate); text-decoration:none;">📄 Draft Proposal</a>
+                                      <a href="<?= e(fileUrl($p['file_proposal'])) ?>" target="_blank" style="font-size:11px; color:var(--slate); text-decoration:none;">📄 Draft Proposal</a>
                                   <?php endif; ?>
                               </div>
                           </td>
@@ -211,7 +236,7 @@ include __DIR__ . '/../includes/sidebar.php';
             <div id="modal_latar_belakang" style="font-size:13px; line-height:1.6; color:var(--navy);"></div>
         </div>
 
-        <form id="formValidasi" method="POST">
+        <form id="formValidasi" method="POST"><?= csrfField() ?>
             <input type="hidden" name="id_judul" id="val_id_judul">
             <input type="hidden" name="id_user_mhs" id="val_id_user_mhs">
             <input type="hidden" name="aksi" id="val_aksi" value="setujui">

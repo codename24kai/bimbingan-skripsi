@@ -22,7 +22,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['aksi'])) {
         $halaman    = trim($_POST['halaman_revisi'] ?? '');
         $catatan    = trim($_POST['catatan_revisi']);
 
-        if (empty($catatan)) {
+        // Dokumen harus milik mahasiswa bimbingan dosen yang sedang login
+        $dokMilik = fetchOne(
+            'SELECT d.id_dokumen FROM dokumen d
+             JOIN bimbingan b ON b.id_mahasiswa = d.id_mahasiswa
+             WHERE d.id_dokumen = ? AND b.id_dosen = ?', [$id_dokumen, $id_dosen]
+        );
+
+        if (!$dokMilik) {
+            setFlash('danger', 'Dokumen tidak ditemukan atau bukan milik mahasiswa bimbingan Anda.');
+        } elseif (!in_array($status_dok, ['direvisi', 'disetujui'], true)
+                  || !in_array($prioritas, ['minor', 'mayor', 'kritis'], true)) {
+            setFlash('danger', 'Status dokumen atau prioritas tidak valid.');
+        } elseif (empty($catatan)) {
             setFlash('danger', 'Catatan revisi tidak boleh kosong.');
         } else {
             $db = getDB();
@@ -43,7 +55,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['aksi'])) {
                     $pesanNotif = ($status_dok === 'disetujui') 
                         ? 'Dokumen '.$dokInfo['nama_dokumen'].' telah disetujui dengan catatan.' 
                         : 'Dosen pembimbing memberikan catatan revisi pada dokumen '.$dokInfo['nama_dokumen'].'.';
-                    $tipeNotif = ($status_dok === 'disetujui') ? 'sukses' : 'warning';
+                    $tipeNotif = ($status_dok === 'disetujui') ? 'sukses' : 'peringatan';
                     
                     execute('INSERT INTO notifikasi (id_user, judul, pesan, tipe, modul) VALUES (?, ?, ?, ?, "dokumen")', 
                             [$dokInfo['id_user'], 'Update Revisi Dokumen', $pesanNotif, $tipeNotif]);
@@ -136,7 +148,7 @@ include __DIR__ . '/../includes/sidebar.php';
                   <td><span class="badge <?= badge($d['status']) ?>"><span class="badge-dot"></span><?= e(strtoupper($d['status'])) ?></span></td>
                   <td style="text-align:right;">
                     <div style="display:flex;gap:6px; justify-content:flex-end;">
-                      <a href="<?= BASE_URL . '/' . e($d['file_path']) ?>" target="_blank" class="btn btn-secondary" style="padding:4px 8px; font-size:11px;" title="Unduh File">⬇️ Unduh</a>
+                      <a href="<?= e(fileUrl($d['file_path'])) ?>" target="_blank" class="btn btn-secondary" style="padding:4px 8px; font-size:11px;" title="Unduh File">⬇️ Unduh</a>
                       <button type="button" class="btn btn-primary" style="padding:4px 8px; font-size:11px;" onclick="openReviewModal(<?= $jsonData ?>)">✍️ Beri Revisi</button>
                     </div>
                   </td>
@@ -184,7 +196,7 @@ include __DIR__ . '/../includes/sidebar.php';
           <div id="rev_nama_mhs" style="font-size:12px; color:var(--slate); margin-top:4px;">-</div>
       </div>
 
-      <form method="POST">
+      <form method="POST"><?= csrfField() ?>
         <input type="hidden" name="aksi" value="beri_revisi">
         <input type="hidden" name="id_dokumen" id="rev_id_dokumen">
         

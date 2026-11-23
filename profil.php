@@ -12,16 +12,45 @@ $eid        = entityId();
 $role       = role();
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $nama  = trim($_POST['nama_lengkap'] ?? '');
-    $noTlp = trim($_POST['no_telepon'] ?? '');
-    $newPw = $_POST['new_password'] ?? '';
+    $nama      = trim($_POST['nama_lengkap'] ?? '');
+    $noTlp     = trim($_POST['no_telepon'] ?? '');
+    $oldPw     = (string)($_POST['old_password'] ?? '');
+    $newPw     = (string)($_POST['new_password'] ?? '');
+    $confirmPw = (string)($_POST['confirm_password'] ?? '');
+    $mustChange = !empty($_SESSION['must_change_password']);
+
+    $error = '';
+    if ($nama === '') {
+        $error = 'Nama lengkap wajib diisi.';
+    } elseif ($mustChange && $newPw === '') {
+        $error = 'Anda wajib mengganti password bawaan sebelum melanjutkan.';
+    } elseif ($newPw !== '') {
+        $current = fetchOne('SELECT id_user, password_hash FROM user WHERE id_user=?', [$uid]);
+        if (!$current || !verifyPassword($oldPw, $current)) {
+            $error = 'Password lama tidak sesuai.';
+        } elseif (strlen($newPw) < MIN_PASSWORD_LENGTH) {
+            $error = 'Password baru minimal ' . MIN_PASSWORD_LENGTH . ' karakter.';
+        } elseif ($newPw !== $confirmPw) {
+            $error = 'Konfirmasi password baru tidak cocok.';
+        } elseif (isDefaultOrTempPassword($newPw) || $newPw === $oldPw) {
+            $error = 'Gunakan password baru yang berbeda dari password lama atau bawaan.';
+        }
+    }
+
+    if ($error !== '') {
+        setFlash('danger', $error);
+        header('Location: ' . BASE_URL . '/profil.php');
+        exit;
+    }
 
     execute('UPDATE user SET nama_lengkap=? WHERE id_user=?', [$nama, $uid]);
     if ($role === 'mahasiswa') {
         execute('UPDATE mahasiswa SET no_telepon=? WHERE id_mahasiswa=?', [$noTlp, $eid]);
     }
-    if ($newPw) {
-        execute('UPDATE user SET password_hash=? WHERE id_user=?', [hash('sha256',$newPw), $uid]);
+    if ($newPw !== '') {
+        execute('UPDATE user SET password_hash=? WHERE id_user=?', [hashPassword($newPw), $uid]);
+        $_SESSION['must_change_password'] = false;
+        session_regenerate_id(true);
     }
 
     // Refresh session name
@@ -78,7 +107,7 @@ include __DIR__ . '/includes/sidebar.php';
     <div class="form-card">
       <h2>Edit Informasi</h2>
       <p>Perbarui data profil Anda</p>
-      <form method="POST">
+      <form method="POST"><?= csrfField() ?>
         <div class="form-row">
           <div class="form-group">
             <label class="form-label">Nama Lengkap</label>
@@ -114,14 +143,19 @@ include __DIR__ . '/includes/sidebar.php';
 
         <div style="border-top:1px solid var(--cream-dark);padding-top:20px;margin-top:8px;">
           <div style="font-size:14px;font-weight:600;color:var(--navy);margin-bottom:14px;">Ganti Password</div>
+          <?php $mustChange = !empty($_SESSION['must_change_password']); ?>
+          <div class="form-group">
+            <label class="form-label">Password Lama<?= $mustChange ? '' : ' (wajib jika mengganti password)' ?></label>
+            <input class="form-input" type="password" name="old_password" placeholder="••••••••" autocomplete="current-password"<?= $mustChange ? ' required' : '' ?>>
+          </div>
           <div class="form-row">
             <div class="form-group">
-              <label class="form-label">Password Baru (kosongkan jika tidak diganti)</label>
-              <input class="form-input" type="password" name="new_password" placeholder="••••••••">
+              <label class="form-label">Password Baru<?= $mustChange ? '' : ' (kosongkan jika tidak diganti)' ?></label>
+              <input class="form-input" type="password" name="new_password" placeholder="Minimal <?= MIN_PASSWORD_LENGTH ?> karakter" minlength="<?= MIN_PASSWORD_LENGTH ?>" autocomplete="new-password"<?= $mustChange ? ' required' : '' ?>>
             </div>
             <div class="form-group">
               <label class="form-label">Konfirmasi Password Baru</label>
-              <input class="form-input" type="password" placeholder="••••••••">
+              <input class="form-input" type="password" name="confirm_password" placeholder="••••••••" autocomplete="new-password"<?= $mustChange ? ' required' : '' ?>>
             </div>
           </div>
         </div>

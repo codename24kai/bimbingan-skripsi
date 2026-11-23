@@ -70,7 +70,7 @@ $navs = [
       ['href'=>'dashboard.php',          'icon'=>'📊','label'=>'Dashboard',            'id'=>'dashboard'],
       ['href'=>'dosen/validasi.php',     'icon'=>'✅','label'=>'Validasi Judul',         'id'=>'validasi'],
       ['href'=>'dosen/mahasiswa.php',    'icon'=>'🎒','label'=>'Mahasiswa Bimbingan',    'id'=>'mahasiswa_dosen'],
-      ['href'=>'dosen/revisi.php',       'icon'=>'📑','label'=>'Review Dokumen'],
+      ['href'=>'dosen/revisi.php',       'icon'=>'📑','label'=>'Review Dokumen',         'id'=>'revisi_dokumen'],
       ['href'=>'dosen/catatan.php',      'icon'=>'📝','label'=>'Catatan Bimbingan',      'id'=>'catatan'],
       ['href'=>'dosen/jadwal.php',       'icon'=>'🗓️','label'=>'Jadwal Konsultasi',     'id'=>'jadwal_dosen'],
     ]],

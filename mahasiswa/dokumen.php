@@ -173,9 +173,9 @@ include __DIR__ . '/../includes/sidebar.php';
                       </td>
                       <td style="text-align:right;">
                         <div style="display:flex;gap:6px; justify-content:flex-end;">
-                          <a href="<?= BASE_URL . '/' . $d['file_path'] ?>" target="_blank" class="btn-icon" title="Unduh File">⬇️</a>
+                          <a href="<?= e(fileUrl($d['file_path'])) ?>" target="_blank" class="btn-icon" title="Unduh File">⬇️</a>
                           <button type="button" class="btn-icon" title="Edit Dokumen" onclick="openEditModal(<?= $jsonData ?>)">✏️</button>
-                          <form method="POST" style="display:inline;" onsubmit="return confirm('Yakin ingin menghapus dokumen ini secara permanen?')">
+                          <form method="POST" style="display:inline;" onsubmit="return confirm('Yakin ingin menghapus dokumen ini secara permanen?')"><?= csrfField() ?>
                               <input type="hidden" name="action" value="hapus">
                               <input type="hidden" name="id_dokumen" value="<?= $d['id_dokumen'] ?>">
                               <button type="submit" class="btn-icon" title="Hapus Dokumen">🗑️</button>
@@ -217,7 +217,7 @@ include __DIR__ . '/../includes/sidebar.php';
     <div class="form-card" style="height:fit-content;">
       <h2>Unggah Dokumen</h2>
       <p>Upload dokumen skripsi terbaru Anda</p>
-      <form method="POST" enctype="multipart/form-data">
+      <form method="POST" enctype="multipart/form-data"><?= csrfField() ?>
         <input type="hidden" name="action" value="upload">
         <div class="form-group">
           <label class="form-label">Nama Dokumen</label>
@@ -252,7 +252,7 @@ include __DIR__ . '/../includes/sidebar.php';
       <h2 style="font-family:'Playfair Display',serif;font-size:20px;">Edit Data Dokumen</h2>
       <button type="button" onclick="document.getElementById('modalEdit').style.display='none'" style="background:none;border:none;font-size:20px;cursor:pointer;">×</button>
     </div>
-    <form method="POST">
+    <form method="POST"><?= csrfField() ?>
       <input type="hidden" name="action" value="edit">
       <input type="hidden" name="id_dokumen" id="edit_id_dok">
       
