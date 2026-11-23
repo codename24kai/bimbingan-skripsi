@@ -362,7 +362,7 @@ erDiagram
 - Login multi-role (Mahasiswa / Dosen / Admin)
 - Session management dengan PHP native session
 - Role-based access control (RBAC)
-- Validasi kredensial dengan SHA-256 hashing
+- Validasi kredensial dengan `password_hash()` (bcrypt); hash SHA-256 lama otomatis di-upgrade saat login
 - Auto-redirect berdasarkan role setelah login
 - Tracking `last_login` timestamp
 
@@ -500,6 +500,10 @@ http://localhost/basis-data-2/bimbingan-skripsi/
 | **Dosen** | `sari.indah@univ.ac.id` | `dosen123` |
 | **Mahasiswa** | `ahmad.fauzi@mhs.univ.ac.id` | `mhs123` |
 
+> Akun yang login dengan password bawaan (`admin123`, `dosen123`, `mhs123`, `mahasiswa123`) wajib mengganti password (minimal 8 karakter) sebelum bisa membuka halaman lain.
+>
+> File upload disimpan di `uploads/` yang diblokir dari akses langsung (`uploads/.htaccess`, butuh Apache dengan `AllowOverride All`). File hanya bisa dibuka lewat `download.php` oleh admin, mahasiswa pemilik, atau dosen pembimbingnya.
+
 ---
 
 ## ⚙️ Konfigurasi Database
@@ -588,7 +592,6 @@ define('MAX_FILE_KB', 10240); // 10 MB
 | 📱 **PWA Support** | Progressive Web App untuk akses mobile offline | Rendah |
 | 📊 **Analytics Dashboard** | Grafik & chart interaktif dengan Chart.js | Rendah |
 | 🔍 **Full-text Search** | Pencarian judul skripsi dengan MySQL FULLTEXT | Rendah |
-| 🛡️ **bcrypt Hashing** | Migrasi dari SHA-256 ke bcrypt/argon2 | Tinggi |
 
 ---
 
@@ -903,7 +906,7 @@ erDiagram
 - Login multi-role (Mahasiswa / Dosen / Admin)
 - Session management dengan PHP native session
 - Role-based access control (RBAC)
-- Validasi kredensial dengan SHA-256 hashing
+- Validasi kredensial dengan `password_hash()` (bcrypt); hash SHA-256 lama otomatis di-upgrade saat login
 - Auto-redirect berdasarkan role setelah login
 - Tracking `last_login` timestamp
 
@@ -1113,7 +1116,6 @@ http://localhost/basis-data-2/bimbingan-skripsi/
 | 📱 **PWA Support** | Progressive Web App untuk akses mobile offline | Rendah |
 | 📊 **Analytics Dashboard** | Grafik & chart interaktif dengan Chart.js | Rendah |
 | 🔍 **Full-text Search** | Pencarian judul skripsi dengan MySQL FULLTEXT | Rendah |
-| 🛡️ **bcrypt Hashing** | Migrasi dari SHA-256 ke bcrypt/argon2 | Tinggi |
 
 ---
 
@@ -1497,7 +1499,7 @@ erDiagram
 - Login multi-role (Mahasiswa / Dosen / Admin)
 - Session management dengan PHP native session
 - Role-based access control (RBAC)
-- Validasi kredensial dengan SHA-256 hashing
+- Validasi kredensial dengan `password_hash()` (bcrypt); hash SHA-256 lama otomatis di-upgrade saat login
 - Auto-redirect berdasarkan role setelah login
 - Tracking `last_login` timestamp
 
@@ -1707,7 +1709,6 @@ http://localhost/basis-data-2/bimbingan-skripsi/
 | 📱 **PWA Support** | Progressive Web App untuk akses mobile offline | Rendah |
 | 📊 **Analytics Dashboard** | Grafik & chart interaktif dengan Chart.js | Rendah |
 | 🔍 **Full-text Search** | Pencarian judul skripsi dengan MySQL FULLTEXT | Rendah |
-| 🛡️ **bcrypt Hashing** | Migrasi dari SHA-256 ke bcrypt/argon2 | Tinggi |
 
 ---
 
@@ -2085,7 +2086,7 @@ erDiagram
 - Login multi-role (Mahasiswa / Dosen / Admin)
 - Session management dengan PHP native session
 - Role-based access control (RBAC)
-- Validasi kredensial dengan SHA-256 hashing
+- Validasi kredensial dengan `password_hash()` (bcrypt); hash SHA-256 lama otomatis di-upgrade saat login
 - Auto-redirect berdasarkan role setelah login
 - Tracking `last_login` timestamp
 
@@ -2295,7 +2296,6 @@ http://localhost/basis-data-2/bimbingan-skripsi/
 | 📱 **PWA Support** | Progressive Web App untuk akses mobile offline | Rendah |
 | 📊 **Analytics Dashboard** | Grafik & chart interaktif dengan Chart.js | Rendah |
 | 🔍 **Full-text Search** | Pencarian judul skripsi dengan MySQL FULLTEXT | Rendah |
-| 🛡️ **bcrypt Hashing** | Migrasi dari SHA-256 ke bcrypt/argon2 | Tinggi |
 
 ---
 
@@ -2681,7 +2681,7 @@ erDiagram
 - Login multi-role (Mahasiswa / Dosen / Admin)
 - Session management dengan PHP native session
 - Role-based access control (RBAC)
-- Validasi kredensial dengan SHA-256 hashing
+- Validasi kredensial dengan `password_hash()` (bcrypt); hash SHA-256 lama otomatis di-upgrade saat login
 - Auto-redirect berdasarkan role setelah login
 - Tracking `last_login` timestamp
 
@@ -2891,7 +2891,6 @@ http://localhost/basis-data-2/bimbingan-skripsi/
 | 📱 **PWA Support** | Progressive Web App untuk akses mobile offline | Rendah |
 | 📊 **Analytics Dashboard** | Grafik & chart interaktif dengan Chart.js | Rendah |
 | 🔍 **Full-text Search** | Pencarian judul skripsi dengan MySQL FULLTEXT | Rendah |
-| 🛡️ **bcrypt Hashing** | Migrasi dari SHA-256 ke bcrypt/argon2 | Tinggi |
 
 ---
 
@@ -3271,7 +3270,7 @@ erDiagram
 - Login multi-role (Mahasiswa / Dosen / Admin)
 - Session management dengan PHP native session
 - Role-based access control (RBAC)
-- Validasi kredensial dengan SHA-256 hashing
+- Validasi kredensial dengan `password_hash()` (bcrypt); hash SHA-256 lama otomatis di-upgrade saat login
 - Auto-redirect berdasarkan role setelah login
 - Tracking `last_login` timestamp
 
@@ -3481,7 +3480,6 @@ Tambahkan screenshot tampilan aplikasi di folder `assets/` dan update path di ba
 | 📱 **PWA Support** | Progressive Web App untuk akses mobile offline | Rendah |
 | 📊 **Analytics Dashboard** | Grafik & chart interaktif dengan Chart.js | Rendah |
 | 🔍 **Full-text Search** | Pencarian judul skripsi dengan MySQL FULLTEXT | Rendah |
-| 🛡️ **bcrypt Hashing** | Migrasi dari SHA-256 ke bcrypt/argon2 | Tinggi |
 
 **
 ```
@@ -3840,7 +3838,7 @@ erDiagram
 - Login multi-role (Mahasiswa / Dosen / Admin)
 - Session management dengan PHP native session
 - Role-based access control (RBAC)
-- Validasi kredensial dengan SHA-256 hashing
+- Validasi kredensial dengan `password_hash()` (bcrypt); hash SHA-256 lama otomatis di-upgrade saat login
 - Auto-redirect berdasarkan role setelah login
 - Tracking `last_login` timestamp
 
@@ -4050,7 +4048,6 @@ http://localhost/basis-data-2/bimbingan-skripsi/
 | 📱 **PWA Support** | Progressive Web App untuk akses mobile offline | Rendah |
 | 📊 **Analytics Dashboard** | Grafik & chart interaktif dengan Chart.js | Rendah |
 | 🔍 **Full-text Search** | Pencarian judul skripsi dengan MySQL FULLTEXT | Rendah |
-| 🛡️ **bcrypt Hashing** | Migrasi dari SHA-256 ke bcrypt/argon2 | Tinggi |
 
 ---
 

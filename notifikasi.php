@@ -64,7 +64,7 @@ include __DIR__ . '/includes/sidebar.php';
                 </div>
                 
                 <?php if (!empty($semua_notif)): ?>
-                    <form method="POST">
+                    <form method="POST"><?= csrfField() ?>
                         <input type="hidden" name="aksi" value="tandai_semua">
                         <button type="submit" class="btn btn-secondary" style="font-size: 13px;">
                             ✔️ Tandai Semua Dibaca
@@ -112,7 +112,7 @@ include __DIR__ . '/includes/sidebar.php';
                                                 </a>
                                             <?php endif; ?>
                                             
-                                            <form method="POST" onsubmit="return confirm('Hapus notifikasi ini?')" style="margin: 0;">
+                                            <form method="POST" onsubmit="return confirm('Hapus notifikasi ini?')" style="margin: 0;"><?= csrfField() ?>
                                                 <input type="hidden" name="aksi" value="hapus">
                                                 <input type="hidden" name="id_notif" value="<?= $n['id_notif'] ?>">
                                                 <button type="submit" style="background: none; border: none; color: var(--danger); font-size: 12px; cursor: pointer; text-decoration: underline;">

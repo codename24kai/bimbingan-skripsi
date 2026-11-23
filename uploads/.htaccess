@@ -1,0 +1,9 @@
+# Blokir akses langsung ke file upload. File disajikan lewat download.php
+# yang memeriksa login dan hak akses.
+<IfModule mod_authz_core.c>
+    Require all denied
+</IfModule>
+<IfModule !mod_authz_core.c>
+    Order allow,deny
+    Deny from all
+</IfModule>

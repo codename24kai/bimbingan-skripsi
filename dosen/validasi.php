@@ -11,14 +11,22 @@ $eid        = entityId();
 
 // Handle aksi
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $id_judul = (int)$_POST['id_judul'];
+    $id_judul = (int)($_POST['id_judul'] ?? 0);
     $aksi     = $_POST['aksi'] ?? '';
 
     $judul = fetchOne('SELECT j.*,m.id_mahasiswa,u.id_user AS id_user_mhs
                        FROM judul_skripsi j
                        JOIN mahasiswa m ON m.id_mahasiswa=j.id_mahasiswa
                        JOIN user u ON u.id_user=m.id_user
-                       WHERE j.id_judul=?', [$id_judul]);
+                       WHERE j.id_judul=?
+                         AND EXISTS (SELECT 1 FROM bimbingan b
+                                     WHERE b.id_mahasiswa = j.id_mahasiswa AND b.id_dosen = ?)', [$id_judul, $eid]);
+
+    if (!$judul) {
+        setFlash('danger', 'Pengajuan judul tidak ditemukan atau bukan milik mahasiswa bimbingan Anda.');
+        header('Location: ' . BASE_URL . '/dosen/validasi.php');
+        exit;
+    }
 
     if ($judul) {
         if ($aksi === 'setujui') {
@@ -95,14 +103,14 @@ include __DIR__ . '/../includes/sidebar.php';
           <?php if ($j['latar_belakang']): ?>
             <div class="validate-desc"><?= e(mb_strimwidth($j['latar_belakang'],0,300,'...')) ?></div>
           <?php endif; ?>
-          <form method="POST" class="validate-actions">
+          <form method="POST" class="validate-actions"><?= csrfField() ?>
             <input type="hidden" name="id_judul" value="<?= $j['id_judul'] ?>">
             <button name="aksi" value="setujui" class="btn btn-success btn-sm">✅ Setujui</button>
             <button name="aksi" value="revisi"  class="btn btn-warn btn-sm">✏️ Minta Revisi</button>
             <button name="aksi" value="tolak"   class="btn btn-danger btn-sm"
               data-confirm="Yakin ingin menolak pengajuan ini?">❌ Tolak</button>
             <?php if ($j['file_proposal']): ?>
-              <a href="<?= BASE_URL . '/' . $j['file_proposal'] ?>" target="_blank" class="btn btn-secondary btn-sm">📄 Lihat Proposal</a>
+              <a href="<?= e(fileUrl($j['file_proposal'])) ?>" target="_blank" class="btn btn-secondary btn-sm">📄 Lihat Proposal</a>
             <?php endif; ?>
           </form>
         </div>

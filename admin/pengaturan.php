@@ -123,7 +123,7 @@ include __DIR__ . '/../includes/sidebar.php';
       <h2 style="font-size:18px; font-family:'Playfair Display',serif; margin-bottom:8px;">Konfigurasi Umum</h2>
       <p style="font-size:13px; color:var(--slate); margin-bottom:20px;">Pengaturan dasar sistem portal bimbingan.</p>
       
-      <form method="POST">
+      <form method="POST"><?= csrfField() ?>
         <input type="hidden" name="aksi" value="simpan_umum">
         
         <div class="form-group">
@@ -179,7 +179,7 @@ include __DIR__ . '/../includes/sidebar.php';
                   </td>
                   <td style="text-align:right;">
                       <button type="button" class="btn-icon" title="Edit Prodi" onclick="openEditProdi(<?= $jsonProdi ?>)">✏️</button>
-                      <form method="POST" style="display:inline;" onsubmit="return confirm('Hapus prodi ini? Aksi akan digagalkan jika ada Dosen/Mahasiswa aktif di prodi ini.')">
+                      <form method="POST" style="display:inline;" onsubmit="return confirm('Hapus prodi ini? Aksi akan digagalkan jika ada Dosen/Mahasiswa aktif di prodi ini.')"><?= csrfField() ?>
                           <input type="hidden" name="aksi" value="hapus_prodi">
                           <input type="hidden" name="id_prodi" value="<?= $p['id_prodi'] ?>">
                           <button type="submit" class="btn-icon">🗑️</button>
@@ -202,7 +202,7 @@ include __DIR__ . '/../includes/sidebar.php';
       <h2 style="font-family:'Playfair Display',serif;font-size:18px;">Tambah Program Studi</h2>
       <button onclick="document.getElementById('modalTambahProdi').style.display='none'" style="background:none;border:none;font-size:20px;cursor:pointer;">×</button>
     </div>
-    <form method="POST">
+    <form method="POST"><?= csrfField() ?>
       <input type="hidden" name="aksi" value="tambah_prodi">
       <div class="form-group">
           <label class="form-label">Nama Program Studi</label>
@@ -240,7 +240,7 @@ include __DIR__ . '/../includes/sidebar.php';
       <h2 style="font-family:'Playfair Display',serif;font-size:18px;">Edit Program Studi</h2>
       <button onclick="document.getElementById('modalEditProdi').style.display='none'" style="background:none;border:none;font-size:20px;cursor:pointer;">×</button>
     </div>
-    <form method="POST">
+    <form method="POST"><?= csrfField() ?>
       <input type="hidden" name="aksi" value="edit_prodi">
       <input type="hidden" name="id_prodi" id="edit_id_prodi">
       <div class="form-group">

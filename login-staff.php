@@ -35,35 +35,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             [$email, $role]
         );
 
-        // 3. Pengecekan Hasil Query yang Terpisah (User ada vs Password benar)
-        if (!$user) {
-            $error = 'Akun tidak ditemukan, role tidak sesuai, atau akun belum aktif.';
-        } elseif (!hash_equals($user['password_hash'], hash('sha256', $password))) {
-            $error = 'Kata sandi yang Anda masukkan salah.';
+        // 3. Pesan disamakan agar email terdaftar tidak bisa ditebak
+        if (!$user || !verifyPassword($password, $user)) {
+            $error = 'Email, kata sandi, atau hak akses tidak sesuai.';
         } else {
             // BERHASIL - Load entity-specific data (Hanya untuk dosen dan admin)
             $entityId = 0;
             if ($role === 'dosen') {
                 $row = fetchOne('SELECT id_dosen FROM dosen WHERE id_user=?', [$user['id_user']]);
-                $entityId = $row['id_dosen'] ?? 0;
+                $entityId = (int)($row['id_dosen'] ?? 0);
             } elseif ($role === 'admin') {
                 $row = fetchOne('SELECT id_admin FROM admin WHERE id_user=?', [$user['id_user']]);
-                $entityId = $row['id_admin'] ?? 0;
+                $entityId = (int)($row['id_admin'] ?? 0);
             }
-
             // Update last_login
             execute('UPDATE user SET last_login=NOW() WHERE id_user=?', [$user['id_user']]);
-
-            // Set session persis dengan standar sistem Anda
-            $_SESSION['id_user']   = $user['id_user'];
-            $_SESSION['role']      = $user['role'];
-            $_SESSION['entity_id'] = $entityId;
-            $_SESSION['user']      = [
-                'id_user'      => $user['id_user'],
-                'nama_lengkap' => $user['nama_lengkap'],
-                'email'        => $user['email'],
-            ];
-
+            // Set session (regenerate ID untuk mencegah session fixation)
+            loginUser($user, $entityId, $password);
             // Redirect ke dashboard
             header('Location: ' . BASE_URL . '/dashboard.php');
             exit;
@@ -112,7 +100,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     </div>
                 <?php endif; ?>
 
-                <form action="" method="POST">
+                <form action="" method="POST"><?= csrfField() ?>
                     <div class="form-group">
                         <label for="role" class="form-label">Hak Akses</label>
                         <select id="role" name="role" class="form-input" required>

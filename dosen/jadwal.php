@@ -11,7 +11,7 @@ $eid        = entityId();
 
 // Handle konfirmasi/penolakan sesi
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $id_sesi = (int)$_POST['id_sesi'];
+    $id_sesi = (int)($_POST['id_sesi'] ?? 0);
     $aksi    = $_POST['aksi'] ?? '';
 
     $sesi = fetchOne('SELECT sb.*,b.id_mahasiswa,
@@ -20,7 +20,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                       JOIN bimbingan b ON b.id_bimbingan=sb.id_bimbingan
                       JOIN mahasiswa m ON m.id_mahasiswa=b.id_mahasiswa
                       JOIN user u ON u.id_user=m.id_user
-                      WHERE sb.id_sesi=?', [$id_sesi]);
+                      WHERE sb.id_sesi=? AND b.id_dosen=?', [$id_sesi, $eid]);
+
+    if (!$sesi) {
+        setFlash('danger', 'Jadwal tidak ditemukan atau bukan milik mahasiswa bimbingan Anda.');
+        header('Location: ' . BASE_URL . '/dosen/jadwal.php');
+        exit;
+    }
 
     if ($sesi) {
         if ($aksi === 'terima') {
@@ -92,7 +98,7 @@ include __DIR__ . '/../includes/sidebar.php';
                   <div style="font-size:13px;margin-top:3px;">💬 <?= e($p['topik']) ?></div>
                   <div style="font-size:12px;color:var(--slate);margin-top:3px;">⏱ <?= $p['durasi_menit'] ?> menit · 📡 <?= e($p['metode']) ?></div>
                 </div>
-                <form method="POST" style="display:flex;flex-direction:column;gap:6px;">
+                <form method="POST" style="display:flex;flex-direction:column;gap:6px;"><?= csrfField() ?>
                   <input type="hidden" name="id_sesi" value="<?= $p['id_sesi'] ?>">
                   <button name="aksi" value="terima" class="btn btn-success btn-sm">✅ Terima</button>
                   <button name="aksi" value="tolak"  class="btn btn-danger btn-sm">❌ Tolak</button>
