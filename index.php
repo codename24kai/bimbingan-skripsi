@@ -85,14 +85,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       <p>Masuk ke portal khusus <b>Mahasiswa</b></p>
 
       <?php if ($error): ?>
-        <div class="alert danger">⚠️ <?= htmlspecialchars($error) ?></div>
+        <div class="alert alert-static danger">⚠️ <?= htmlspecialchars($error) ?></div>
       <?php endif; ?>
 
       <form method="POST" action=""><?= csrfField() ?>
         <div class="form-group">
           <label for="f_email" class="form-label">Email Mahasiswa</label>
           <input id="f_email" class="form-input" type="email" name="email" required
-            placeholder="nim@mahasiswa.ac.id"
+            placeholder="nama@univ.ac.id"
             value="<?= htmlspecialchars($_POST['email'] ?? '') ?>">
         </div>
 

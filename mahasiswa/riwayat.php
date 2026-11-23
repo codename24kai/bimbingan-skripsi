@@ -16,8 +16,22 @@ $riwayat = fetchAll(
      JOIN bimbingan b ON b.id_bimbingan=sb.id_bimbingan
      LEFT JOIN catatan_bimbingan cb ON cb.id_sesi=sb.id_sesi
      WHERE b.id_mahasiswa=?
-     ORDER BY sb.tgl_sesi DESC', [$eid]
+     ORDER BY sb.tgl_sesi DESC, sb.waktu_mulai DESC', [$eid]
 );
+
+// Pisahkan sesi yang akan datang dari riwayat
+$akanDatang = array_values(array_filter($riwayat, fn($r) =>
+    in_array($r['status'], ['dijadwalkan','dikonfirmasi'], true) && $r['tgl_sesi'] >= date('Y-m-d')));
+$riwayat = array_values(array_filter($riwayat, fn($r) =>
+    !(in_array($r['status'], ['dijadwalkan','dikonfirmasi'], true) && $r['tgl_sesi'] >= date('Y-m-d'))));
+$akanDatang = array_reverse($akanDatang); // terdekat dulu
+
+// Nomor "Bimbingan ke-N" dihitung dari sesi pertama yang tidak dibatalkan
+$nomor = [];
+$n = 0;
+foreach (array_reverse($riwayat) as $r) {
+    if ($r['status'] !== 'batal') $nomor[$r['id_sesi']] = ++$n;
+}
 
 include __DIR__ . '/../includes/header.php';
 include __DIR__ . '/../includes/sidebar.php';
@@ -30,42 +44,63 @@ include __DIR__ . '/../includes/sidebar.php';
     <p>Catatan lengkap seluruh sesi bimbingan skripsi Anda</p>
   </div>
 
+  <?php if (!empty($akanDatang)): ?>
+    <div class="card" style="margin-bottom:20px;">
+      <div class="card-header">
+        <div class="card-title">Akan Datang</div>
+        <a href="<?= BASE_URL ?>/mahasiswa/bimbingan.php" style="font-size:13px;color:var(--info-text);text-decoration:underline;">Kelola jadwal</a>
+      </div>
+      <div class="card-body">
+        <?php foreach ($akanDatang as $a): ?>
+          <div class="sesi-item">
+            <div style="min-width:0;">
+              <div style="font-size:14px;font-weight:600;"><?= e($a['topik']) ?></div>
+              <div style="font-size:13px;color:var(--slate);margin-top:3px;"><?= tgl($a['tgl_sesi'].' '.$a['waktu_mulai'], 'harijam') ?> · <?= tglRelatif($a['tgl_sesi']) ?> · <?= e(label($a['metode'])) ?></div>
+            </div>
+            <span class="badge <?= badge($a['status']) ?>"><span class="badge-dot"></span><?= e(label($a['status'])) ?></span>
+          </div>
+        <?php endforeach; ?>
+      </div>
+    </div>
+  <?php endif; ?>
+
   <?php if (empty($riwayat)): ?>
     <div class="empty-state card" style="padding:48px;">
       <div class="empty-icon">📋</div>
       <div class="empty-title">Belum Ada Riwayat</div>
       <div class="empty-sub">Riwayat bimbingan akan muncul setelah sesi pertama selesai.</div>
+      <a href="<?= BASE_URL ?>/mahasiswa/bimbingan.php" class="btn btn-secondary btn-sm" style="margin-top:12px;">Ajukan jadwal bimbingan</a>
     </div>
   <?php else: ?>
-    <?php $sesi = 1; foreach ($riwayat as $r):
+    <?php foreach ($riwayat as $r):
       $cls = $r['keputusan']==='disetujui' ? 'approved' : ($r['keputusan']==='revisi' ? 'revision' : '');
     ?>
       <div class="catatan-card <?= $cls ?>">
         <div class="catatan-header">
           <div>
             <div class="catatan-dosen">
-              Bimbingan ke-<?= $sesi++ ?> — <?= e($r['topik']) ?>
+              <?= isset($nomor[$r['id_sesi']]) ? 'Bimbingan ke-' . $nomor[$r['id_sesi']] : 'Sesi dibatalkan' ?> · <?= e($r['topik']) ?>
             </div>
             <div style="display:flex;flex-wrap:wrap;gap:8px 10px;align-items:center;margin-top:6px;">
-              <span class="badge <?= badge($r['status']) ?>"><span class="badge-dot"></span><?= e($r['status']) ?></span>
+              <span class="badge <?= badge($r['status']) ?>"><span class="badge-dot"></span><?= e(label($r['status'])) ?></span>
               <?php if ($r['keputusan']): ?>
-                <span class="badge <?= badge($r['keputusan']) ?>"><span class="badge-dot"></span><?= e($r['keputusan']) ?></span>
+                <span class="badge <?= badge($r['keputusan']) ?>"><span class="badge-dot"></span>Keputusan: <?= e(mb_strtolower(label($r['keputusan']))) ?></span>
               <?php endif; ?>
               <?php if ($r['durasi_menit']): ?>
-                <span style="font-size:12px;color:var(--slate);">⏱ <?= $r['durasi_menit'] ?> menit</span>
+                <span style="font-size:12px;color:var(--slate);"><?= (int)$r['durasi_menit'] ?> menit</span>
               <?php endif; ?>
-              <span style="font-size:12px;color:var(--slate);">📡 <?= e($r['metode']) ?></span>
+              <span style="font-size:12px;color:var(--slate);"><?= e(label($r['metode'])) ?></span>
               <?php if ($r['bab_terkait']): ?>
-                <span class="badge neutral"><?= e($r['bab_terkait']) ?></span>
+                <span class="badge neutral"><?= e(label($r['bab_terkait'])) ?></span>
               <?php endif; ?>
             </div>
           </div>
-          <div class="catatan-date"><?= date('d M Y H:i', strtotime($r['tgl_sesi'].' '.$r['waktu_mulai'])) ?></div>
+          <div class="catatan-date"><?= tgl($r['tgl_sesi'].' '.$r['waktu_mulai'], 'harijam') ?></div>
         </div>
         <?php if ($r['isi_catatan']): ?>
           <div class="catatan-text"><strong>Catatan Dosen:</strong> <?= e($r['isi_catatan']) ?></div>
         <?php else: ?>
-          <div class="catatan-text" style="color:var(--slate);">Belum ada catatan untuk sesi ini.</div>
+          <div class="catatan-text" style="color:var(--slate);"><?= $r['status']==='batal' ? 'Sesi ini dibatalkan.' : 'Dosen belum menulis catatan untuk sesi ini.' ?></div>
         <?php endif; ?>
       </div>
     <?php endforeach; ?>

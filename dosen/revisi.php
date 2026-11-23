@@ -141,10 +141,10 @@ include __DIR__ . '/../includes/sidebar.php';
                   </td>
                   <td>
                     <div style="font-weight:500; font-size:13px;"><?= e($d['nama_dokumen']) ?></div>
-                    <div style="font-size:11px; color:var(--slate);"><?= e($d['jenis_bab']) ?> · <?= $d['ukuran_kb'] ?> KB</div>
+                    <div style="font-size:11px; color:var(--slate);"><?= e(label($d['jenis_bab'])) ?> · <?= $d['ukuran_kb'] ?> KB</div>
                   </td>
                   <td><span class="mono" style="font-size:12px;background:var(--cream);padding:3px 8px;border-radius:4px;">v<?= $d['versi'] ?></span></td>
-                  <td style="font-size:12px; color:var(--slate);"><?= date('d M Y', strtotime($d['tgl_upload'])) ?></td>
+                  <td style="font-size:12px; color:var(--slate);"><?= tgl($d['tgl_upload']) ?></td>
                   <td><span class="badge <?= badge($d['status']) ?>"><span class="badge-dot"></span><?= e(strtoupper($d['status'])) ?></span></td>
                   <td style="text-align:right;">
                     <div style="display:flex;gap:6px; justify-content:flex-end;">
@@ -164,7 +164,7 @@ include __DIR__ . '/../includes/sidebar.php';
                         <span>📌</span>
                         <div>
                           <strong style="color:var(--navy);">Catatan Dosen</strong> ·
-                          <span class="badge <?= badge($rv['prioritas']) ?>" style="font-size:10px;"><?= $rv['prioritas'] ?></span>
+                          <span class="badge <?= badge($rv['prioritas']) ?>" style="font-size:10px;"><?= e(label($rv['prioritas'])) ?></span>
                           <?php if ($rv['halaman_revisi']): ?> · <span style="color:var(--slate);">Hal: <?= e($rv['halaman_revisi']) ?></span><?php endif; ?>
                           <div style="color:#4a5568;margin-top:3px; line-height:1.4;"><?= nl2br(e($rv['catatan_revisi'])) ?></div>
                         </div>

@@ -96,7 +96,7 @@ include __DIR__ . '/../includes/sidebar.php';
         <div class="mini-avatar"><?= strtoupper(substr($j['nama_mhs'],0,2)) ?></div>
         <div class="validate-body">
           <div class="validate-title"><?= e($j['judul_indonesia']) ?></div>
-          <div class="validate-mhs">👤 <?= e($j['nama_mhs']) ?> · NIM: <?= e($j['nim']) ?> · Diajukan: <?= date('d M Y', strtotime($j['tgl_pengajuan'])) ?> · Iterasi: <?= $j['iterasi'] ?></div>
+          <div class="validate-mhs">👤 <?= e($j['nama_mhs']) ?> · NIM: <?= e($j['nim']) ?> · Diajukan: <?= tgl($j['tgl_pengajuan']) ?> · Iterasi: <?= $j['iterasi'] ?></div>
           <?php if ($j['bidang_penelitian']): ?>
             <div style="font-size:12px;margin-bottom:6px;"><span class="badge info"><?= e($j['bidang_penelitian']) ?></span></div>
           <?php endif; ?>
@@ -117,7 +117,7 @@ include __DIR__ . '/../includes/sidebar.php';
       </div>
     <?php endforeach; ?>
   <?php else: ?>
-    <div class="alert info">✅ Tidak ada pengajuan yang menunggu validasi saat ini.</div>
+    <div class="alert alert-static info">✅ Tidak ada pengajuan yang menunggu validasi saat ini.</div>
   <?php endif; ?>
 
   <!-- Riwayat -->
@@ -134,9 +134,9 @@ include __DIR__ . '/../includes/sidebar.php';
                   <td style="font-weight:500;"><?= e($j['nama_mhs']) ?></td>
                   <td style="max-width:280px;font-size:13px;"><?= e(mb_strimwidth($j['judul_indonesia'],0,80,'...')) ?></td>
                   <td style="font-size:13px;"><?= e($j['bidang_penelitian']) ?></td>
-                  <td><span class="badge <?= badge($j['status']) ?>"><span class="badge-dot"></span><?= $j['status'] ?></span></td>
+                  <td><span class="badge <?= badge($j['status']) ?>"><span class="badge-dot"></span><?= e(label($j['status'])) ?></span></td>
                   <td style="text-align:center;"><?= $j['iterasi'] ?></td>
-                  <td style="font-size:12px;color:var(--slate);"><?= date('d M Y', strtotime($j['tgl_pengajuan'])) ?></td>
+                  <td style="font-size:12px;color:var(--slate);"><?= tgl($j['tgl_pengajuan']) ?></td>
                 </tr>
               <?php endforeach; ?>
             </tbody>

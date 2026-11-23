@@ -25,12 +25,13 @@ $typeIcon = ['info'=>'ℹ️','sukses'=>'✅','peringatan'=>'⚠️','error'=>'�
 
   <div class="topbar-right">
     <!-- Notification button -->
-    <div class="notif-btn" id="notifBtn">
+    <button type="button" class="notif-btn" id="notifBtn"
+            aria-label="Notifikasi<?= $unreadCount > 0 ? ', ' . $unreadCount . ' belum dibaca' : '' ?>">
       🔔
       <?php if ($unreadCount > 0): ?>
-        <span class="notif-dot"></span>
+        <span class="notif-count" aria-hidden="true"><?= $unreadCount > 99 ? '99+' : $unreadCount ?></span>
       <?php endif; ?>
-    </div>
+    </button>
 
     <!-- Notification panel -->
     <div class="notif-panel" id="notifPanel">
@@ -48,7 +49,7 @@ $typeIcon = ['info'=>'ℹ️','sukses'=>'✅','peringatan'=>'⚠️','error'=>'�
             <div style="font-size:18px;flex-shrink:0;"><?= $typeIcon[$n['tipe']] ?? 'ℹ️' ?></div>
             <div>
               <div class="notif-msg"><strong><?= e($n['judul']) ?></strong><br><?= e(mb_strimwidth($n['pesan'],0,80,'...')) ?></div>
-              <div class="notif-time"><?= date('d M Y H:i', strtotime($n['created_at'])) ?></div>
+              <div class="notif-time"><?= tgl($n['created_at'], 'jam') ?></div>
             </div>
           </div>
         <?php endforeach; ?>
@@ -56,10 +57,6 @@ $typeIcon = ['info'=>'ℹ️','sukses'=>'✅','peringatan'=>'⚠️','error'=>'�
     </div>
 
     <!-- Avatar -->
-    <div class="avatar" style="width:36px;height:36px;font-size:13px;cursor:pointer;">
-    <a href="<?= BASE_URL ?>/profil.php">
-    <?= e($initials) ?>
-    </a>
-    </div>
+    <a href="<?= BASE_URL ?>/profil.php" class="avatar" style="width:36px;height:36px;font-size:13px;" aria-label="Profil saya" title="Profil saya"><?= e($initials) ?></a>
   </div>
 </header>

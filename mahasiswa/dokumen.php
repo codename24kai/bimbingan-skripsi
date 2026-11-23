@@ -157,12 +157,12 @@ include __DIR__ . '/../includes/sidebar.php';
                           <span style="font-size:20px;">📄</span>
                           <div>
                             <div style="font-weight:500;"><?= e($d['nama_dokumen']) ?></div>
-                            <div style="font-size:12px;color:var(--slate);"><?= e($d['jenis_bab']) ?> · <?= $d['ukuran_kb'] ?> KB</div>
+                            <div style="font-size:12px;color:var(--slate);"><?= e(label($d['jenis_bab'])) ?> · <?= $d['ukuran_kb'] ?> KB</div>
                           </div>
                         </div>
                       </td>
                       <td><span class="mono" style="font-size:12px;background:var(--cream);padding:3px 8px;border-radius:4px;">v<?= $d['versi'] ?></span></td>
-                      <td style="font-size:13px;color:var(--slate);"><?= date('d M Y', strtotime($d['tgl_upload'])) ?></td>
+                      <td style="font-size:13px;color:var(--slate);"><?= tgl($d['tgl_upload']) ?></td>
                       <td><span class="badge <?= badge($d['status']) ?>"><span class="badge-dot"></span><?= e(strtoupper($d['status'])) ?></span></td>
                       <td>
                         <?php if ($d['revisi_pending'] > 0): ?>
@@ -197,7 +197,7 @@ include __DIR__ . '/../includes/sidebar.php';
                             <span>📌</span>
                             <div>
                               <strong><?= e($rv['nama_dosen']) ?></strong> ·
-                              <span class="badge <?= badge($rv['prioritas']) ?>" style="font-size:10px;"><?= $rv['prioritas'] ?></span>
+                              <span class="badge <?= badge($rv['prioritas']) ?>" style="font-size:10px;"><?= e(label($rv['prioritas'])) ?></span>
                               <?php if ($rv['halaman_revisi']): ?> · <span style="color:var(--slate);">Hal: <?= e($rv['halaman_revisi']) ?></span><?php endif; ?>
                               <div style="color:#4a5568;margin-top:3px; line-height:1.4;"><?= e($rv['catatan_revisi']) ?></div>
                             </div>
@@ -270,7 +270,7 @@ include __DIR__ . '/../includes/sidebar.php';
         </select>
       </div>
       
-      <div class="alert info" style="font-size:12px; padding:10px;">
+      <div class="alert alert-static info" style="font-size:12px; padding:10px;">
           Fitur ini hanya untuk mengubah metadata (Nama dan Jenis Bab). Jika Anda ingin memperbarui isi file, silakan <b>Unggah Dokumen</b> baru di panel sebelah kanan agar sistem dapat menaikkan versinya (v2, v3, dst).
       </div>
       

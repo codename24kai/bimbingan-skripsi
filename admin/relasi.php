@@ -55,6 +55,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 execute('INSERT INTO bimbingan (id_mahasiswa, id_dosen, id_judul, semester, tgl_mulai, status, no_sk, file_sk)
                          VALUES (?, ?, ?, ?, CURDATE(), "aktif", ?, ?)', 
                          [$id_mhs, $id_dosen, $id_judul, $semester, $no_sk, $filePath]);
+                // SK terbit: skripsi mahasiswa mulai berjalan
+                execute('UPDATE mahasiswa SET status_skripsi="proses" WHERE id_mahasiswa=?', [$id_mhs]);
                 
                 // Tambahkan notifikasi otomatis DENGAN LAMPIRAN SK
                 $dosen = fetchOne('SELECT id_user FROM dosen WHERE id_dosen=?', [$id_dosen]);
@@ -76,9 +78,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 setFlash('danger', 'Gagal memproses plotting: ' . $e->getMessage());
             }
         }
-    } elseif ($aksi === 'hentikan') {
-        execute('UPDATE bimbingan SET status="dihentikan",tgl_selesai=CURDATE() WHERE id_bimbingan=?', [(int)$_POST['id_bimbingan']]);
-        setFlash('warning', 'Relasi bimbingan berhasil dihentikan.');
+    } elseif ($aksi === 'hentikan' || $aksi === 'selesai') {
+        $idB  = (int)($_POST['id_bimbingan'] ?? 0);
+        $bimb = fetchOne('SELECT b.id_mahasiswa, m.id_user FROM bimbingan b
+                          JOIN mahasiswa m ON m.id_mahasiswa=b.id_mahasiswa
+                          WHERE b.id_bimbingan=? AND b.status="aktif"', [$idB]);
+        if (!$bimb) {
+            setFlash('danger', 'Relasi bimbingan aktif tidak ditemukan.');
+        } elseif ($aksi === 'selesai') {
+            execute('UPDATE bimbingan SET status="selesai",tgl_selesai=CURDATE() WHERE id_bimbingan=?', [$idB]);
+            execute('UPDATE mahasiswa SET status_skripsi="selesai" WHERE id_mahasiswa=?', [$bimb['id_mahasiswa']]);
+            execute('INSERT INTO notifikasi (id_user,judul,pesan,tipe,modul) VALUES (?,?,?,?,?)',
+                [$bimb['id_user'], 'Bimbingan Skripsi Selesai',
+                 'Selamat! Proses bimbingan skripsi Anda telah dinyatakan selesai.', 'sukses', 'bimbingan']);
+            setFlash('success', 'Bimbingan ditandai selesai. Status skripsi mahasiswa menjadi "Selesai".');
+        } else {
+            execute('UPDATE bimbingan SET status="dihentikan",tgl_selesai=CURDATE() WHERE id_bimbingan=?', [$idB]);
+            // Tanpa pembimbing aktif, skripsi kembali ke tahap awal
+            execute('UPDATE mahasiswa SET status_skripsi="belum" WHERE id_mahasiswa=? AND status_skripsi="proses"', [$bimb['id_mahasiswa']]);
+            setFlash('warning', 'Relasi bimbingan berhasil dihentikan.');
+        }
     }
     header('Location: ' . BASE_URL . '/admin/relasi.php');
     exit;
@@ -197,7 +216,7 @@ include __DIR__ . '/../includes/sidebar.php';
                                   <td style="font-size:13px;">
                                       <?= e($ap['judul_indonesia']) ?>
                                       <div style="display:flex; gap:8px; align-items:center; margin-top:6px;">
-                                          <div style="font-size:11px; color:var(--info-text);">ACC: <?= date('d M Y', strtotime($ap['tgl_pengajuan'])) ?></div>
+                                          <div style="font-size:11px; color:var(--info-text);">ACC: <?= tgl($ap['tgl_pengajuan']) ?></div>
                                           <span class="badge info" style="font-size:10px;"><?= e($ap['bidang_penelitian']) ?></span>
                                       </div>
                                       <?php if ($ap['usulan_dosen']): ?>
@@ -340,15 +359,22 @@ include __DIR__ . '/../includes/sidebar.php';
                     <?php endif; ?>
                 </td>
 
-                <td style="font-size:12px;"><?= date('d/m/y', strtotime($r['tgl_mulai'])) ?></td>
-                <td><span class="badge <?= badge($r['status']) ?>"><span class="badge-dot"></span><?= $r['status'] ?></span></td>
+                <td class="nowrap" style="font-size:12px;"><?= tgl($r['tgl_mulai']) ?></td>
+                <td><span class="badge <?= badge($r['status']) ?>"><span class="badge-dot"></span><?= label($r['status']) ?></span></td>
                 <td>
                   <?php if ($r['status'] === 'aktif'): ?>
+                    <div style="display:flex;gap:6px;flex-wrap:wrap;">
+                    <form method="POST" onsubmit="return confirm('Tandai bimbingan <?= e(addslashes($r['nama_mhs'])) ?> sebagai selesai? Status skripsinya akan menjadi Selesai.')"><?= csrfField() ?>
+                      <input type="hidden" name="aksi" value="selesai">
+                      <input type="hidden" name="id_bimbingan" value="<?= $r['id_bimbingan'] ?>">
+                      <button class="btn btn-success" style="padding:4px 8px; font-size:11px;">🎓 Selesai</button>
+                    </form>
                     <form method="POST" onsubmit="return confirm('Hentikan relasi ini? Dosen dan mahasiswa tidak akan bisa melakukan proses bimbingan lagi.')"><?= csrfField() ?>
                       <input type="hidden" name="aksi" value="hentikan">
                       <input type="hidden" name="id_bimbingan" value="<?= $r['id_bimbingan'] ?>">
                       <button class="btn btn-danger" style="padding:4px 8px; font-size:11px;">🛑 Hentikan</button>
                     </form>
+                    </div>
                   <?php else: ?><span style="color:var(--slate);font-size:12px;">—</span><?php endif; ?>
                 </td>
               </tr>

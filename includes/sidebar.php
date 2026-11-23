@@ -10,23 +10,6 @@ $initials = substr($initials, 0, 2);
 
 $roleLabel = ['mahasiswa'=>'Mahasiswa','dosen'=>'Dosen','admin'=>'Administrator'][$role] ?? $role;
 
-// Count unread notif for badge
-$unread = countRows('SELECT COUNT(*) FROM notifikasi WHERE id_user=? AND is_read=0', [userId()]);
-
-// ==========================================
-// 1. LOGIKA SCOPED ACCESS MAHASISWA
-// ==========================================
-$isBimbinganAktif = false;
-if ($role === 'mahasiswa') {
-    // Mencari apakah mahasiswa punya bimbingan yang aktif (SK Terbit)
-    $cekBimb = fetchOne("SELECT id_bimbingan FROM bimbingan WHERE id_mahasiswa=? AND status='aktif'", [$_SESSION['entity_id']]);
-    if ($cekBimb) {
-        $isBimbinganAktif = true;
-    }
-}
-
-
-
 // ==========================================
 // 1. LOGIKA SCOPED ACCESS MAHASISWA
 // ==========================================
@@ -55,11 +38,11 @@ $navs = [
       ['href'=>'mahasiswa/pengajuan.php','icon'=>'📝','label'=>'Pengajuan Judul',   'id'=>'pengajuan', 'locked'=>false],
       
       // MENU BARU: Usulan Pembimbing (Terkunci jika judul belum di ACC)
-      ['href'=>'mahasiswa/pengajuan_dosen.php','icon'=>'👨‍🏫','label'=>'Usulan Pembimbing','id'=>'usulan_dosen','locked'=>!$isJudulDisetujui],
+      ['href'=>'mahasiswa/pengajuan_dosen.php','icon'=>'👨‍🏫','label'=>'Usulan Pembimbing','id'=>'usulan_dosen','locked'=>!$isJudulDisetujui, 'hint'=>'Terbuka setelah judul disetujui'],
       
-      ['href'=>'mahasiswa/dokumen.php',  'icon'=>'📁','label'=>'Dokumen & Revisi',  'id'=>'dokumen',   'locked'=>!$isBimbinganAktif],
-      ['href'=>'mahasiswa/bimbingan.php','icon'=>'🗓️','label'=>'Jadwal Bimbingan',  'id'=>'bimbingan', 'locked'=>!$isBimbinganAktif],
-      ['href'=>'mahasiswa/riwayat.php',  'icon'=>'📋','label'=>'Riwayat Bimbingan', 'id'=>'riwayat',   'locked'=>!$isBimbinganAktif],
+      ['href'=>'mahasiswa/dokumen.php',  'icon'=>'📁','label'=>'Dokumen & Revisi',  'id'=>'dokumen',   'locked'=>!$isBimbinganAktif, 'hint'=>'Terbuka setelah SK bimbingan terbit'],
+      ['href'=>'mahasiswa/bimbingan.php','icon'=>'🗓️','label'=>'Jadwal Bimbingan',  'id'=>'bimbingan', 'locked'=>!$isBimbinganAktif, 'hint'=>'Terbuka setelah SK bimbingan terbit'],
+      ['href'=>'mahasiswa/riwayat.php',  'icon'=>'📋','label'=>'Riwayat Bimbingan', 'id'=>'riwayat',   'locked'=>!$isBimbinganAktif, 'hint'=>'Terbuka setelah SK bimbingan terbit'],
     ]],
     ['section'=>'Akun','items'=>[
       ['href'=>'profil.php','icon'=>'👤','label'=>'Profil Saya','id'=>'profil', 'locked'=>false],
@@ -119,23 +102,21 @@ $navs = [
         // Cek apakah item ini terkunci (scoped access)
         $isLocked = $item['locked'] ?? false;
         
-        // Logika render untuk menu normal vs menu terkunci
-        $href    = $isLocked ? '#' : BASE_URL . '/' . $item['href'];
-        $onclick = $isLocked ? 'onclick="alert(\'🔒 Akses Terkunci!\\n\\nMenu ini baru akan terbuka setelah judul Anda disetujui dan Program Studi menerbitkan SK Bimbingan.\'); return false;"' : '';
-        $style   = $isLocked ? 'opacity:0.6; cursor:not-allowed; background:rgba(0,0,0,0.03);' : '';
       ?>
-        <a href="<?= $href ?>"
-           class="nav-item <?= $isActive ? 'active' : '' ?>" 
-           style="<?= $style ?>" 
-           <?= $onclick ?>>
-           
-          <span class="nav-icon"><?= $isLocked ? '🔒' : $item['icon'] ?></span>
-          <?= e($item['label']) ?>
-          
-          <?php if ($item['id'] === 'riwayat' && $unread > 0 && !$isLocked): ?>
-            <span class="nav-badge"><?= $unread ?></span>
-          <?php endif; ?>
-        </a>
+        <?php if ($isLocked): ?>
+          <span class="nav-item nav-item--locked" aria-disabled="true" title="<?= e($item['hint'] ?? 'Belum tersedia') ?>">
+            <span class="nav-icon" aria-hidden="true">🔒</span>
+            <span style="min-width:0;">
+              <?= e($item['label']) ?>
+              <span class="nav-hint"><?= e($item['hint'] ?? 'Belum tersedia') ?></span>
+            </span>
+          </span>
+        <?php else: ?>
+          <a href="<?= BASE_URL . '/' . $item['href'] ?>" class="nav-item <?= $isActive ? 'active' : '' ?>"<?= $isActive ? ' aria-current="page"' : '' ?>>
+            <span class="nav-icon" aria-hidden="true"><?= $item['icon'] ?></span>
+            <?= e($item['label']) ?>
+          </a>
+        <?php endif; ?>
       <?php endforeach; ?>
     <?php endforeach; ?>
   </nav>

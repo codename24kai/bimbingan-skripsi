@@ -104,7 +104,7 @@ include __DIR__ . '/../includes/sidebar.php';
           <tbody>
             <?php foreach ($list as $m): 
                 // Encode data row menjadi JSON agar mudah dibaca oleh Javascript
-                $jsonData = htmlspecialchars(json_encode($m), ENT_QUOTES, 'UTF-8');
+                $jsonData = htmlspecialchars(json_encode($m + ['status_skripsi_label' => label($m['status_skripsi'])]), ENT_QUOTES, 'UTF-8');
             ?>
               <tr>
                 <td>
@@ -119,13 +119,13 @@ include __DIR__ . '/../includes/sidebar.php';
                 <td class="mono" style="font-size:12px;"><?= e($m['nim']) ?></td>
                 <td style="font-size:13px;"><?= e($m['nama_prodi']) ?></td>
                 <td style="font-size:13px;"><?= e($m['nama_dosen'] ?? '—') ?></td>
-                <td><span class="badge <?= badge($m['status_skripsi']) ?>"><span class="badge-dot"></span><?= $m['status_skripsi'] ?></span></td>
+                <td><span class="badge <?= badge($m['status_skripsi']) ?>"><span class="badge-dot"></span><?= e(label($m['status_skripsi'])) ?></span></td>
                 <td>
                   <form method="POST" style="display:inline;"><?= csrfField() ?>
                     <input type="hidden" name="aksi" value="toggle_status">
                     <input type="hidden" name="id_user" value="<?= $m['id_user'] ?>">
                     <button type="submit" class="badge <?= $m['status_user']==='aktif' ? 'success' : 'danger' ?>" style="cursor:pointer;border:none;" title="Klik untuk mengubah status">
-                      <span class="badge-dot"></span><?= $m['status_user'] ?>
+                      <span class="badge-dot"></span><?= e(label($m['status_user'])) ?>
                     </button>
                   </form>
                 </td>
@@ -253,7 +253,7 @@ include __DIR__ . '/../includes/sidebar.php';
         </div>
         <div class="detail-row">
             <span style="color:var(--slate); font-size:13px;">Status Skripsi</span>
-            <span id="prev_status" style="font-size:14px; text-transform:uppercase;">-</span>
+            <span id="prev_status" style="font-size:14px;">-</span>
         </div>
         <div class="detail-row detail-row--last">
             <span style="color:var(--slate); font-size:13px;">Dosen Pembimbing</span>
@@ -288,7 +288,7 @@ function openPreviewModal(data) {
     document.getElementById('prev_prodi').innerText = data.nama_prodi;
     document.getElementById('prev_angkatan').innerText = data.angkatan;
     document.getElementById('prev_notelp').innerText = data.no_telepon ? data.no_telepon : 'Belum diisi';
-    document.getElementById('prev_status').innerText = data.status_skripsi;
+    document.getElementById('prev_status').innerText = data.status_skripsi_label || data.status_skripsi;
     document.getElementById('prev_dosen').innerText = data.nama_dosen ? data.nama_dosen : 'Belum ada pembimbing aktif';
     
     document.getElementById('modalPreview').style.display = 'flex';

@@ -105,11 +105,11 @@ include __DIR__ . '/../includes/sidebar.php';
 
   <div class="page-header">
     <h1>Pengajuan Judul Skripsi</h1>
-    <p>Tahap awal: Ajukan 2-3 alternatif judul dan kelengkapan administrasi.</p>
+    <p>Langkah pertama: ajukan 2 sampai 3 pilihan judul beserta berkas syarat.</p>
   </div>
 
   <?php if ($bimbinganAktif): ?>
-    <div class="alert success" style="padding:24px; display:flex; flex-direction:column; align-items:center; text-align:center;">
+    <div class="alert alert-static success" style="padding:24px; display:flex; flex-direction:column; align-items:center; text-align:center;">
         <div style="font-size:40px; margin-bottom:10px;">🎉</div>
         <h2 style="margin:0 0 10px 0; color:var(--navy);">Selamat! SK Bimbingan Anda Telah Terbit</h2>
         <p style="margin:0 0 20px 0; font-size:14px; color:var(--slate); max-width:500px;">
@@ -127,32 +127,33 @@ include __DIR__ . '/../includes/sidebar.php';
     </div>
   <?php endif; ?>
 
-  <div class="split" style="--side:340px; margin-top:20px;">
+  <div class="<?= $bimbinganAktif ? '' : 'split' ?>" style="--side:340px; margin-top:20px;">
+    <?php if (!$bimbinganAktif): ?>
     <div class="form-card">
       <?php if ($judulDisetujui): ?>
           <?php if (!$bimbinganAktif): ?>
-              <div class="alert info">
-                 <strong>Judul Disetujui!</strong> Pengajuan ditutup. Silakan tunggu Program Studi mem-plotting Dosen Pembimbing dan menerbitkan SK Anda.
+              <div class="alert alert-static info">
+                 <strong>Judul disetujui.</strong> Langkah berikutnya: <a href="<?= BASE_URL ?>/mahasiswa/pengajuan_dosen.php" style="text-decoration:underline;font-weight:600;">usulkan dosen pembimbing</a>, lalu tunggu Program Studi menerbitkan SK bimbingan.
               </div>
           <?php endif; ?>
       <?php else: ?>
-          <h2>Formulir Pengajuan (Opsi Judul)</h2>
-          <p style="color:var(--slate); font-size:13px; margin-bottom:20px;">Anda wajib mengajukan minimal 2 judul penelitian.</p>
+          <h2>Formulir Pengajuan Judul</h2>
+          <p style="color:var(--slate); font-size:13px; margin-bottom:20px;">Isi minimal 2 pilihan judul. Dosen akan memilih atau meminta revisi.</p>
           
           <form method="POST" enctype="multipart/form-data"><?= csrfField() ?>
             <div class="form-group">
               <label for="f_judul_indonesia" class="form-label">Judul Utama <span style="color:red">*</span></label>
-              <input id="f_judul_indonesia" class="form-input" name="judul_indonesia" required placeholder="Judul Prioritas Pertama" value="<?= e($_POST['judul_indonesia'] ?? '') ?>">
+              <input id="f_judul_indonesia" class="form-input" name="judul_indonesia" required placeholder="Judul yang paling Anda pilih" value="<?= e($_POST['judul_indonesia'] ?? '') ?>">
             </div>
             
             <div class="form-row">
                 <div class="form-group">
-                  <label for="f_judul_alternatif_1" class="form-label">Alternatif Judul 1 <span style="color:red">*</span></label>
-                  <input id="f_judul_alternatif_1" class="form-input" name="judul_alternatif_1" required placeholder="Opsi Kedua">
+                  <label for="f_judul_alternatif_1" class="form-label">Judul Cadangan 1 <span style="color:red">*</span></label>
+                  <input id="f_judul_alternatif_1" class="form-input" name="judul_alternatif_1" required placeholder="Pilihan judul kedua">
                 </div>
                 <div class="form-group">
-                  <label for="f_judul_alternatif_2" class="form-label">Alternatif Judul 2</label>
-                  <input id="f_judul_alternatif_2" class="form-input" name="judul_alternatif_2" placeholder="Opsi Ketiga (Opsional)">
+                  <label for="f_judul_alternatif_2" class="form-label">Judul Cadangan 2 <span style="font-weight:400;color:var(--slate);">(opsional)</span></label>
+                  <input id="f_judul_alternatif_2" class="form-input" name="judul_alternatif_2" placeholder="Pilihan judul ketiga">
                 </div>
             </div>
 
@@ -178,20 +179,20 @@ include __DIR__ . '/../includes/sidebar.php';
             </div>
 
             <div class="form-group">
-              <label for="f_latar_belakang" class="form-label">Ringkasan Latar Belakang (Untuk ke-3 Judul) <span style="color:red">*</span></label>
-              <textarea id="f_latar_belakang" class="form-input" name="latar_belakang" required rows="5" placeholder="Gambarkan secara singkat urgensi masalah dari judul-judul di atas..."></textarea>
+              <label for="f_latar_belakang" class="form-label">Latar Belakang Singkat <span style="color:red">*</span></label>
+              <textarea id="f_latar_belakang" class="form-input" name="latar_belakang" required rows="5" placeholder="Jelaskan masalah yang ingin Anda selesaikan dan mengapa penting. Cukup satu ringkasan untuk semua pilihan judul."></textarea>
             </div>
 
             <div class="form-row">
                 <div class="form-group">
-                  <label for="f_file_transkrip" class="form-label">Berkas Syarat (Transkrip/KRS) <span style="color:red">*</span></label>
+                  <label for="f_file_transkrip" class="form-label">Transkrip atau KRS <span style="color:red">*</span></label>
                   <input id="f_file_transkrip" type="file" name="file_transkrip" accept=".pdf" class="form-input" style="padding:8px;" required>
-                  <span style="font-size:11px;color:var(--slate);">Wajib PDF, Maks 5MB.</span>
+                  <span style="font-size:12px;color:var(--slate);">Format PDF, maksimal 5 MB.</span>
                 </div>
                 <div class="form-group">
-                  <label for="f_file_proposal" class="form-label">Draft Proposal (Bila ada)</label>
+                  <label for="f_file_proposal" class="form-label">Draf Proposal <span style="font-weight:400;color:var(--slate);">(opsional)</span></label>
                   <input id="f_file_proposal" type="file" name="file_proposal" accept=".pdf,.docx,.doc" class="form-input" style="padding:8px;">
-                  <span style="font-size:11px;color:var(--slate);">Opsional. PDF/DOCX.</span>
+                  <span style="font-size:12px;color:var(--slate);">Format PDF atau DOCX.</span>
                 </div>
             </div>
 
@@ -201,19 +202,20 @@ include __DIR__ . '/../includes/sidebar.php';
           </form>
       <?php endif; ?>
     </div>
+    <?php endif; ?>
 
     <div>
       <div class="card">
         <div class="card-header"><div class="card-title">Status Ajuan Terakhir</div></div>
         <div class="card-body">
           <?php if (empty($riwayat)): ?>
-            <div class="empty-state"><div class="empty-sub">Belum ada data.</div></div>
+            <div class="empty-state"><div class="empty-sub">Belum ada pengajuan. Isi formulir di samping untuk mengajukan judul pertama Anda.</div></div>
           <?php else: ?>
             <?php foreach ($riwayat as $r): ?>
               <div style="border:1px solid var(--cream-dark);border-radius:8px;padding:14px;margin-bottom:10px;">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
                     <span style="font-size:11px; font-weight:600; color:var(--slate);">Iterasi ke-<?= $r['iterasi'] ?></span>
-                    <span class="badge <?= badge($r['status']) ?>"><span class="badge-dot"></span><?= e(strtoupper($r['status'])) ?></span>
+                    <span class="badge <?= badge($r['status']) ?>"><span class="badge-dot"></span><?= e(label($r['status'])) ?></span>
                 </div>
                 
                 <div style="font-size:11px; color:var(--slate); margin-bottom:4px;">1. <?= e($r['judul_indonesia']) ?></div>

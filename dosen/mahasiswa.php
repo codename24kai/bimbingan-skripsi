@@ -63,7 +63,7 @@ include __DIR__ . '/../includes/sidebar.php';
                   <td style="font-size:13px;"><?= e($m['nama_prodi']) ?></td>
                   <td style="max-width:220px;font-size:13px;"><?= e(mb_strimwidth($m['judul_indonesia'],0,60,'...')) ?></td>
                   <td style="text-align:center;"><?= $m['total_sesi'] ?></td>
-                  <td><span class="badge <?= badge($m['status_skripsi']) ?>"><span class="badge-dot"></span><?= $m['status_skripsi'] ?></span></td>
+                  <td><span class="badge <?= badge($m['status_skripsi']) ?>"><span class="badge-dot"></span><?= e(label($m['status_skripsi'])) ?></span></td>
                   <td>
                     <div style="display:flex;gap:6px;">
                       <a href="<?= BASE_URL ?>/dosen/catatan.php?id_bimbingan=<?= $m['id_bimbingan'] ?>" class="btn-icon" title="Catatan">📋</a>
