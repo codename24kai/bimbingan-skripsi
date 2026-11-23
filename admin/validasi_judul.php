@@ -48,7 +48,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
 
             // Update status menjadi disetujui, dan timpa judul_indonesia dengan judul yang dipilih
-            // (Agar sistem relasi dan dokumen selanjutnya tetap membaca kolom utama)
             execute('UPDATE judul_skripsi SET status="disetujui", judul_indonesia=? WHERE id_judul=?', [$judul_terpilih, $id_judul]);
             
             // Kirim Notifikasi

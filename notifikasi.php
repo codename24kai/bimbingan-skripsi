@@ -4,17 +4,16 @@ require_once __DIR__ . '/config/app.php';
 require_once __DIR__ . '/config/db.php';
 require_once __DIR__ . '/config/auth.php';
 
-// Pastikan user sudah login (sesuaikan dengan helper autentikasi Anda)
 if (!isLoggedIn()) {
     header('Location: ' . BASE_URL . '/index.php');
     exit;
 }
 
 $pageTitle  = 'Semua Notifikasi';
-$activePage = 'notifikasi'; // Untuk menandai menu aktif di sidebar (jika ada)
-$id_user    = userId(); // Mengambil ID user yang sedang login
+$activePage = 'notifikasi'; 
+$id_user    = userId();
 
-// Handle Aksi (Tandai semua dibaca / Hapus)
+// Handle Aksi
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $aksi = $_POST['aksi'] ?? '';
     
@@ -27,12 +26,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         setFlash('success', 'Notifikasi berhasil dihapus.');
     }
     
-    // Redirect untuk menghindari resubmission form saat refresh
     header('Location: ' . BASE_URL . '/notifikasi.php');
     exit;
 }
 
-// Handle aksi klik notifikasi satuan (menandai 1 notifikasi dibaca)
 if (isset($_GET['read_id'])) {
     $read_id = (int)$_GET['read_id'];
     execute('UPDATE notifikasi SET is_read = 1 WHERE id_notif = ? AND id_user = ?', [$read_id, $id_user]);
@@ -40,9 +37,9 @@ if (isset($_GET['read_id'])) {
     exit;
 }
 
-// Ambil seluruh data notifikasi milik user ini
+// Ambil data notifikasi
 $semua_notif = fetchAll('SELECT * FROM notifikasi WHERE id_user = ? ORDER BY created_at DESC', [$id_user]);
-$typeIcon    = ['info'=>'ℹ️', 'sukses'=>'✅', 'peringatan'=>'⚠️', 'error'=>'❌'];
+$typeIcon    = ['info'=>'ℹ️', 'sukses'=>'✅', 'peringatan'=>'⚠️', 'error'=>'❌', 'danger'=>'❌'];
 
 include __DIR__ . '/includes/header.php';
 include __DIR__ . '/includes/sidebar.php';
@@ -59,8 +56,8 @@ include __DIR__ . '/includes/sidebar.php';
 
             <div class="page-header" style="display: flex; justify-content: space-between; align-items: center;">
                 <div>
-                    <h1>Notifikasi Anda</h1>
-                    <p>Pemberitahuan aktivitas dan pembaruan sistem</p>
+                    <h1>Kotak Masuk Notifikasi</h1>
+                    <p>Pemberitahuan aktivitas, pesan, dan dokumen masuk</p>
                 </div>
                 
                 <?php if (!empty($semua_notif)): ?>
@@ -86,7 +83,7 @@ include __DIR__ . '/includes/sidebar.php';
                             <?php foreach ($semua_notif as $n): 
                                 $isUnread = $n['is_read'] == 0;
                             ?>
-                                <div style="display: flex; align-items: flex-start; gap: 16px; padding: 20px; border-bottom: 1px solid var(--cream-dark); background-color: <?= $isUnread ? 'rgba(74, 144, 217, 0.05)' : 'transparent' ?>;">
+                                <div style="display: flex; align-items: flex-start; gap: 16px; padding: 20px; border-bottom: 1px solid var(--cream-dark); background-color: <?= $isUnread ? 'rgba(74, 144, 217, 0.04)' : 'transparent' ?>;">
                                     
                                     <div style="font-size: 24px; flex-shrink: 0;">
                                         <?= $typeIcon[$n['tipe']] ?? 'ℹ️' ?>
@@ -101,11 +98,20 @@ include __DIR__ . '/includes/sidebar.php';
                                                 <?= date('d M Y H:i', strtotime($n['created_at'])) ?>
                                             </span>
                                         </div>
-                                        <p style="font-size: 13px; color: <?= $isUnread ? 'var(--navy-light)' : 'var(--slate)' ?>; margin: 0 0 10px 0; line-height: 1.5;">
+                                        
+                                        <p style="font-size: 13px; color: <?= $isUnread ? 'var(--navy)' : 'var(--slate)' ?>; margin: 0 0 12px 0; line-height: 1.5;">
                                             <?= e($n['pesan']) ?>
                                         </p>
                                         
-                                        <div style="display: flex; gap: 10px; align-items: center;">
+                                        <?php if (!empty($n['tautan'])): ?>
+                                            <div style="margin-bottom: 12px;">
+                                                <a href="<?= BASE_URL ?>/<?= e($n['tautan']) ?>" target="_blank" class="btn btn-primary" style="font-size: 11px; padding: 6px 12px; text-decoration: none; display: inline-flex; gap: 6px;">
+                                                    📄 Unduh Lampiran
+                                                </a>
+                                            </div>
+                                        <?php endif; ?>
+                                        
+                                        <div style="display: flex; gap: 12px; align-items: center; margin-top:4px;">
                                             <?php if ($isUnread): ?>
                                                 <a href="notifikasi.php?read_id=<?= $n['id_notif'] ?>" class="badge info" style="text-decoration: none;">
                                                     <span class="badge-dot"></span>Tandai Dibaca
@@ -115,15 +121,15 @@ include __DIR__ . '/includes/sidebar.php';
                                             <form method="POST" onsubmit="return confirm('Hapus notifikasi ini?')" style="margin: 0;"><?= csrfField() ?>
                                                 <input type="hidden" name="aksi" value="hapus">
                                                 <input type="hidden" name="id_notif" value="<?= $n['id_notif'] ?>">
-                                                <button type="submit" style="background: none; border: none; color: var(--danger); font-size: 12px; cursor: pointer; text-decoration: underline;">
-                                                    Hapus
+                                                <button type="submit" style="background: none; border: none; color: var(--danger); font-size: 12px; cursor: pointer; text-decoration: underline; padding:0;">
+                                                    Hapus Pesan
                                                 </button>
                                             </form>
                                         </div>
                                     </div>
                                     
                                     <?php if ($isUnread): ?>
-                                        <div style="width: 10px; height: 10px; background-color: var(--info); border-radius: 50%; flex-shrink: 0; margin-top: 6px;"></div>
+                                        <div style="width: 8px; height: 8px; background-color: var(--info); border-radius: 50%; flex-shrink: 0; margin-top: 8px;"></div>
                                     <?php endif; ?>
                                     
                                 </div>

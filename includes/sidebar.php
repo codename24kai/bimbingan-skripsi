@@ -1,16 +1,4 @@
 <?php
-// Letakkan blok PHP ini di Paling Atas file includes/sidebar.php
-$isBimbinganAktif = false;
-
-// Cek hanya untuk role mahasiswa
-if (isset($_SESSION['role']) && $_SESSION['role'] === 'mahasiswa') {
-    // Mencari apakah mahasiswa punya bimbingan yang aktif (SK Terbit)
-    $cekBimb = fetchOne("SELECT id_bimbingan FROM bimbingan WHERE id_mahasiswa=? AND status='aktif'", [$_SESSION['entity_id']]);
-    if ($cekBimb) {
-        $isBimbinganAktif = true;
-    }
-}
-
 // includes/sidebar.php
 require_once __DIR__ . '/../config/auth.php';
 
@@ -25,25 +13,64 @@ $roleLabel = ['mahasiswa'=>'Mahasiswa','dosen'=>'Dosen','admin'=>'Administrator'
 // Count unread notif for badge
 $unread = countRows('SELECT COUNT(*) FROM notifikasi WHERE id_user=? AND is_read=0', [userId()]);
 
+// ==========================================
+// 1. LOGIKA SCOPED ACCESS MAHASISWA
+// ==========================================
+$isBimbinganAktif = false;
+if ($role === 'mahasiswa') {
+    // Mencari apakah mahasiswa punya bimbingan yang aktif (SK Terbit)
+    $cekBimb = fetchOne("SELECT id_bimbingan FROM bimbingan WHERE id_mahasiswa=? AND status='aktif'", [$_SESSION['entity_id']]);
+    if ($cekBimb) {
+        $isBimbinganAktif = true;
+    }
+}
+
+
+
+// ==========================================
+// 1. LOGIKA SCOPED ACCESS MAHASISWA
+// ==========================================
+$isBimbinganAktif = false;
+$isJudulDisetujui = false; // <-- Penambahan untuk cek judul ACC
+
+if ($role === 'mahasiswa') {
+    // Cek Bimbingan
+    $cekBimb = fetchOne("SELECT id_bimbingan FROM bimbingan WHERE id_mahasiswa=? AND status='aktif'", [$_SESSION['entity_id']]);
+    if ($cekBimb) {
+        $isBimbinganAktif = true;
+    }
+    
+    // Cek Judul Disetujui (Untuk mengunci halaman usulan dosen)
+    $cekJudul = fetchOne("SELECT id_judul FROM judul_skripsi WHERE id_mahasiswa=? AND status='disetujui'", [$_SESSION['entity_id']]);
+    if ($cekJudul) {
+        $isJudulDisetujui = true;
+    }
+}
+
 // Nav per role
 $navs = [
   'mahasiswa' => [
     ['section'=>'Menu Utama','items'=>[
-      ['href'=>'dashboard.php',         'icon'=>'📊','label'=>'Dashboard',         'id'=>'dashboard'],
-      ['href'=>'mahasiswa/pengajuan.php','icon'=>'📝','label'=>'Pengajuan Judul',   'id'=>'pengajuan'],
-      ['href'=>'mahasiswa/dokumen.php',  'icon'=>'📁','label'=>'Dokumen & Revisi',  'id'=>'dokumen'],
-      ['href'=>'mahasiswa/bimbingan.php','icon'=>'🗓️','label'=>'Jadwal Bimbingan',  'id'=>'bimbingan'],
-      ['href'=>'mahasiswa/riwayat.php',  'icon'=>'📋','label'=>'Riwayat Bimbingan', 'id'=>'riwayat'],
+      ['href'=>'dashboard.php',         'icon'=>'📊','label'=>'Dashboard',         'id'=>'dashboard', 'locked'=>false],
+      ['href'=>'mahasiswa/pengajuan.php','icon'=>'📝','label'=>'Pengajuan Judul',   'id'=>'pengajuan', 'locked'=>false],
+      
+      // MENU BARU: Usulan Pembimbing (Terkunci jika judul belum di ACC)
+      ['href'=>'mahasiswa/pengajuan_dosen.php','icon'=>'👨‍🏫','label'=>'Usulan Pembimbing','id'=>'usulan_dosen','locked'=>!$isJudulDisetujui],
+      
+      ['href'=>'mahasiswa/dokumen.php',  'icon'=>'📁','label'=>'Dokumen & Revisi',  'id'=>'dokumen',   'locked'=>!$isBimbinganAktif],
+      ['href'=>'mahasiswa/bimbingan.php','icon'=>'🗓️','label'=>'Jadwal Bimbingan',  'id'=>'bimbingan', 'locked'=>!$isBimbinganAktif],
+      ['href'=>'mahasiswa/riwayat.php',  'icon'=>'📋','label'=>'Riwayat Bimbingan', 'id'=>'riwayat',   'locked'=>!$isBimbinganAktif],
     ]],
     ['section'=>'Akun','items'=>[
-      ['href'=>'profil.php','icon'=>'👤','label'=>'Profil Saya','id'=>'profil'],
+      ['href'=>'profil.php','icon'=>'👤','label'=>'Profil Saya','id'=>'profil', 'locked'=>false],
     ]],
   ],
   'dosen' => [
     ['section'=>'Menu Utama','items'=>[
-      ['href'=>'dashboard.php',          'icon'=>'📊','label'=>'Dashboard',              'id'=>'dashboard'],
+      ['href'=>'dashboard.php',          'icon'=>'📊','label'=>'Dashboard',            'id'=>'dashboard'],
       ['href'=>'dosen/validasi.php',     'icon'=>'✅','label'=>'Validasi Judul',         'id'=>'validasi'],
       ['href'=>'dosen/mahasiswa.php',    'icon'=>'🎒','label'=>'Mahasiswa Bimbingan',    'id'=>'mahasiswa_dosen'],
+      ['href'=>'dosen/revisi.php',       'icon'=>'📑','label'=>'Review Dokumen',         'id'=>'revisi_dokumen'],
       ['href'=>'dosen/catatan.php',      'icon'=>'📝','label'=>'Catatan Bimbingan',      'id'=>'catatan'],
       ['href'=>'dosen/jadwal.php',       'icon'=>'🗓️','label'=>'Jadwal Konsultasi',     'id'=>'jadwal_dosen'],
     ]],
@@ -54,11 +81,11 @@ $navs = [
   'admin' => [
     ['section'=>'Manajemen','items'=>[
       ['href'=>'dashboard.php',             'icon'=>'📊','label'=>'Dashboard',            'id'=>'dashboard'],
+      ['href'=>'admin/validasi_judul.php',  'icon'=>'✅','label'=>'Validasi Judul',       'id'=>'validasi_judul'],
+      ['href'=>'admin/relasi.php',          'icon'=>'🔗','label'=>'Relasi & SK',          'id'=>'relasi'],
       ['href'=>'admin/mahasiswa.php',       'icon'=>'🎒','label'=>'Kelola Mahasiswa',     'id'=>'kelola_mahasiswa'],
       ['href'=>'admin/dosen.php',           'icon'=>'👨‍🏫','label'=>'Kelola Dosen',         'id'=>'kelola_dosen'],
-      ['href'=>'admin/relasi.php',          'icon'=>'🔗','label'=>'Relasi Pembimbingan',  'id'=>'relasi'],
       ['href'=>'admin/laporan.php',         'icon'=>'📈','label'=>'Laporan & Aktivitas',  'id'=>'laporan'],
-      ['href'=>'admin/validasi_judul.php',  'icon'=>'✅','label'=>'Validasi Judul',       'id'=>'validasi_judul'],
     ]],
     ['section'=>'Sistem','items'=>[
       ['href'=>'admin/pengaturan.php','icon'=>'⚙️','label'=>'Pengaturan','id'=>'pengaturan'],
@@ -66,43 +93,6 @@ $navs = [
   ],
 ];
 ?>
-
-<aside class="sidebar">
-    <div class="sidebar-logo">SkripsiKu</div>
-    <ul class="sidebar-menu">
-        
-        <li><a href="<?= BASE_URL ?>/dashboard.php">🏠 Dashboard</a></li>
-
-        <?php if ($_SESSION['role'] === 'mahasiswa'): ?>
-            
-            <li><a href="<?= BASE_URL ?>/mahasiswa/pengajuan.php">📝 Pengajuan Judul</a></li>
-            
-            <?php if ($isBimbinganAktif): ?>
-                <li><a href="<?= BASE_URL ?>/mahasiswa/dokumen.php">📁 Dokumen & Revisi</a></li>
-                <li><a href="<?= BASE_URL ?>/mahasiswa/jadwal.php">📅 Jadwal Bimbingan</a></li>
-                <li><a href="<?= BASE_URL ?>/mahasiswa/riwayat.php">⏳ Riwayat Bimbingan</a></li>
-            <?php else: ?>
-                <li>
-                    <a href="#" onclick="alert('🔒 Akses Terkunci!\n\nMenu ini baru akan terbuka setelah judul Anda disetujui dan Program Studi menerbitkan SK Bimbingan.')" style="opacity:0.5; cursor:not-allowed; background:#f8f9fa;">
-                        🔒 Dokumen & Revisi
-                    </a>
-                </li>
-                <li>
-                    <a href="#" onclick="alert('🔒 Akses Terkunci!\n\nMenu ini baru akan terbuka setelah judul Anda disetujui dan Program Studi menerbitkan SK Bimbingan.')" style="opacity:0.5; cursor:not-allowed; background:#f8f9fa;">
-                        🔒 Jadwal Bimbingan
-                    </a>
-                </li>
-                <li>
-                    <a href="#" onclick="alert('🔒 Akses Terkunci!\n\nMenu ini baru akan terbuka setelah judul Anda disetujui dan Program Studi menerbitkan SK Bimbingan.')" style="opacity:0.5; cursor:not-allowed; background:#f8f9fa;">
-                        🔒 Riwayat Bimbingan
-                    </a>
-                </li>
-            <?php endif; ?>
-
-        <?php endif; ?>
-        
-        </ul>
-</aside>
 
 <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
@@ -125,12 +115,24 @@ $navs = [
       <div class="nav-section-label"><?= e($group['section']) ?></div>
       <?php foreach ($group['items'] as $item):
         $isActive = ($activePage ?? '') === $item['id'];
+        
+        // Cek apakah item ini terkunci (scoped access)
+        $isLocked = $item['locked'] ?? false;
+        
+        // Logika render untuk menu normal vs menu terkunci
+        $href    = $isLocked ? '#' : BASE_URL . '/' . $item['href'];
+        $onclick = $isLocked ? 'onclick="alert(\'🔒 Akses Terkunci!\\n\\nMenu ini baru akan terbuka setelah judul Anda disetujui dan Program Studi menerbitkan SK Bimbingan.\'); return false;"' : '';
+        $style   = $isLocked ? 'opacity:0.6; cursor:not-allowed; background:rgba(0,0,0,0.03);' : '';
       ?>
-        <a href="<?= BASE_URL ?>/<?= $item['href'] ?>"
-           class="nav-item <?= $isActive ? 'active' : '' ?>">
-          <span class="nav-icon"><?= $item['icon'] ?></span>
+        <a href="<?= $href ?>"
+           class="nav-item <?= $isActive ? 'active' : '' ?>" 
+           style="<?= $style ?>" 
+           <?= $onclick ?>>
+           
+          <span class="nav-icon"><?= $isLocked ? '🔒' : $item['icon'] ?></span>
           <?= e($item['label']) ?>
-          <?php if ($item['id'] === 'riwayat' && $unread > 0): ?>
+          
+          <?php if ($item['id'] === 'riwayat' && $unread > 0 && !$isLocked): ?>
             <span class="nav-badge"><?= $unread ?></span>
           <?php endif; ?>
         </a>

@@ -56,12 +56,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                          VALUES (?, ?, ?, ?, CURDATE(), "aktif", ?, ?)', 
                          [$id_mhs, $id_dosen, $id_judul, $semester, $no_sk, $filePath]);
                 
-                // Tambahkan notifikasi otomatis
+                // Tambahkan notifikasi otomatis DENGAN LAMPIRAN SK
                 $dosen = fetchOne('SELECT id_user FROM dosen WHERE id_dosen=?', [$id_dosen]);
                 $mhs = fetchOne('SELECT id_user FROM mahasiswa WHERE id_mahasiswa=?', [$id_mhs]);
                 
-                if($dosen) execute('INSERT INTO notifikasi (id_user, judul, pesan, tipe) VALUES (?, ?, ?, ?)', [$dosen['id_user'], 'Bimbingan Baru', 'Anda telah diplot sebagai pembimbing mahasiswa baru. SK telah diterbitkan.', 'info']);
-                if($mhs) execute('INSERT INTO notifikasi (id_user, judul, pesan, tipe) VALUES (?, ?, ?, ?)', [$mhs['id_user'], 'SK Bimbingan Terbit!', 'Dosen pembimbing telah ditetapkan dan SK Bimbingan Anda sudah bisa diunduh. Semua akses fitur kini terbuka.', 'sukses']);
+                if($dosen) {
+                    execute('INSERT INTO notifikasi (id_user, judul, pesan, tipe, tautan) VALUES (?, ?, ?, ?, ?)', 
+                        [$dosen['id_user'], 'Penugasan Bimbingan Baru', 'Anda telah ditunjuk sebagai Dosen Pembimbing untuk judul baru. SK Pembimbingan telah diterbitkan.', 'info', $filePath]);
+                }
+                if($mhs) {
+                    execute('INSERT INTO notifikasi (id_user, judul, pesan, tipe, tautan) VALUES (?, ?, ?, ?, ?)', 
+                        [$mhs['id_user'], 'SK Bimbingan Terbit!', 'Dosen pembimbing Anda telah ditetapkan. Silakan unduh SK Bimbingan terlampir. Akses ke menu Dokumen dan Jadwal kini telah dibuka.', 'sukses', $filePath]);
+                }
 
                 $db->commit();
                 setFlash('success', 'Relasi berhasil dibuat. SK telah diterbitkan dan notifikasi dikirim.');
@@ -78,12 +84,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     exit;
 }
 
-// 1. QUERY ANTREAN AJUAN
+// 1. QUERY ANTREAN AJUAN (Ditambahkan JOIN ke usulan_dosen)
 $antreanPlotting = fetchAll(
-    'SELECT j.id_judul, j.judul_indonesia, m.id_mahasiswa, m.nim, u.nama_lengkap, j.tgl_pengajuan
+    'SELECT j.id_judul, j.judul_indonesia, j.bidang_penelitian, j.usulan_dosen, m.id_mahasiswa, m.nim, u.nama_lengkap, j.tgl_pengajuan, ud.nama_lengkap AS nama_dosen_usulan
      FROM judul_skripsi j
      JOIN mahasiswa m ON m.id_mahasiswa = j.id_mahasiswa
      JOIN user u ON u.id_user = m.id_user
+     LEFT JOIN dosen d_usul ON d_usul.id_dosen = j.usulan_dosen
+     LEFT JOIN user ud ON ud.id_user = d_usul.id_user
      WHERE j.status = "disetujui"
      AND NOT EXISTS (
          SELECT 1 FROM bimbingan b WHERE b.id_mahasiswa = m.id_mahasiswa AND b.status = "aktif"
@@ -97,7 +105,11 @@ $mhsTanpaBimb = fetchAll(
      WHERE NOT EXISTS (SELECT 1 FROM bimbingan b WHERE b.id_mahasiswa=m.id_mahasiswa AND b.status="aktif")
      ORDER BY u.nama_lengkap'
 );
-$dosenList = fetchAll('SELECT d.id_dosen,u.nama_lengkap,(d.kuota_bimbingan-d.terisi) AS sisa, d.keahlian FROM dosen d JOIN user u ON u.id_user=d.id_user WHERE d.kuota_bimbingan>d.terisi ORDER BY u.nama_lengkap');
+// Pastikan d.keahlian ditarik dari database
+$dosenList = fetchAll('SELECT d.id_dosen, u.nama_lengkap, (d.kuota_bimbingan-d.terisi) AS sisa, d.keahlian 
+                       FROM dosen d JOIN user u ON u.id_user=d.id_user 
+                       WHERE d.kuota_bimbingan > d.terisi 
+                       ORDER BY u.nama_lengkap');
 $judulList = fetchAll('SELECT j.id_judul,j.judul_indonesia,m.nim FROM judul_skripsi j JOIN mahasiswa m ON m.id_mahasiswa=j.id_mahasiswa WHERE j.status="disetujui"');
 
 // 3. QUERY TABEL SEMUA RELASI
@@ -181,9 +193,18 @@ include __DIR__ . '/../includes/sidebar.php';
                                       <div style="font-weight:600; font-size:13px;"><?= e($ap['nama_lengkap']) ?></div>
                                       <div class="mono" style="font-size:11px; color:var(--slate);"><?= e($ap['nim']) ?></div>
                                   </td>
+                                  
                                   <td style="font-size:13px;">
                                       <?= e($ap['judul_indonesia']) ?>
-                                      <div style="font-size:11px; color:var(--info); margin-top:4px;">ACC: <?= date('d M Y', strtotime($ap['tgl_pengajuan'])) ?></div>
+                                      <div style="display:flex; gap:8px; align-items:center; margin-top:6px;">
+                                          <div style="font-size:11px; color:var(--info);">ACC: <?= date('d M Y', strtotime($ap['tgl_pengajuan'])) ?></div>
+                                          <span class="badge info" style="font-size:10px;"><?= e($ap['bidang_penelitian']) ?></span>
+                                      </div>
+                                      <?php if ($ap['usulan_dosen']): ?>
+                                          <div style="font-size:11px; font-weight:600; color:var(--gold); margin-top:8px;">
+                                              ⭐ Usulan Mhs: <?= e($ap['nama_dosen_usulan']) ?>
+                                          </div>
+                                      <?php endif; ?>
                                   </td>
                                   <form method="POST" enctype="multipart/form-data"><?= csrfField() ?>
                                       <input type="hidden" name="aksi" value="buat">
@@ -192,20 +213,43 @@ include __DIR__ . '/../includes/sidebar.php';
                                       <input type="hidden" name="semester" value="<?= $semesterDefault ?>">
                                       
                                       <td style="padding: 10px;">
-                                          <select class="form-input" name="id_dosen" style="padding:6px; font-size:13px; margin-bottom:8px;" required>
-                                              <option value="" disabled selected>-- Pilih Dosen Tersedia --</option>
-                                              <?php foreach ($dosenList as $d): ?>
-                                                  <option value="<?= $d['id_dosen'] ?>">
-                                                      <?= e($d['nama_lengkap']) ?> (Sisa: <?= $d['sisa'] ?>)
-                                                  </option>
-                                              <?php endforeach; ?>
+                                          <div style="font-size:11px; color:var(--slate); margin-bottom:4px;">Plotting Dosen Pembimbing:</div>
+                                          <select class="form-input" name="id_dosen" style="padding:6px; font-size:13px; margin-bottom:12px;" required>
+                                              <option value="" disabled selected>-- Pilih Dosen --</option>
+                                              
+                                              <optgroup label="🌟 Rekomendasi (<?= e($ap['bidang_penelitian']) ?>)">
+                                                  <?php 
+                                                  $adaRekom = false;
+                                                  foreach ($dosenList as $d) {
+                                                      if ($d['keahlian'] === $ap['bidang_penelitian']) {
+                                                          // AUTO-SELECT JIKA INI DOSEN YANG DIUSULKAN
+                                                          $isSelected = ($d['id_dosen'] == $ap['usulan_dosen']) ? 'selected' : '';
+                                                          echo '<option value="' . $d['id_dosen'] . '" '.$isSelected.'>✅ ' . e($d['nama_lengkap']) . ' (Sisa: ' . $d['sisa'] . ')</option>';
+                                                          $adaRekom = true;
+                                                      }
+                                                  }
+                                                  if (!$adaRekom) echo '<option disabled>Tidak ada dosen dengan bidang ini</option>';
+                                                  ?>
+                                              </optgroup>
+                                  
+                                              <optgroup label="👨‍🏫 Dosen Bidang Lainnya">
+                                                  <?php 
+                                                  foreach ($dosenList as $d) {
+                                                      if ($d['keahlian'] !== $ap['bidang_penelitian']) {
+                                                          // AUTO-SELECT JIKA INI DOSEN YANG DIUSULKAN
+                                                          $isSelected = ($d['id_dosen'] == $ap['usulan_dosen']) ? 'selected' : '';
+                                                          echo '<option value="' . $d['id_dosen'] . '" '.$isSelected.'>' . e($d['nama_lengkap']) . ' (Sisa: ' . $d['sisa'] . ' | Bidang: ' . e($d['keahlian']) . ')</option>';
+                                                      }
+                                                  }
+                                                  ?>
+                                              </optgroup>
                                           </select>
                                           
                                           <input type="text" class="form-input" name="no_sk" placeholder="Nomor SK (Cth: 123/SK/UNPAM/2026)" style="padding:6px; font-size:12px; margin-bottom:8px;" required>
-                                          
                                           <div style="font-size:11px; color:var(--slate); margin-bottom:4px;">Unggah PDF SK Bimbingan:</div>
                                           <input type="file" name="file_sk" accept=".pdf" class="form-input" style="padding:4px; font-size:12px;" required>
                                       </td>
+                                      
                                       <td>
                                           <button type="submit" class="btn btn-primary" style="padding:8px 12px; font-size:12px; width: 100%; justify-content: center;">Terbitkan</button>
                                       </td>
