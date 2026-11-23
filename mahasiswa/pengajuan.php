@@ -14,7 +14,9 @@ $riwayat = fetchAll('SELECT * FROM judul_skripsi WHERE id_mahasiswa=? ORDER BY t
 // Cek judul disetujui
 $judulDisetujui = fetchOne('SELECT * FROM judul_skripsi WHERE id_mahasiswa=? AND status="disetujui" LIMIT 1', [$eid]);
 // Cek status bimbingan (Apakah SK sudah terbit)
-$bimbinganAktif = fetchOne('SELECT no_sk, file_sk FROM bimbingan WHERE id_mahasiswa=? AND status="aktif" LIMIT 1', [$eid]);
+$bimbinganAktif = fetchOne('SELECT b.no_sk, b.file_sk, b.tgl_mulai, b.semester, u.nama_lengkap AS nama_dosen
+                           FROM bimbingan b JOIN dosen d ON d.id_dosen=b.id_dosen JOIN user u ON u.id_user=d.id_user
+                           WHERE b.id_mahasiswa=? AND b.status="aktif" LIMIT 1', [$eid]);
 
 // Handle POST Pengajuan
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -105,38 +107,126 @@ include __DIR__ . '/../includes/sidebar.php';
 
   <div class="page-header">
     <h1>Pengajuan Judul Skripsi</h1>
-    <p>Langkah pertama: ajukan 2 sampai 3 pilihan judul beserta berkas syarat.</p>
+    <p><?= $judulDisetujui ? 'Ringkasan judul skripsi Anda yang sudah disetujui beserta riwayat pengajuannya.' : 'Langkah pertama: ajukan 2 sampai 3 pilihan judul beserta berkas syarat.' ?></p>
   </div>
 
-  <?php if ($bimbinganAktif): ?>
-    <div class="alert alert-static success" style="padding:24px; display:flex; flex-direction:column; align-items:center; text-align:center;">
-        <div style="font-size:40px; margin-bottom:10px;">🎉</div>
-        <h2 style="margin:0 0 10px 0; color:var(--navy);">Selamat! SK Bimbingan Anda Telah Terbit</h2>
-        <p style="margin:0 0 20px 0; font-size:14px; color:var(--slate); max-width:500px;">
-            Judul skripsi Anda telah disetujui dan Dosen Pembimbing telah ditetapkan oleh Program Studi. Seluruh akses ke fitur bimbingan skripsi kini telah <b>dibuka</b>.
-        </p>
-        <div style="background:var(--white); border:1px solid var(--cream-dark); padding:16px; border-radius:8px; display:inline-flex; gap:20px; align-items:center;">
-            <div>
-                <div class="meta-sm">Nomor SK Bimbingan</div>
-                <div style="font-weight:700; color:var(--navy);"><?= e($bimbinganAktif['no_sk']) ?></div>
-            </div>
-            <?php if($bimbinganAktif['file_sk']): ?>
-                <a href="<?= e(fileUrl($bimbinganAktif['file_sk'])) ?>" target="_blank" class="btn btn-primary" style="font-size:12px;">⬇️ Unduh SK Bimbingan</a>
-            <?php endif; ?>
+  <?php if ($judulDisetujui): ?>
+    <?php if ($bimbinganAktif): ?>
+      <div class="status-card status-card--success">
+        <div class="status-card__icon"><?= icon('graduation', 26) ?></div>
+        <div class="min-w-0" style="flex:1;">
+          <div class="status-card__title">SK bimbingan sudah terbit</div>
+          <div class="muted">No. SK <strong><?= e($bimbinganAktif['no_sk']) ?></strong> · mulai <?= tgl($bimbinganAktif['tgl_mulai']) ?> · semester <?= e($bimbinganAktif['semester']) ?> · pembimbing <strong><?= e($bimbinganAktif['nama_dosen']) ?></strong></div>
         </div>
-    </div>
-  <?php endif; ?>
-
-  <div class="<?= $bimbinganAktif ? '' : 'split' ?>" style="--side:340px; margin-top:20px;">
-    <?php if (!$bimbinganAktif): ?>
-    <div class="form-card">
-      <?php if ($judulDisetujui): ?>
-          <?php if (!$bimbinganAktif): ?>
-              <div class="alert alert-static info">
-                 <strong>Judul disetujui.</strong> Langkah berikutnya: <a href="<?= BASE_URL ?>/mahasiswa/pengajuan_dosen.php" style="text-decoration:underline;font-weight:600;">usulkan dosen pembimbing</a>, lalu tunggu Program Studi menerbitkan SK bimbingan.
-              </div>
+        <div class="status-card__aksi">
+          <?php if ($bimbinganAktif['file_sk']): ?>
+            <a href="<?= e(fileUrl($bimbinganAktif['file_sk'])) ?>" target="_blank" class="btn btn-primary btn-sm"><?= icon('download', 16) ?> Unduh SK</a>
           <?php endif; ?>
-      <?php else: ?>
+          <a href="<?= BASE_URL ?>/mahasiswa/bimbingan.php" class="btn btn-secondary btn-sm"><?= icon('calendar', 16) ?> Ajukan jadwal</a>
+        </div>
+      </div>
+    <?php else: ?>
+      <div class="status-card status-card--info">
+        <div class="status-card__icon"><?= icon('check-circle', 26) ?></div>
+        <div class="min-w-0" style="flex:1;">
+          <div class="status-card__title">Judul Anda sudah disetujui</div>
+          <div class="muted"><?= $judulDisetujui['usulan_dosen'] ? 'Usulan pembimbing sudah dikirim. Tunggu Program Studi menerbitkan SK bimbingan.' : 'Langkah berikutnya: usulkan dosen pembimbing yang sesuai bidang Anda.' ?></div>
+        </div>
+        <div class="status-card__aksi">
+          <a href="<?= BASE_URL ?>/mahasiswa/pengajuan_dosen.php" class="btn btn-gold btn-sm"><?= icon('user', 16) ?> <?= $judulDisetujui['usulan_dosen'] ? 'Lihat usulan pembimbing' : 'Usulkan pembimbing' ?></a>
+        </div>
+      </div>
+    <?php endif; ?>
+
+    <div class="split" style="--side:340px; margin-top:20px;">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Judul Skripsi Anda</div>
+          <span class="badge success"><span class="badge-dot"></span>Disetujui</span>
+        </div>
+        <div class="card-body">
+          <div class="judul-utama"><?= e($judulDisetujui['judul_indonesia']) ?></div>
+
+          <div class="info-grid">
+            <div><div class="info-label">Bidang penelitian</div><div class="info-value"><?= e($judulDisetujui['bidang_penelitian']) ?></div></div>
+            <div><div class="info-label">Metode penelitian</div><div class="info-value"><?= e($judulDisetujui['metode_penelitian'] ?: '-') ?></div></div>
+            <div><div class="info-label">Tanggal diajukan</div><div class="info-value"><?= tgl($judulDisetujui['tgl_pengajuan']) ?></div></div>
+            <div><div class="info-label">Pengajuan ke</div><div class="info-value"><?= (int)$judulDisetujui['iterasi'] ?></div></div>
+          </div>
+
+          <?php if ($judulDisetujui['latar_belakang']): ?>
+            <div class="info-label" style="margin-top:20px;">Latar belakang</div>
+            <details class="latar">
+              <summary>
+                <span class="latar__ringkas"><?= e(mb_strimwidth($judulDisetujui['latar_belakang'], 0, 260, '…')) ?></span>
+                <?php if (mb_strlen($judulDisetujui['latar_belakang']) > 260): ?><span class="latar__toggle">Tampilkan selengkapnya</span><?php endif; ?>
+              </summary>
+              <div class="latar__penuh"><?= nl2br(e($judulDisetujui['latar_belakang'])) ?></div>
+            </details>
+          <?php endif; ?>
+
+          <?php $alternatif = array_filter([$judulDisetujui['judul_alternatif_1'], $judulDisetujui['judul_alternatif_2']], fn($j) => $j && $j !== $judulDisetujui['judul_indonesia']); ?>
+          <?php if ($alternatif): ?>
+            <div class="info-label" style="margin-top:20px;">Judul cadangan yang diajukan</div>
+            <ul class="judul-alt">
+              <?php foreach ($alternatif as $alt): ?><li><?= e($alt) ?></li><?php endforeach; ?>
+            </ul>
+          <?php endif; ?>
+
+          <div class="info-label" style="margin-top:20px;">Berkas</div>
+          <div class="berkas-list">
+            <?php if ($judulDisetujui['file_transkrip']): ?>
+              <a href="<?= e(fileUrl($judulDisetujui['file_transkrip'])) ?>" target="_blank" class="berkas"><?= icon('file', 18) ?><span>Transkrip / KRS</span><?= icon('download', 16) ?></a>
+            <?php endif; ?>
+            <?php if ($judulDisetujui['file_proposal']): ?>
+              <a href="<?= e(fileUrl($judulDisetujui['file_proposal'])) ?>" target="_blank" class="berkas"><?= icon('file', 18) ?><span>Draf proposal</span><?= icon('download', 16) ?></a>
+            <?php endif; ?>
+            <?php if (!$judulDisetujui['file_transkrip'] && !$judulDisetujui['file_proposal']): ?>
+              <span class="muted">Tidak ada berkas.</span>
+            <?php endif; ?>
+          </div>
+        </div>
+      </div>
+
+      <div>
+      <div class="card">
+        <div class="card-header"><div class="card-title">Riwayat Pengajuan</div></div>
+        <div class="card-body">
+          <?php if (empty($riwayat)): ?>
+            <div class="empty-state"><div class="empty-sub">Belum ada pengajuan. Isi formulir di samping untuk mengajukan judul pertama Anda.</div></div>
+          <?php else: ?>
+            <?php foreach ($riwayat as $r): ?>
+              <div style="border:1px solid var(--cream-dark);border-radius:8px;padding:14px;margin-bottom:10px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                    <span style="font-size:11px; font-weight:600; color:var(--slate);">Iterasi ke-<?= $r['iterasi'] ?></span>
+                    <span class="badge <?= badge($r['status']) ?>"><span class="badge-dot"></span><?= e(label($r['status'])) ?></span>
+                </div>
+                
+                <div class="meta-sm mb-4">1. <?= e($r['judul_indonesia']) ?></div>
+                <div class="meta-sm mb-4">2. <?= e($r['judul_alternatif_1']) ?></div>
+                <?php if($r['judul_alternatif_2']): ?>
+                    <div style="font-size:11px; color:var(--slate); margin-bottom:10px;">3. <?= e($r['judul_alternatif_2']) ?></div>
+                <?php endif; ?>
+
+                <div style="display:flex; gap:10px; margin-top:12px; border-top:1px dashed var(--cream-dark); padding-top:10px;">
+                    <?php if($r['file_transkrip']): ?>
+                        <a href="<?= e(fileUrl($r['file_transkrip'])) ?>" target="_blank" style="font-size:11px; color:var(--info-text); text-decoration:none;">📄 Transkrip</a>
+                    <?php endif; ?>
+                    <?php if($r['file_proposal']): ?>
+                        <a href="<?= e(fileUrl($r['file_proposal'])) ?>" target="_blank" style="font-size:11px; color:var(--info-text); text-decoration:none;">📄 Proposal</a>
+                    <?php endif; ?>
+                </div>
+              </div>
+            <?php endforeach; ?>
+          <?php endif; ?>
+        </div>
+      </div>
+      </div>
+    </div>
+
+  <?php else: ?>
+    <div class="split" style="--side:340px; margin-top:20px;">
+      <div class="form-card">
           <h2>Formulir Pengajuan Judul</h2>
           <p style="color:var(--slate); font-size:13px; margin-bottom:20px;">Isi minimal 2 pilihan judul. Dosen akan memilih atau meminta revisi.</p>
           
@@ -198,13 +288,10 @@ include __DIR__ . '/../includes/sidebar.php';
               <button type="submit" class="btn btn-primary btn-full">Kirim Pengajuan</button>
             </div>
           </form>
-      <?php endif; ?>
-    </div>
-    <?php endif; ?>
-
-    <div>
+      </div>
+      <div>
       <div class="card">
-        <div class="card-header"><div class="card-title">Status Ajuan Terakhir</div></div>
+        <div class="card-header"><div class="card-title">Riwayat Pengajuan</div></div>
         <div class="card-body">
           <?php if (empty($riwayat)): ?>
             <div class="empty-state"><div class="empty-sub">Belum ada pengajuan. Isi formulir di samping untuk mengajukan judul pertama Anda.</div></div>
@@ -235,8 +322,8 @@ include __DIR__ . '/../includes/sidebar.php';
           <?php endif; ?>
         </div>
       </div>
+      </div>
     </div>
-    
-  </div>
+  <?php endif; ?>
 </div>
 <?php include __DIR__ . '/../includes/footer.php'; ?>

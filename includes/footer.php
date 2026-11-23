@@ -12,6 +12,6 @@
   </div>
 </dialog>
 
-<script src="<?= BASE_URL ?>/assets/script.js"></script>
+<script src="<?= BASE_URL ?>/assets/script.js?v=<?= @filemtime(__DIR__ . '/../assets/script.js') ?>"></script>
 </body>
 </html>
