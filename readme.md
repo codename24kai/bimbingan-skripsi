@@ -502,6 +502,8 @@ http://localhost/basis-data-2/bimbingan-skripsi/
 
 > Akun yang login dengan password bawaan (`admin123`, `dosen123`, `mhs123`, `mahasiswa123`) wajib mengganti password (minimal 8 karakter) sebelum bisa membuka halaman lain.
 >
+> Lupa password? Admin bisa mereset lewat tombol 🔑 di halaman Kelola Mahasiswa atau Kelola Dosen. Sistem membuat password sementara (awalan `Reset-`) yang ditampilkan sekali; pengguna wajib menggantinya saat login pertama.
+>
 > File upload disimpan di `uploads/` yang diblokir dari akses langsung (`uploads/.htaccess`, butuh Apache dengan `AllowOverride All`). File hanya bisa dibuka lewat `download.php` oleh admin, mahasiswa pemilik, atau dosen pembimbingnya.
 
 ---
