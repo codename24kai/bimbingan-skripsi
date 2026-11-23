@@ -32,7 +32,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $error = 'Password baru minimal ' . MIN_PASSWORD_LENGTH . ' karakter.';
         } elseif ($newPw !== $confirmPw) {
             $error = 'Konfirmasi password baru tidak cocok.';
-        } elseif (in_array($newPw, DEFAULT_PASSWORDS, true) || $newPw === $oldPw) {
+        } elseif (isDefaultOrTempPassword($newPw) || $newPw === $oldPw) {
             $error = 'Gunakan password baru yang berbeda dari password lama atau bawaan.';
         }
     }

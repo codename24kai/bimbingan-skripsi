@@ -20,6 +20,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $db->commit();
             setFlash('success','Dosen berhasil ditambahkan. Password default: dosen123');
         } catch(\Exception $e) { $db->rollBack(); setFlash('danger','Gagal: '.$e->getMessage()); }
+    } elseif ($aksi === 'reset_password') {
+        $temp = resetUserPassword((int)($_POST['id_user'] ?? 0), 'dosen');
+        if ($temp === null) {
+            setFlash('danger','Dosen tidak ditemukan.');
+        } else {
+            setFlash('success','Password direset. Password sementara: '.$temp.' (catat sekarang, tidak ditampilkan lagi). Pengguna wajib menggantinya saat login.');
+        }
     } elseif ($aksi === 'hapus') {
         execute('DELETE FROM user WHERE id_user=?',[(int)$_POST['id_user']]);
         setFlash('success','Data dosen berhasil dihapus.');
@@ -70,8 +77,13 @@ include __DIR__ . '/../includes/sidebar.php';
                   <?php $sisa = $d['kuota_bimbingan'] - $d['terisi']; ?>
                   <span class="badge <?= $sisa===0?'danger':($sisa<=2?'warning':'success') ?>"><span class="badge-dot"></span><?= $sisa ?></span>
                 </td>
-                <td>
-                  <form method="POST" onsubmit="return confirm('Hapus dosen ini?')"><?= csrfField() ?>
+                <td style="white-space:nowrap;">
+                  <form method="POST" style="display:inline;" onsubmit="return confirm('Reset password dosen ini? Password lama tidak akan berlaku lagi.')"><?= csrfField() ?>
+                    <input type="hidden" name="aksi" value="reset_password">
+                    <input type="hidden" name="id_user" value="<?= $d['id_user'] ?>">
+                    <button class="btn-icon" title="Reset Password">🔑</button>
+                  </form>
+                  <form method="POST" style="display:inline;" onsubmit="return confirm('Hapus dosen ini?')"><?= csrfField() ?>
                     <input type="hidden" name="aksi" value="hapus">
                     <input type="hidden" name="id_user" value="<?= $d['id_user'] ?>">
                     <button class="btn-icon">🗑️</button>

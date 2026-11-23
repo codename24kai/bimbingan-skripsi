@@ -52,6 +52,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif ($aksi === 'hapus') {
         execute('DELETE FROM user WHERE id_user=?', [(int)$_POST['id_user']]);
         setFlash('success', 'Data mahasiswa berhasil dihapus.');
+    } elseif ($aksi === 'reset_password') {
+        $temp = resetUserPassword((int)($_POST['id_user'] ?? 0), 'mahasiswa');
+        if ($temp === null) {
+            setFlash('danger', 'Mahasiswa tidak ditemukan.');
+        } else {
+            setFlash('success', 'Password direset. Password sementara: ' . $temp . ' (catat sekarang, tidak ditampilkan lagi). Pengguna wajib menggantinya saat login.');
+        }
     } elseif ($aksi === 'toggle_status') {
         $user = fetchOne('SELECT status FROM user WHERE id_user=?', [(int)$_POST['id_user']]);
         $newStatus = ($user['status'] === 'aktif') ? 'nonaktif' : 'aktif';
@@ -127,6 +134,12 @@ include __DIR__ . '/../includes/sidebar.php';
                   
                   <button type="button" class="btn-icon" title="Edit Data" onclick="openEditModal(<?= $jsonData ?>)">✏️</button>
                   
+                  <form method="POST" style="display:inline;" onsubmit="return confirm('Reset password mahasiswa ini? Password lama tidak akan berlaku lagi.')"><?= csrfField() ?>
+                    <input type="hidden" name="aksi" value="reset_password">
+                    <input type="hidden" name="id_user" value="<?= $m['id_user'] ?>">
+                    <button type="submit" class="btn-icon" title="Reset Password">🔑</button>
+                  </form>
+
                   <form method="POST" style="display:inline;" onsubmit="return confirm('Hapus mahasiswa ini? Semua data terkait (bimbingan, dokumen) akan ikut terhapus.')"><?= csrfField() ?>
                     <input type="hidden" name="aksi" value="hapus">
                     <input type="hidden" name="id_user" value="<?= $m['id_user'] ?>">

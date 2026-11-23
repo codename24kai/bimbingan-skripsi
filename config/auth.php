@@ -19,6 +19,38 @@ if (session_status() === PHP_SESSION_NONE) {
 // salah satu password ini wajib menggantinya sebelum memakai sistem.
 const DEFAULT_PASSWORDS = ['mhs123', 'dosen123', 'admin123', 'mahasiswa123'];
 const MIN_PASSWORD_LENGTH = 8;
+// Password sementara hasil reset admin selalu diawali prefix ini, sehingga
+// pengguna wajib menggantinya saat login pertama (tanpa perlu kolom baru).
+const TEMP_PASSWORD_PREFIX = 'Reset-';
+
+function isDefaultOrTempPassword(string $password): bool {
+    return in_array($password, DEFAULT_PASSWORDS, true)
+        || str_starts_with($password, TEMP_PASSWORD_PREFIX);
+}
+
+/** Buat password sementara acak, mis. "Reset-k7Qm2xPa". */
+function generateTempPassword(): string {
+    $chars = 'abcdefghijkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    $out = '';
+    for ($i = 0; $i < 8; $i++) {
+        $out .= $chars[random_int(0, strlen($chars) - 1)];
+    }
+    return TEMP_PASSWORD_PREFIX . $out;
+}
+
+/**
+ * Reset password user dengan role tertentu menjadi password sementara.
+ * Mengembalikan password sementara, atau null jika user tidak ditemukan.
+ */
+function resetUserPassword(int $idUser, string $role): ?string {
+    $user = fetchOne('SELECT id_user FROM user WHERE id_user=? AND role=?', [$idUser, $role]);
+    if (!$user) {
+        return null;
+    }
+    $temp = generateTempPassword();
+    execute('UPDATE user SET password_hash=? WHERE id_user=?', [hashPassword($temp), $idUser]);
+    return $temp;
+}
 
 // ── CSRF ─────────────────────────────────────────────────────
 
@@ -87,7 +119,7 @@ function loginUser(array $user, int $entityId, string $plainPassword): void {
         'nama_lengkap' => $user['nama_lengkap'],
         'email'        => $user['email'],
     ];
-    $_SESSION['must_change_password'] = in_array($plainPassword, DEFAULT_PASSWORDS, true);
+    $_SESSION['must_change_password'] = isDefaultOrTempPassword($plainPassword);
 }
 
 function isLoggedIn(): bool {
