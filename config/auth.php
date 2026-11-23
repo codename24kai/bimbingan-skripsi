@@ -213,3 +213,4 @@ function fileUrl(?string $path): string {
 }
 
 require_once __DIR__ . '/format.php';
+require_once __DIR__ . '/ui.php';

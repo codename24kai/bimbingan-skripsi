@@ -78,45 +78,45 @@ include __DIR__ . '/../includes/sidebar.php';
     <div class="card-body">
       <div class="table-wrap">
         <table>
-          <thead><tr><th>Dosen</th><th>NIP</th><th>Prodi</th><th>Jabatan</th><th>Kuota</th><th>Terisi</th><th>Sisa</th><th style="text-align:right;">Aksi</th></tr></thead>
+          <thead><tr><th>Dosen</th><th>NIP</th><th>Prodi</th><th>Jabatan</th><th>Kuota</th><th>Terisi</th><th>Sisa</th><th class="text-right">Aksi</th></tr></thead>
           <tbody>
             <?php foreach ($list as $d): 
                 $jsonData = htmlspecialchars(json_encode($d), ENT_QUOTES, 'UTF-8');
             ?>
               <tr>
                 <td>
-                  <div style="display:flex;align-items:center;gap:10px;">
-                    <div class="mini-avatar" style="width:34px;height:34px;font-size:11px;"><?= strtoupper(substr($d['nama_lengkap'],0,2)) ?></div>
+                  <div class="row-10">
+                    <div class="mini-avatar" style="width:34px;height:34px;font-size:11px;"><?= e(inisial($d['nama_lengkap'])) ?></div>
                     <div>
-                      <div style="font-weight:500;"><?= e($d['nama_lengkap']) ?></div>
-                      <div style="font-size:12px;color:var(--slate);"><?= e($d['email']) ?></div>
+                      <div class="fw-500"><?= e($d['nama_lengkap']) ?></div>
+                      <div class="meta"><?= e($d['email']) ?></div>
                     </div>
                   </div>
                 </td>
-                <td class="mono" style="font-size:12px;"><?= e($d['nip']) ?></td>
-                <td style="font-size:13px;"><?= e($d['nama_prodi']) ?></td>
-                <td style="font-size:12px;"><?= e($d['jabatan_fungsional'] ?? '—') ?></td>
-                <td style="text-align:center;"><?= $d['kuota_bimbingan'] ?></td>
-                <td style="text-align:center;"><?= $d['terisi'] ?></td>
+                <td class="mono fs-12"><?= e($d['nip']) ?></td>
+                <td class="fs-13"><?= e($d['nama_prodi']) ?></td>
+                <td class="fs-12"><?= e($d['jabatan_fungsional'] ?? '—') ?></td>
+                <td class="text-center"><?= $d['kuota_bimbingan'] ?></td>
+                <td class="text-center"><?= $d['terisi'] ?></td>
                 <td>
                   <?php $sisa = $d['kuota_bimbingan'] - $d['terisi']; ?>
                   <span class="badge <?= $sisa===0?'danger':($sisa<=2?'warning':'success') ?>"><span class="badge-dot"></span><?= $sisa ?></span>
                 </td>
                 <td style="text-align:right;white-space:nowrap;">
-                  <button type="button" class="btn-icon" title="Pratinjau Data" onclick="openPreviewModal(<?= $jsonData ?>)">👁️</button>
+                  <button type="button" class="btn-icon" title="Pratinjau Data" aria-label="Pratinjau Data <?= e($d['nama_lengkap']) ?>" onclick="openPreviewModal(<?= $jsonData ?>)"><?= icon('eye') ?></button>
 
-                  <button type="button" class="btn-icon" title="Edit Data" onclick="openEditModal(<?= $jsonData ?>)">✏️</button>
+                  <button type="button" class="btn-icon" title="Edit Data" aria-label="Edit Data <?= e($d['nama_lengkap']) ?>" onclick="openEditModal(<?= $jsonData ?>)"><?= icon('pencil') ?></button>
 
-                  <form method="POST" style="display:inline;" onsubmit="return confirm('Reset password dosen ini? Password lama tidak akan berlaku lagi.')"><?= csrfField() ?>
+                  <form method="POST" style="display:inline;" data-confirm="Reset password <?= e($d['nama_lengkap']) ?>? Password lama tidak berlaku lagi dan password sementara akan ditampilkan." data-confirm-ok="Reset password"><?= csrfField() ?>
                     <input type="hidden" name="aksi" value="reset_password">
                     <input type="hidden" name="id_user" value="<?= $d['id_user'] ?>">
-                    <button type="submit" class="btn-icon" title="Reset Password">🔑</button>
+                    <button type="submit" class="btn-icon" title="Reset Password" aria-label="Reset Password <?= e($d['nama_lengkap']) ?>"><?= icon('key') ?></button>
                   </form>
 
-                  <form method="POST" onsubmit="return confirm('Hapus dosen ini? Semua data bimbingan terkait akan ikut terhapus.')" style="display:inline;"><?= csrfField() ?>
+                  <form method="POST" data-confirm="Hapus dosen <?= e($d['nama_lengkap']) ?>? Semua data bimbingan terkait ikut terhapus dan tidak bisa dikembalikan." data-confirm-ok="Hapus" style="display:inline;"><?= csrfField() ?>
                     <input type="hidden" name="aksi" value="hapus">
                     <input type="hidden" name="id_user" value="<?= $d['id_user'] ?>">
-                    <button type="submit" class="btn-icon" title="Hapus Data">🗑️</button>
+                    <button type="submit" class="btn-icon btn-icon--danger" title="Hapus Data" aria-label="Hapus Data <?= e($d['nama_lengkap']) ?>"><?= icon('trash') ?></button>
                   </form>
                 </td>
               </tr>
@@ -131,11 +131,11 @@ include __DIR__ . '/../includes/sidebar.php';
   </div>
 </div>
 
-<div id="modalDosen" style="display:none;position:fixed;inset:0;background:rgba(11,31,58,.6);z-index:1000;align-items:center;justify-content:center;">
+<div class="modal-overlay" id="modalDosen" style="display:none;">
   <div style="background:var(--white);border-radius:var(--radius);padding:32px;width:100%;max-width:520px;box-shadow:var(--shadow-lg);max-height:90vh;overflow-y:auto;">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
-      <h2 style="font-family:'Playfair Display',serif;font-size:20px;">Tambah Dosen</h2>
-      <button type="button" onclick="document.getElementById('modalDosen').style.display='none'" style="background:none;border:none;font-size:20px;cursor:pointer;">×</button>
+    <div class="modal-head">
+      <h2 class="modal-title">Tambah Dosen</h2>
+      <button type="button" aria-label="Tutup" class="modal-close" type="button" onclick="document.getElementById('modalDosen').style.display='none'">×</button>
     </div>
     
     <form method="POST"><?= csrfField() ?>
@@ -206,11 +206,11 @@ include __DIR__ . '/../includes/sidebar.php';
   </div>
 </div>
 
-<div id="modalEdit" style="display:none;position:fixed;inset:0;background:rgba(11,31,58,.6);z-index:1000;align-items:center;justify-content:center;">
+<div class="modal-overlay" id="modalEdit" style="display:none;">
   <div style="background:var(--white);border-radius:var(--radius);padding:32px;width:100%;max-width:520px;box-shadow:var(--shadow-lg);max-height:90vh;overflow-y:auto;">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
-      <h2 style="font-family:'Playfair Display',serif;font-size:20px;">Edit Dosen</h2>
-      <button type="button" onclick="document.getElementById('modalEdit').style.display='none'" style="background:none;border:none;font-size:20px;cursor:pointer;">×</button>
+    <div class="modal-head">
+      <h2 class="modal-title">Edit Dosen</h2>
+      <button type="button" aria-label="Tutup" class="modal-close" type="button" onclick="document.getElementById('modalEdit').style.display='none'">×</button>
     </div>
     
     <form method="POST"><?= csrfField() ?>
@@ -280,44 +280,44 @@ include __DIR__ . '/../includes/sidebar.php';
   </div>
 </div>
 
-<div id="modalPreview" style="display:none;position:fixed;inset:0;background:rgba(11,31,58,.6);z-index:1000;align-items:center;justify-content:center;">
-  <div style="background:var(--white);border-radius:var(--radius);padding:32px;width:100%;max-width:450px;box-shadow:var(--shadow-lg);">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
-      <h2 style="font-family:'Playfair Display',serif;font-size:20px;">Profil Dosen</h2>
-      <button type="button" onclick="document.getElementById('modalPreview').style.display='none'" style="background:none;border:none;font-size:20px;cursor:pointer;">×</button>
+<div class="modal-overlay" id="modalPreview" style="display:none;">
+  <div class="modal-box">
+    <div class="modal-head">
+      <h2 class="modal-title">Profil Dosen</h2>
+      <button type="button" aria-label="Tutup" class="modal-close" type="button" onclick="document.getElementById('modalPreview').style.display='none'">×</button>
     </div>
     
     <div style="display:flex; flex-direction:column; gap:16px;">
         <div class="detail-row">
-            <span style="color:var(--slate); font-size:13px;">Nama Lengkap</span>
-            <strong id="prev_nama" style="font-size:14px;">-</strong>
+            <span class="muted">Nama Lengkap</span>
+            <strong class="fs-14" id="prev_nama">-</strong>
         </div>
         <div class="detail-row">
-            <span style="color:var(--slate); font-size:13px;">Email</span>
-            <span id="prev_email" style="font-size:14px;">-</span>
+            <span class="muted">Email</span>
+            <span class="fs-14" id="prev_email">-</span>
         </div>
         <div class="detail-row">
-            <span style="color:var(--slate); font-size:13px;">NIP</span>
-            <span id="prev_nip" class="mono" style="font-size:14px;">-</span>
+            <span class="muted">NIP</span>
+            <span id="prev_nip" class="mono fs-14">-</span>
         </div>
         <div class="detail-row">
-            <span style="color:var(--slate); font-size:13px;">Program Studi</span>
-            <span id="prev_prodi" style="font-size:14px;">-</span>
+            <span class="muted">Program Studi</span>
+            <span class="fs-14" id="prev_prodi">-</span>
         </div>
         <div class="detail-row">
-            <span style="color:var(--slate); font-size:13px;">Jabatan Fungsional</span>
-            <span id="prev_jabatan" style="font-size:14px;">-</span>
+            <span class="muted">Jabatan Fungsional</span>
+            <span class="fs-14" id="prev_jabatan">-</span>
         </div>
         <div class="detail-row">
-            <span style="color:var(--slate); font-size:13px;">Bidang Keahlian</span>
+            <span class="muted">Bidang Keahlian</span>
             <strong id="prev_keahlian" style="font-size:14px; color:var(--navy);">-</strong>
         </div>
         <div class="detail-row">
-            <span style="color:var(--slate); font-size:13px;">Kuota Maksimal</span>
-            <span id="prev_kuota" style="font-size:14px;">-</span>
+            <span class="muted">Kuota Maksimal</span>
+            <span class="fs-14" id="prev_kuota">-</span>
         </div>
         <div class="detail-row detail-row--last">
-            <span style="color:var(--slate); font-size:13px;">Mahasiswa Bimbingan</span>
+            <span class="muted">Mahasiswa Bimbingan</span>
             <strong id="prev_terisi" style="font-size:14px; color:var(--info-text);">-</strong>
         </div>
     </div>

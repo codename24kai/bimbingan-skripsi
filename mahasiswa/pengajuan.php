@@ -117,7 +117,7 @@ include __DIR__ . '/../includes/sidebar.php';
         </p>
         <div style="background:var(--white); border:1px solid var(--cream-dark); padding:16px; border-radius:8px; display:inline-flex; gap:20px; align-items:center;">
             <div>
-                <div style="font-size:11px; color:var(--slate);">Nomor SK Bimbingan</div>
+                <div class="meta-sm">Nomor SK Bimbingan</div>
                 <div style="font-weight:700; color:var(--navy);"><?= e($bimbinganAktif['no_sk']) ?></div>
             </div>
             <?php if($bimbinganAktif['file_sk']): ?>
@@ -142,13 +142,13 @@ include __DIR__ . '/../includes/sidebar.php';
           
           <form method="POST" enctype="multipart/form-data"><?= csrfField() ?>
             <div class="form-group">
-              <label for="f_judul_indonesia" class="form-label">Judul Utama <span style="color:red">*</span></label>
+              <label for="f_judul_indonesia" class="form-label">Judul Utama <span class="req" aria-hidden="true">*</span></label>
               <input id="f_judul_indonesia" class="form-input" name="judul_indonesia" required placeholder="Judul yang paling Anda pilih" value="<?= e($_POST['judul_indonesia'] ?? '') ?>">
             </div>
             
             <div class="form-row">
                 <div class="form-group">
-                  <label for="f_judul_alternatif_1" class="form-label">Judul Cadangan 1 <span style="color:red">*</span></label>
+                  <label for="f_judul_alternatif_1" class="form-label">Judul Cadangan 1 <span class="req" aria-hidden="true">*</span></label>
                   <input id="f_judul_alternatif_1" class="form-input" name="judul_alternatif_1" required placeholder="Pilihan judul kedua">
                 </div>
                 <div class="form-group">
@@ -159,7 +159,7 @@ include __DIR__ . '/../includes/sidebar.php';
 
             <div class="form-row">
               <div class="form-group">
-                <label for="f_bidang_penelitian" class="form-label">Konsentrasi / Bidang Ilmu <span style="color:red">*</span></label>
+                <label for="f_bidang_penelitian" class="form-label">Konsentrasi / Bidang Ilmu <span class="req" aria-hidden="true">*</span></label>
                 <select id="f_bidang_penelitian" class="form-input" name="bidang_penelitian" required>
                   <option value="" disabled selected>Pilih Bidang...</option>
                   <?php foreach (['Rekayasa Perangkat Lunak & Web','Pemrograman Mobile','Kecerdasan Buatan & Machine Learning','Data Science & Analitik','Internet of Things (IoT)','Keamanan Siber & Jaringan','Manajemen Sistem Informasi'] as $b): ?>
@@ -168,7 +168,7 @@ include __DIR__ . '/../includes/sidebar.php';
                 </select>
               </div>
               <div class="form-group">
-                <label for="f_metode_penelitian" class="form-label">Metode Penelitian <span style="color:red">*</span></label>
+                <label for="f_metode_penelitian" class="form-label">Metode Penelitian <span class="req" aria-hidden="true">*</span></label>
                 <select id="f_metode_penelitian" class="form-input" name="metode_penelitian" required>
                   <option value="" disabled selected>Pilih Metode...</option>
                   <?php foreach (['Agile Software Development','Waterfall Model','RAD (Rapid Application Development)','Prototyping','CRISP-DM (Data Science)','Riset Eksperimental','Kuantitatif','Kualitatif','Lainnya'] as $m): ?>
@@ -179,20 +179,18 @@ include __DIR__ . '/../includes/sidebar.php';
             </div>
 
             <div class="form-group">
-              <label for="f_latar_belakang" class="form-label">Latar Belakang Singkat <span style="color:red">*</span></label>
+              <label for="f_latar_belakang" class="form-label">Latar Belakang Singkat <span class="req" aria-hidden="true">*</span></label>
               <textarea id="f_latar_belakang" class="form-input" name="latar_belakang" required rows="5" placeholder="Jelaskan masalah yang ingin Anda selesaikan dan mengapa penting. Cukup satu ringkasan untuk semua pilihan judul."></textarea>
             </div>
 
             <div class="form-row">
                 <div class="form-group">
-                  <label for="f_file_transkrip" class="form-label">Transkrip atau KRS <span style="color:red">*</span></label>
-                  <input id="f_file_transkrip" type="file" name="file_transkrip" accept=".pdf" class="form-input" style="padding:8px;" required>
-                  <span style="font-size:12px;color:var(--slate);">Format PDF, maksimal 5 MB.</span>
+                  <label for="f_file_transkrip" class="form-label">Transkrip atau KRS <span class="req" aria-hidden="true">*</span></label>
+                  <?= uploadZone('file_transkrip', 'Klik atau seret file PDF', '.pdf', 'Format PDF, maksimal 5 MB', true) ?>
                 </div>
                 <div class="form-group">
                   <label for="f_file_proposal" class="form-label">Draf Proposal <span style="font-weight:400;color:var(--slate);">(opsional)</span></label>
-                  <input id="f_file_proposal" type="file" name="file_proposal" accept=".pdf,.docx,.doc" class="form-input" style="padding:8px;">
-                  <span style="font-size:12px;color:var(--slate);">Format PDF atau DOCX.</span>
+                  <?= uploadZone('file_proposal', 'Klik atau seret file', '.pdf,.docx,.doc', 'Format PDF atau DOCX') ?>
                 </div>
             </div>
 
@@ -218,8 +216,8 @@ include __DIR__ . '/../includes/sidebar.php';
                     <span class="badge <?= badge($r['status']) ?>"><span class="badge-dot"></span><?= e(label($r['status'])) ?></span>
                 </div>
                 
-                <div style="font-size:11px; color:var(--slate); margin-bottom:4px;">1. <?= e($r['judul_indonesia']) ?></div>
-                <div style="font-size:11px; color:var(--slate); margin-bottom:4px;">2. <?= e($r['judul_alternatif_1']) ?></div>
+                <div class="meta-sm mb-4">1. <?= e($r['judul_indonesia']) ?></div>
+                <div class="meta-sm mb-4">2. <?= e($r['judul_alternatif_1']) ?></div>
                 <?php if($r['judul_alternatif_2']): ?>
                     <div style="font-size:11px; color:var(--slate); margin-bottom:10px;">3. <?= e($r['judul_alternatif_2']) ?></div>
                 <?php endif; ?>

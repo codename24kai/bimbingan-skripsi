@@ -118,7 +118,7 @@ include __DIR__ . '/includes/sidebar.php';
                                                 </a>
                                             <?php endif; ?>
                                             
-                                            <form method="POST" onsubmit="return confirm('Hapus notifikasi ini?')" style="margin: 0;"><?= csrfField() ?>
+                                            <form method="POST" data-confirm="Hapus notifikasi ini?" data-confirm-ok="Hapus" style="margin: 0;"><?= csrfField() ?>
                                                 <input type="hidden" name="aksi" value="hapus">
                                                 <input type="hidden" name="id_notif" value="<?= $n['id_notif'] ?>">
                                                 <button type="submit" style="background: none; border: none; color:var(--danger-text); font-size: 12px; cursor: pointer; text-decoration: underline; padding:0;">

@@ -140,7 +140,7 @@ include __DIR__ . '/../includes/sidebar.php';
                           <th>Bidang & Metode</th>
                           <th>Berkas Syarat</th>
                           <th>Tanggal Ajuan</th>
-                          <th style="text-align:right;">Aksi</th>
+                          <th class="text-right">Aksi</th>
                       </tr>
                   </thead>
                   <tbody>
@@ -150,12 +150,12 @@ include __DIR__ . '/../includes/sidebar.php';
                       <tr>
                           <td>
                               <div style="font-weight:600; font-size:13px;"><?= e($p['nama_lengkap']) ?></div>
-                              <div class="mono" style="font-size:11px; color:var(--slate);">NIM: <?= e($p['nim']) ?></div>
+                              <div class="mono meta-sm">NIM: <?= e($p['nim']) ?></div>
                               <div style="font-size:11px; color:var(--info-text); margin-top:4px;">Iterasi ke-<?= $p['iterasi'] ?></div>
                           </td>
                           <td>
                               <div style="font-size:12px; font-weight:500; color:var(--navy);"><?= e($p['bidang_penelitian']) ?></div>
-                              <div style="font-size:11px; color:var(--slate);"><?= e($p['metode_penelitian']) ?></div>
+                              <div class="meta-sm"><?= e($p['metode_penelitian']) ?></div>
                           </td>
                           <td>
                               <div style="display:flex; gap:8px; flex-direction:column;">
@@ -171,7 +171,7 @@ include __DIR__ . '/../includes/sidebar.php';
                               </div>
                           </td>
                           <td style="font-size:12px; color:var(--slate);"><?= tgl($p['tgl_pengajuan']) ?></td>
-                          <td style="text-align:right;">
+                          <td class="text-right">
                               <button type="button" class="btn btn-primary" style="padding:6px 12px; font-size:12px;" onclick="openReviewModal(<?= $jsonItem ?>)">🔍 Tinjau & Validasi</button>
                           </td>
                       </tr>
@@ -201,7 +201,7 @@ include __DIR__ . '/../includes/sidebar.php';
                   <tr>
                       <td>
                           <div style="font-weight:600; font-size:13px;"><?= e($r['nama_lengkap']) ?></div>
-                          <div class="mono" style="font-size:11px; color:var(--slate);"><?= e($r['nim']) ?></div>
+                          <div class="mono meta-sm"><?= e($r['nim']) ?></div>
                       </td>
                       <td style="font-size:12px; max-width:300px; line-height:1.4;"><?= e($r['judul_indonesia']) ?></td>
                       <td style="font-size:12px; color:var(--slate);"><?= e($r['bidang_penelitian']) ?></td>
@@ -324,10 +324,8 @@ function submitTolak() {
     document.getElementById('val_aksi').value = 'tolak';
     document.getElementById('alasanTolak').style.display = 'block';
     
-    const konfirmasi = confirm("Apakah Anda yakin ingin menolak pengajuan judul ini?");
-    if(konfirmasi) {
-        document.getElementById('formValidasi').submit();
-    }
+    window.konfirmasi({ pesan: 'Tolak pengajuan judul ini? Mahasiswa harus mengajukan judul baru.', ok: 'Tolak judul' })
+      .then(function (ya) { if (ya) document.getElementById('formValidasi').submit(); });
 }
 </script>
 

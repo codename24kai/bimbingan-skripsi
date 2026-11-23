@@ -70,7 +70,7 @@ include __DIR__ . '/../includes/sidebar.php';
       <p>Dosen akan menerima atau menolak permintaan Anda. Anda akan mendapat notifikasi.</p>
       <form method="POST"><?= csrfField() ?>
         <div class="form-group">
-          <label for="f_tgl_sesi" class="form-label">Tanggal <span style="color:red">*</span></label>
+          <label for="f_tgl_sesi" class="form-label">Tanggal <span class="req" aria-hidden="true">*</span></label>
           <input id="f_tgl_sesi" class="form-input" type="date" name="tgl_sesi" required min="<?= date('Y-m-d') ?>">
         </div>
         <div class="form-row">
@@ -88,7 +88,7 @@ include __DIR__ . '/../includes/sidebar.php';
           </div>
         </div>
         <div class="form-group">
-          <label for="f_topik" class="form-label">Topik Bimbingan <span style="color:red">*</span></label>
+          <label for="f_topik" class="form-label">Topik Bimbingan <span class="req" aria-hidden="true">*</span></label>
           <textarea id="f_topik" class="form-input" name="topik" style="min-height:80px;" required placeholder="Topik yang akan dibahas..."></textarea>
         </div>
         <div class="form-group">

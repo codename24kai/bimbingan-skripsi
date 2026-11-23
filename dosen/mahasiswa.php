@@ -54,19 +54,19 @@ include __DIR__ . '/../includes/sidebar.php';
               <?php foreach ($list as $m): ?>
                 <tr>
                   <td>
-                    <div style="display:flex;align-items:center;gap:10px;">
-                      <div class="mini-avatar" style="width:36px;height:36px;font-size:12px;"><?= strtoupper(substr($m['nama_lengkap'],0,2)) ?></div>
-                      <div style="font-weight:500;"><?= e($m['nama_lengkap']) ?></div>
+                    <div class="row-10">
+                      <div class="mini-avatar" style="width:36px;height:36px;font-size:12px;"><?= e(inisial($m['nama_lengkap'])) ?></div>
+                      <div class="fw-500"><?= e($m['nama_lengkap']) ?></div>
                     </div>
                   </td>
-                  <td class="mono" style="font-size:12px;"><?= e($m['nim']) ?></td>
-                  <td style="font-size:13px;"><?= e($m['nama_prodi']) ?></td>
+                  <td class="mono fs-12"><?= e($m['nim']) ?></td>
+                  <td class="fs-13"><?= e($m['nama_prodi']) ?></td>
                   <td style="max-width:220px;font-size:13px;"><?= e(mb_strimwidth($m['judul_indonesia'],0,60,'...')) ?></td>
-                  <td style="text-align:center;"><?= $m['total_sesi'] ?></td>
+                  <td class="text-center"><?= $m['total_sesi'] ?></td>
                   <td><span class="badge <?= badge($m['status_skripsi']) ?>"><span class="badge-dot"></span><?= e(label($m['status_skripsi'])) ?></span></td>
                   <td>
                     <div style="display:flex;gap:6px;">
-                      <a href="<?= BASE_URL ?>/dosen/catatan.php?id_bimbingan=<?= $m['id_bimbingan'] ?>" class="btn-icon" title="Catatan">📋</a>
+                      <a href="<?= BASE_URL ?>/dosen/catatan.php?id_bimbingan=<?= $m['id_bimbingan'] ?>" class="btn-icon" title="Catatan bimbingan" aria-label="Catatan bimbingan <?= e($m['nama_lengkap']) ?>"><?= icon('clipboard') ?></a>
                     </div>
                   </td>
                 </tr>

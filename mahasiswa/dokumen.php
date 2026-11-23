@@ -138,7 +138,7 @@ include __DIR__ . '/../includes/sidebar.php';
 
   <div class="split" style="--side:320px;">
     <div>
-      <div class="card" style="margin-bottom:20px;">
+      <div class="card mb-20">
         <div class="card-header"><div class="card-title">Daftar Dokumen</div></div>
         <div class="card-body">
           <?php if (empty($dokumen)): ?>
@@ -146,18 +146,18 @@ include __DIR__ . '/../includes/sidebar.php';
           <?php else: ?>
             <div class="table-wrap">
               <table>
-                <thead><tr><th>Dokumen</th><th>Versi</th><th>Diunggah</th><th>Status</th><th>Revisi</th><th style="text-align:right;">Aksi</th></tr></thead>
+                <thead><tr><th>Dokumen</th><th>Versi</th><th>Diunggah</th><th>Status</th><th>Revisi</th><th class="text-right">Aksi</th></tr></thead>
                 <tbody>
                   <?php foreach ($dokumen as $d): 
                       $jsonData = htmlspecialchars(json_encode($d), ENT_QUOTES, 'UTF-8');
                   ?>
                     <tr>
                       <td>
-                        <div style="display:flex;align-items:center;gap:10px;">
+                        <div class="row-10">
                           <span style="font-size:20px;">📄</span>
                           <div>
-                            <div style="font-weight:500;"><?= e($d['nama_dokumen']) ?></div>
-                            <div style="font-size:12px;color:var(--slate);"><?= e(label($d['jenis_bab'])) ?> · <?= $d['ukuran_kb'] ?> KB</div>
+                            <div class="fw-500"><?= e($d['nama_dokumen']) ?></div>
+                            <div class="meta"><?= e(label($d['jenis_bab'])) ?> · <?= $d['ukuran_kb'] ?> KB</div>
                           </div>
                         </div>
                       </td>
@@ -171,14 +171,14 @@ include __DIR__ . '/../includes/sidebar.php';
                           <span style="font-size:13px;color:var(--slate);">—</span>
                         <?php endif; ?>
                       </td>
-                      <td style="text-align:right;">
+                      <td class="text-right">
                         <div style="display:flex;gap:6px; justify-content:flex-end;">
-                          <a href="<?= e(fileUrl($d['file_path'])) ?>" target="_blank" class="btn-icon" title="Unduh File">⬇️</a>
-                          <button type="button" class="btn-icon" title="Edit Dokumen" onclick="openEditModal(<?= $jsonData ?>)">✏️</button>
-                          <form method="POST" style="display:inline;" onsubmit="return confirm('Yakin ingin menghapus dokumen ini secara permanen?')"><?= csrfField() ?>
+                          <a href="<?= e(fileUrl($d['file_path'])) ?>" target="_blank" class="btn-icon" title="Unduh File" aria-label="Unduh <?= e($d['nama_dokumen']) ?>"><?= icon('download') ?></a>
+                          <button type="button" class="btn-icon" title="Edit Dokumen" aria-label="Edit Dokumen <?= e($d['nama_dokumen']) ?>" onclick="openEditModal(<?= $jsonData ?>)"><?= icon('pencil') ?></button>
+                          <form method="POST" style="display:inline;" data-confirm="Hapus dokumen <?= e($d['nama_dokumen']) ?> (v<?= (int)$d['versi'] ?>)? File akan dihapus permanen." data-confirm-ok="Hapus"><?= csrfField() ?>
                               <input type="hidden" name="action" value="hapus">
                               <input type="hidden" name="id_dokumen" value="<?= $d['id_dokumen'] ?>">
-                              <button type="submit" class="btn-icon" title="Hapus Dokumen">🗑️</button>
+                              <button type="submit" class="btn-icon btn-icon--danger" title="Hapus Dokumen" aria-label="Hapus Dokumen <?= e($d['nama_dokumen']) ?>"><?= icon('trash') ?></button>
                           </form>
                         </div>
                       </td>
@@ -198,7 +198,7 @@ include __DIR__ . '/../includes/sidebar.php';
                             <div>
                               <strong><?= e($rv['nama_dosen']) ?></strong> ·
                               <span class="badge <?= badge($rv['prioritas']) ?>" style="font-size:10px;"><?= e(label($rv['prioritas'])) ?></span>
-                              <?php if ($rv['halaman_revisi']): ?> · <span style="color:var(--slate);">Hal: <?= e($rv['halaman_revisi']) ?></span><?php endif; ?>
+                              <?php if ($rv['halaman_revisi']): ?> · <span class="text-slate">Hal: <?= e($rv['halaman_revisi']) ?></span><?php endif; ?>
                               <div style="color:#4a5568;margin-top:3px; line-height:1.4;"><?= e($rv['catatan_revisi']) ?></div>
                             </div>
                           </div>
@@ -233,12 +233,8 @@ include __DIR__ . '/../includes/sidebar.php';
           </select>
         </div>
         <div class="form-group">
-          <div class="upload-zone" id="uploadZone">
-            <div class="upload-icon">📤</div>
-            <div class="upload-label" id="fileLabelDok">Klik atau seret file PDF/DOCX</div>
-            <div class="upload-sub">Ukuran maksimal 10 MB</div>
-            <input type="file" name="file" aria-label="Pilih file dokumen" required accept=".pdf,.docx,.doc" style="position:absolute;inset:0;opacity:0;cursor:pointer;" onchange="document.getElementById('fileLabelDok').innerText = this.files[0] ? this.files[0].name : 'Klik atau seret file PDF/DOCX'">
-          </div>
+          <label for="f_file" class="form-label">File dokumen</label>
+          <?= uploadZone('file', 'Klik atau seret file PDF/DOCX', '.pdf,.docx,.doc', 'Ukuran maksimal 10 MB', true) ?>
         </div>
         <button type="submit" class="btn btn-gold btn-full">📤 Upload Dokumen</button>
       </form>
@@ -246,11 +242,11 @@ include __DIR__ . '/../includes/sidebar.php';
   </div>
 </div>
 
-<div id="modalEdit" style="display:none;position:fixed;inset:0;background:rgba(11,31,58,.6);z-index:1000;align-items:center;justify-content:center;">
+<div class="modal-overlay" id="modalEdit" style="display:none;">
   <div style="background:var(--white);border-radius:var(--radius);padding:32px;width:100%;max-width:400px;box-shadow:var(--shadow-lg);">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
-      <h2 style="font-family:'Playfair Display',serif;font-size:20px;">Edit Data Dokumen</h2>
-      <button type="button" onclick="document.getElementById('modalEdit').style.display='none'" style="background:none;border:none;font-size:20px;cursor:pointer;">×</button>
+    <div class="modal-head">
+      <h2 class="modal-title">Edit Data Dokumen</h2>
+      <button type="button" aria-label="Tutup" class="modal-close" type="button" onclick="document.getElementById('modalEdit').style.display='none'">×</button>
     </div>
     <form method="POST"><?= csrfField() ?>
       <input type="hidden" name="action" value="edit">

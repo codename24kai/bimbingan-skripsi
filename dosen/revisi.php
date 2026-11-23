@@ -127,7 +127,7 @@ include __DIR__ . '/../includes/sidebar.php';
                 <th>Versi</th>
                 <th>Tanggal</th>
                 <th>Status</th>
-                <th style="text-align:right;">Aksi</th>
+                <th class="text-right">Aksi</th>
               </tr>
             </thead>
             <tbody>
@@ -137,16 +137,16 @@ include __DIR__ . '/../includes/sidebar.php';
                 <tr style="<?= $d['status'] === 'menunggu' ? 'background:rgba(245, 166, 35, 0.05);' : '' ?>">
                   <td>
                     <div style="font-weight:600; font-size:13px;"><?= e($d['nama_mhs']) ?></div>
-                    <div class="mono" style="font-size:11px; color:var(--slate);"><?= e($d['nim']) ?></div>
+                    <div class="mono meta-sm"><?= e($d['nim']) ?></div>
                   </td>
                   <td>
                     <div style="font-weight:500; font-size:13px;"><?= e($d['nama_dokumen']) ?></div>
-                    <div style="font-size:11px; color:var(--slate);"><?= e(label($d['jenis_bab'])) ?> · <?= $d['ukuran_kb'] ?> KB</div>
+                    <div class="meta-sm"><?= e(label($d['jenis_bab'])) ?> · <?= $d['ukuran_kb'] ?> KB</div>
                   </td>
                   <td><span class="mono" style="font-size:12px;background:var(--cream);padding:3px 8px;border-radius:4px;">v<?= $d['versi'] ?></span></td>
                   <td style="font-size:12px; color:var(--slate);"><?= tgl($d['tgl_upload']) ?></td>
                   <td><span class="badge <?= badge($d['status']) ?>"><span class="badge-dot"></span><?= e(strtoupper($d['status'])) ?></span></td>
-                  <td style="text-align:right;">
+                  <td class="text-right">
                     <div style="display:flex;gap:6px; justify-content:flex-end;">
                       <a href="<?= e(fileUrl($d['file_path'])) ?>" target="_blank" class="btn btn-secondary" style="padding:4px 8px; font-size:11px;" title="Unduh File">⬇️ Unduh</a>
                       <button type="button" class="btn btn-primary" style="padding:4px 8px; font-size:11px;" onclick="openReviewModal(<?= $jsonData ?>)">✍️ Beri Revisi</button>
@@ -165,7 +165,7 @@ include __DIR__ . '/../includes/sidebar.php';
                         <div>
                           <strong style="color:var(--navy);">Catatan Dosen</strong> ·
                           <span class="badge <?= badge($rv['prioritas']) ?>" style="font-size:10px;"><?= e(label($rv['prioritas'])) ?></span>
-                          <?php if ($rv['halaman_revisi']): ?> · <span style="color:var(--slate);">Hal: <?= e($rv['halaman_revisi']) ?></span><?php endif; ?>
+                          <?php if ($rv['halaman_revisi']): ?> · <span class="text-slate">Hal: <?= e($rv['halaman_revisi']) ?></span><?php endif; ?>
                           <div style="color:#4a5568;margin-top:3px; line-height:1.4;"><?= nl2br(e($rv['catatan_revisi'])) ?></div>
                         </div>
                       </div>
@@ -191,7 +191,7 @@ include __DIR__ . '/../includes/sidebar.php';
     
     <div style="padding:24px 32px;">
       <div style="margin-bottom:20px; background:var(--cream); padding:12px; border-radius:8px;">
-          <div style="font-size:11px; color:var(--slate); margin-bottom:4px;">Mengulas Dokumen:</div>
+          <div class="meta-sm mb-4">Mengulas Dokumen:</div>
           <div id="rev_nama_dokumen" style="font-weight:600; font-size:14px; color:var(--navy);">-</div>
           <div id="rev_nama_mhs" style="font-size:12px; color:var(--slate); margin-top:4px;">-</div>
       </div>
