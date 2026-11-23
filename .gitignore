@@ -1,0 +1,4 @@
+# File yang diunggah pengguna tidak boleh masuk repository
+uploads/*
+!uploads/.gitkeep
+!uploads/.htaccess

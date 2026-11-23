@@ -14,7 +14,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $db = getDB(); $db->beginTransaction();
         try {
             $idUser = execute('INSERT INTO user (nama_lengkap,email,password_hash,role,status) VALUES (?,?,?,?,?)',
-                [$_POST['nama_lengkap'],$_POST['email'],hash('sha256','dosen123'),'dosen','aktif']);
+                [$_POST['nama_lengkap'],$_POST['email'],hashPassword('dosen123'),'dosen','aktif']);
             execute('INSERT INTO dosen (id_user,id_prodi,nip,jabatan_fungsional,keahlian,kuota_bimbingan) VALUES (?,?,?,?,?,?)',
                 [$idUser,$_POST['id_prodi'],$_POST['nip'],$_POST['jabatan'],$_POST['keahlian'],(int)$_POST['kuota']]);
             $db->commit();
@@ -71,7 +71,7 @@ include __DIR__ . '/../includes/sidebar.php';
                   <span class="badge <?= $sisa===0?'danger':($sisa<=2?'warning':'success') ?>"><span class="badge-dot"></span><?= $sisa ?></span>
                 </td>
                 <td>
-                  <form method="POST" onsubmit="return confirm('Hapus dosen ini?')">
+                  <form method="POST" onsubmit="return confirm('Hapus dosen ini?')"><?= csrfField() ?>
                     <input type="hidden" name="aksi" value="hapus">
                     <input type="hidden" name="id_user" value="<?= $d['id_user'] ?>">
                     <button class="btn-icon">🗑️</button>
@@ -93,7 +93,7 @@ include __DIR__ . '/../includes/sidebar.php';
       <button type="button" onclick="document.getElementById('modalDosen').style.display='none'" style="background:none;border:none;font-size:20px;cursor:pointer;">×</button>
     </div>
     
-    <form method="POST">
+    <form method="POST"><?= csrfField() ?>
       <input type="hidden" name="aksi" value="tambah">
       
       <div class="form-group">

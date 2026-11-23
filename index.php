@@ -27,23 +27,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             [$email, $role]
         );
 
-        if ($user && hash_equals($user['password_hash'], hash('sha256', $password))) {
+        if ($user && verifyPassword($password, $user)) {
             // Load entity-specific data HANYA untuk mahasiswa
             $row = fetchOne('SELECT id_mahasiswa FROM mahasiswa WHERE id_user=?', [$user['id_user']]);
-            $entityId = $row['id_mahasiswa'] ?? 0;
+            $entityId = (int)($row['id_mahasiswa'] ?? 0);
 
             // Update last_login
             execute('UPDATE user SET last_login=NOW() WHERE id_user=?', [$user['id_user']]);
 
-            // Set session
-            $_SESSION['id_user']   = $user['id_user'];
-            $_SESSION['role']      = $user['role'];
-            $_SESSION['entity_id'] = $entityId;
-            $_SESSION['user']      = [
-                'id_user'      => $user['id_user'],
-                'nama_lengkap' => $user['nama_lengkap'],
-                'email'        => $user['email'],
-            ];
+            // Set session (regenerate ID untuk mencegah session fixation)
+            loginUser($user, $entityId, $password);
 
             header('Location: ' . BASE_URL . '/dashboard.php');
             exit;
@@ -95,7 +88,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <div class="alert danger">⚠️ <?= htmlspecialchars($error) ?></div>
       <?php endif; ?>
 
-      <form method="POST" action="">
+      <form method="POST" action=""><?= csrfField() ?>
         <div class="form-group">
           <label class="form-label">Email Mahasiswa</label>
           <input class="form-input" type="email" name="email" required

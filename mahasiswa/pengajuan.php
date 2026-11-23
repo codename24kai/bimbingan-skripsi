@@ -121,7 +121,7 @@ include __DIR__ . '/../includes/sidebar.php';
                 <div style="font-weight:700; color:var(--navy);"><?= e($bimbinganAktif['no_sk']) ?></div>
             </div>
             <?php if($bimbinganAktif['file_sk']): ?>
-                <a href="<?= BASE_URL ?>/<?= e($bimbinganAktif['file_sk']) ?>" target="_blank" class="btn btn-primary" style="font-size:12px;">⬇️ Unduh SK Bimbingan</a>
+                <a href="<?= e(fileUrl($bimbinganAktif['file_sk'])) ?>" target="_blank" class="btn btn-primary" style="font-size:12px;">⬇️ Unduh SK Bimbingan</a>
             <?php endif; ?>
         </div>
     </div>
@@ -139,7 +139,7 @@ include __DIR__ . '/../includes/sidebar.php';
           <h2>Formulir Pengajuan (Opsi Judul)</h2>
           <p style="color:var(--slate); font-size:13px; margin-bottom:20px;">Anda wajib mengajukan minimal 2 judul penelitian.</p>
           
-          <form method="POST" enctype="multipart/form-data">
+          <form method="POST" enctype="multipart/form-data"><?= csrfField() ?>
             <div class="form-group">
               <label class="form-label">Judul Utama <span style="color:red">*</span></label>
               <input class="form-input" name="judul_indonesia" required placeholder="Judul Prioritas Pertama" value="<?= e($_POST['judul_indonesia'] ?? '') ?>">
@@ -224,10 +224,10 @@ include __DIR__ . '/../includes/sidebar.php';
 
                 <div style="display:flex; gap:10px; margin-top:12px; border-top:1px dashed var(--cream-dark); padding-top:10px;">
                     <?php if($r['file_transkrip']): ?>
-                        <a href="<?= BASE_URL ?>/<?= $r['file_transkrip'] ?>" target="_blank" style="font-size:11px; color:var(--info); text-decoration:none;">📄 Transkrip</a>
+                        <a href="<?= e(fileUrl($r['file_transkrip'])) ?>" target="_blank" style="font-size:11px; color:var(--info); text-decoration:none;">📄 Transkrip</a>
                     <?php endif; ?>
                     <?php if($r['file_proposal']): ?>
-                        <a href="<?= BASE_URL ?>/<?= $r['file_proposal'] ?>" target="_blank" style="font-size:11px; color:var(--info); text-decoration:none;">📄 Proposal</a>
+                        <a href="<?= e(fileUrl($r['file_proposal'])) ?>" target="_blank" style="font-size:11px; color:var(--info); text-decoration:none;">📄 Proposal</a>
                     <?php endif; ?>
                 </div>
               </div>

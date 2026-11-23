@@ -144,7 +144,7 @@ include __DIR__ . '/../includes/sidebar.php';
                       </td>
                       <td>
                         <div style="display:flex;gap:6px;">
-                          <a href="<?= BASE_URL . '/' . $d['file_path'] ?>" target="_blank" class="btn-icon" title="Unduh File">⬇️</a>
+                          <a href="<?= e(fileUrl($d['file_path'])) ?>" target="_blank" class="btn-icon" title="Unduh File">⬇️</a>
                         </div>
                       </td>
                     </tr>
@@ -182,7 +182,7 @@ include __DIR__ . '/../includes/sidebar.php';
     <div class="form-card" style="height:fit-content;">
       <h2>Unggah Dokumen</h2>
       <p>Upload dokumen skripsi terbaru Anda</p>
-      <form method="POST" enctype="multipart/form-data">
+      <form method="POST" enctype="multipart/form-data"><?= csrfField() ?>
         <input type="hidden" name="action" value="upload">
         <div class="form-group">
           <label class="form-label">Nama Dokumen</label>

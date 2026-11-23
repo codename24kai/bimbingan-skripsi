@@ -185,7 +185,7 @@ include __DIR__ . '/../includes/sidebar.php';
                                       <?= e($ap['judul_indonesia']) ?>
                                       <div style="font-size:11px; color:var(--info); margin-top:4px;">ACC: <?= date('d M Y', strtotime($ap['tgl_pengajuan'])) ?></div>
                                   </td>
-                                  <form method="POST" enctype="multipart/form-data">
+                                  <form method="POST" enctype="multipart/form-data"><?= csrfField() ?>
                                       <input type="hidden" name="aksi" value="buat">
                                       <input type="hidden" name="id_mahasiswa" value="<?= $ap['id_mahasiswa'] ?>">
                                       <input type="hidden" name="id_judul" value="<?= $ap['id_judul'] ?>">
@@ -222,7 +222,7 @@ include __DIR__ . '/../includes/sidebar.php';
               <div style="max-width:600px;">
                   <p style="font-size:13px; color:var(--slate); margin-bottom:16px;">Gunakan form bypass ini jika mahasiswa belum melakukan pengajuan lewat sistem namun SK sudah dicetak (misal: Pindahan).</p>
                   
-                  <form method="POST" enctype="multipart/form-data">
+                  <form method="POST" enctype="multipart/form-data"><?= csrfField() ?>
                     <input type="hidden" name="aksi" value="buat">
                     <div class="form-group">
                       <label class="form-label">1. Pilih Mahasiswa (Tanpa Bimbingan Aktif)</label>
@@ -289,7 +289,7 @@ include __DIR__ . '/../includes/sidebar.php';
                     <?php if(!empty($r['no_sk'])): ?>
                         <div style="font-size:11px; font-weight:600; color:var(--navy);"><?= e($r['no_sk']) ?></div>
                         <?php if(!empty($r['file_sk'])): ?>
-                            <a href="<?= BASE_URL ?>/<?= e($r['file_sk']) ?>" target="_blank" style="font-size:11px; color:var(--info); text-decoration:underline;">Lihat PDF</a>
+                            <a href="<?= e(fileUrl($r['file_sk'])) ?>" target="_blank" style="font-size:11px; color:var(--info); text-decoration:underline;">Lihat PDF</a>
                         <?php endif; ?>
                     <?php else: ?>
                         <span style="font-size:11px; color:var(--slate);">-</span>
@@ -300,7 +300,7 @@ include __DIR__ . '/../includes/sidebar.php';
                 <td><span class="badge <?= badge($r['status']) ?>"><span class="badge-dot"></span><?= $r['status'] ?></span></td>
                 <td>
                   <?php if ($r['status'] === 'aktif'): ?>
-                    <form method="POST" onsubmit="return confirm('Hentikan relasi ini? Dosen dan mahasiswa tidak akan bisa melakukan proses bimbingan lagi.')">
+                    <form method="POST" onsubmit="return confirm('Hentikan relasi ini? Dosen dan mahasiswa tidak akan bisa melakukan proses bimbingan lagi.')"><?= csrfField() ?>
                       <input type="hidden" name="aksi" value="hentikan">
                       <input type="hidden" name="id_bimbingan" value="<?= $r['id_bimbingan'] ?>">
                       <button class="btn btn-danger" style="padding:4px 8px; font-size:11px;">🛑 Hentikan</button>
