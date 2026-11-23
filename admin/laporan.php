@@ -82,7 +82,7 @@ if (isset($_GET['export'])) {
         <body onload="window.print()">
             <div class="header">
                 <h1>Laporan Rekapitulasi Bimbingan Dosen</h1>
-                <p>Dicetak pada: <?= date('d F Y H:i') ?></p>
+                <p>Dicetak pada: <?= tgl(date('Y-m-d H:i'), 'panjang') . ', ' . date('H.i') ?></p>
             </div>
             <table>
                 <thead>
@@ -138,7 +138,7 @@ include __DIR__ . '/../includes/sidebar.php';
   <div class="page-header" style="display:flex; justify-content:space-between; align-items:flex-end;">
     <div>
         <h1>Laporan & Aktivitas</h1>
-        <p>Pantau statistik dan aktivitas sistem secara keseluruhan — <?= date('d F Y') ?></p>
+        <p>Pantau statistik dan aktivitas sistem secara keseluruhan — <?= tgl(date('Y-m-d'), 'panjang') ?></p>
     </div>
     
     <div style="position: relative; display: inline-block;">
@@ -193,7 +193,7 @@ include __DIR__ . '/../includes/sidebar.php';
           <?php $total = array_sum(array_column($distribusiJudul,'n')); ?>
           <?php foreach ($distribusiJudul as $d): ?>
             <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--cream-dark);">
-              <span class="badge <?= badge($d['status']) ?>"><span class="badge-dot"></span><?= $d['status'] ?></span>
+              <span class="badge <?= badge($d['status']) ?>"><span class="badge-dot"></span><?= e(label($d['status'])) ?></span>
               <div style="display:flex;align-items:center;gap:10px;">
                 <div style="width:80px;"><div class="progress-bar"><div class="progress-fill blue" style="width:<?= $total > 0 ? round($d['n']/$total*100) : 0 ?>%"></div></div></div>
                 <strong><?= $d['n'] ?></strong>
@@ -229,11 +229,11 @@ include __DIR__ . '/../includes/sidebar.php';
           <tbody>
             <?php foreach ($logAktivitas as $log): ?>
               <tr>
-                <td class="mono" style="font-size:12px;"><?= date('d M H:i', strtotime($log['created_at'])) ?></td>
+                <td class="mono" style="font-size:12px;"><?= tgl($log['created_at'], 'tglblnjam') ?></td>
                 <td style="font-weight:500;"><?= e($log['nama_lengkap']) ?></td>
-                <td><span class="badge neutral"><?= $log['role'] ?></span></td>
+                <td><span class="badge neutral"><?= e(label($log['role'])) ?></span></td>
                 <td style="font-size:13px;"><?= e($log['judul']) ?></td>
-                <td><span class="badge <?= badge($log['tipe']) ?>"><span class="badge-dot"></span><?= $log['tipe'] ?></span></td>
+                <td><span class="badge <?= badge($log['tipe']) ?>"><span class="badge-dot"></span><?= e(label($log['tipe'])) ?></span></td>
                 <td style="font-size:12px;color:var(--slate);"><?= e($log['modul'] ?? '—') ?></td>
               </tr>
             <?php endforeach; ?>

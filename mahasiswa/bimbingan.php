@@ -19,8 +19,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $bimbingan) {
     $topik  = trim($_POST['topik'] ?? '');
     $metode = $_POST['metode'] ?? 'tatap_muka';
 
+    if (!in_array($metode, ['tatap_muka','zoom','gmeet','lainnya'], true)) $metode = 'tatap_muka';
+    if (!in_array($durasi, [30,45,60], true)) $durasi = 45;
     if (!$tgl || !$waktu || !$topik) {
-        setFlash('danger', 'Harap isi semua field wajib.');
+        setFlash('danger', 'Tanggal, waktu, dan topik bimbingan wajib diisi.');
+    } elseif ($tgl < date('Y-m-d')) {
+        setFlash('danger', 'Tanggal bimbingan tidak boleh di masa lalu.');
     } else {
         execute('INSERT INTO sesi_bimbingan (id_bimbingan,tgl_sesi,waktu_mulai,durasi_menit,topik,metode,status)
                  VALUES (?,?,?,?,?,?,"dijadwalkan")',
@@ -31,16 +35,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $bimbingan) {
         if ($dosenUser) {
             execute('INSERT INTO notifikasi (id_user,judul,pesan,tipe,modul) VALUES (?,?,?,?,?)',
                 [$dosenUser['id_user'], 'Permintaan Jadwal Bimbingan',
-                 'Mahasiswa mengajukan sesi bimbingan pada ' . date('d M Y', strtotime($tgl)) . ' pukul ' . $waktu,
+                 'Mahasiswa mengajukan sesi bimbingan pada ' . tgl($tgl . ' ' . $waktu, 'harijam') . '. Buka Jadwal Konsultasi untuk menerima atau menolak.',
                  'info', 'jadwal']);
         }
-        setFlash('success', 'Permintaan jadwal bimbingan berhasil dikirim!');
+        setFlash('success', 'Permintaan jadwal terkirim. Status akan berubah menjadi "Dikonfirmasi" setelah dosen menerimanya.');
         header('Location: ' . BASE_URL . '/mahasiswa/bimbingan.php');
         exit;
     }
 }
 
-$jadwal = fetchAll('SELECT * FROM sesi_bimbingan WHERE id_bimbingan=? ORDER BY tgl_sesi DESC LIMIT 10',
+// Jadwal mendatang lebih dulu (terdekat di atas), lalu sesi yang sudah lewat
+$jadwal = fetchAll('SELECT * FROM sesi_bimbingan WHERE id_bimbingan=?
+                    ORDER BY (tgl_sesi >= CURDATE() AND status IN ("dijadwalkan","dikonfirmasi")) DESC,
+                             CASE WHEN tgl_sesi >= CURDATE() AND status IN ("dijadwalkan","dikonfirmasi") THEN tgl_sesi END ASC,
+                             tgl_sesi DESC, waktu_mulai DESC
+                    LIMIT 10',
     [$bimbingan['id_bimbingan'] ?? 0]);
 
 include __DIR__ . '/../includes/header.php';
@@ -53,12 +62,12 @@ include __DIR__ . '/../includes/sidebar.php';
   <div class="page-header"><h1>Jadwal Bimbingan</h1><p>Ajukan jadwal konsultasi dengan dosen pembimbing</p></div>
 
   <?php if (!$bimbingan): ?>
-    <div class="alert info">ℹ️ Anda belum memiliki bimbingan aktif. Ajukan judul skripsi terlebih dahulu.</div>
+    <div class="alert alert-static info">ℹ️ Jadwal bimbingan bisa diajukan setelah SK bimbingan terbit. Lihat langkah yang tersisa di <a href="<?= BASE_URL ?>/dashboard.php" style="text-decoration:underline;font-weight:600;">Dashboard</a>.</div>
   <?php else: ?>
   <div class="grid-2">
     <div class="form-card">
       <h2>Ajukan Jadwal</h2>
-      <p>Pilih waktu yang tersedia sesuai slot dosen.</p>
+      <p>Dosen akan menerima atau menolak permintaan Anda. Anda akan mendapat notifikasi.</p>
       <form method="POST"><?= csrfField() ?>
         <div class="form-group">
           <label for="f_tgl_sesi" class="form-label">Tanggal <span style="color:red">*</span></label>
@@ -99,21 +108,21 @@ include __DIR__ . '/../includes/sidebar.php';
       <div class="card-header"><div class="card-title">Sesi Bimbingan</div></div>
       <div class="card-body">
         <?php if (empty($jadwal)): ?>
-          <div class="empty-state"><div class="empty-sub">Belum ada sesi bimbingan.</div></div>
+          <div class="empty-state"><div class="empty-sub">Belum ada sesi bimbingan. Ajukan jadwal pertama Anda lewat form di samping.</div></div>
         <?php else: ?>
           <div class="timeline">
             <?php foreach ($jadwal as $j):
-              $dot = $j['status']==='selesai' ? 'green' : ($j['status']==='batal' ? 'red' : 'blue');
+              $dot = ['selesai'=>'green','batal'=>'red','dikonfirmasi'=>'blue'][$j['status']] ?? 'gold';
               $icon = $j['status']==='selesai' ? '✅' : ($j['status']==='batal' ? '❌' : '🗓️');
             ?>
               <div class="timeline-item">
                 <div class="timeline-dot <?= $dot ?>"><?= $icon ?></div>
                 <div class="timeline-body">
                   <div class="timeline-title"><?= e($j['topik']) ?></div>
-                  <div class="timeline-sub"><?= $j['durasi_menit'] ?> menit · <?= e($j['metode']) ?></div>
-                  <div class="timeline-time"><?= date('d M Y H:i', strtotime($j['tgl_sesi'].' '.$j['waktu_mulai'])) ?></div>
+                  <div class="timeline-sub"><?= (int)$j['durasi_menit'] ?> menit · <?= e(label($j['metode'])) ?></div>
+                  <div class="timeline-time"><?= tgl($j['tgl_sesi'].' '.$j['waktu_mulai'], 'harijam') ?></div>
                 </div>
-                <span class="badge <?= badge($j['status']) ?>" style="flex-shrink:0;"><?= $j['status'] ?></span>
+                <span class="badge <?= badge($j['status']) ?>"><span class="badge-dot"></span><?= e(label($j['status'])) ?></span>
               </div>
             <?php endforeach; ?>
           </div>

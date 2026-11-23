@@ -192,7 +192,7 @@ include __DIR__ . '/../includes/sidebar.php';
                   <td class="mono" style="font-size:12px; font-weight:600;"><?= e($p['kode_prodi']) ?></td>
                   <td>
                       <div style="font-size:13px; font-weight:500;"><?= e($p['nama_prodi']) ?></div>
-                      <div style="font-size:11px; color:var(--slate);">Jenjang: <?= e($p['jenjang']) ?></div>
+                      <div style="font-size:11px; color:var(--slate);">Jenjang: <?= e(label($p['jenjang'])) ?></div>
                   </td>
                   <td>
                       <span class="badge info" style="font-weight:700;"><?= e($p['akreditasi'] ?? '—') ?></span>

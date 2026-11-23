@@ -95,7 +95,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <p>Silakan masuk dengan akun staf atau dosen Anda.</p>
 
                 <?php if (!empty($error)): ?>
-                    <div class="alert danger" style="margin-bottom: 20px;">
+                    <div class="alert alert-static danger" style="margin-bottom: 20px;">
                         ⚠️ <?= htmlspecialchars($error); ?>
                     </div>
                 <?php endif; ?>
@@ -112,7 +112,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                     <div class="form-group">
                         <label for="email" class="form-label">Email Staf / Dosen</label>
-                        <input id="email" name="email" type="email" class="form-input" placeholder="email@contoh.ac.id" required value="<?= htmlspecialchars($_POST['email'] ?? '') ?>">
+                        <input id="email" name="email" type="email" class="form-input" placeholder="nama@univ.ac.id" required value="<?= htmlspecialchars($_POST['email'] ?? '') ?>">
                     </div>
 
                     <div class="form-group">

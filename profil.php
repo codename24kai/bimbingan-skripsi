@@ -99,7 +99,7 @@ include __DIR__ . '/includes/sidebar.php';
       <?php endif; ?>
 
       <div style="margin-top:8px;font-size:12px;color:var(--slate);">
-        Login terakhir: <?= $userDB['last_login'] ? date('d M Y H:i', strtotime($userDB['last_login'])) : '—' ?>
+        Login terakhir: <?= $userDB['last_login'] ? tgl($userDB['last_login'], 'jam') : '—' ?>
       </div>
     </div>
 

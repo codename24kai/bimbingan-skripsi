@@ -95,7 +95,7 @@ include __DIR__ . '/includes/sidebar.php';
                                                 <?= e($n['judul']) ?>
                                             </h3>
                                             <span style="font-size: 12px; color: var(--slate); white-space: nowrap;">
-                                                <?= date('d M Y H:i', strtotime($n['created_at'])) ?>
+                                                <?= tgl($n['created_at'], 'jam') ?>
                                             </span>
                                         </div>
                                         

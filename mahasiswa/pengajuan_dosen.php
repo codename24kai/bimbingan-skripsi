@@ -64,7 +64,7 @@ include __DIR__ . '/../includes/sidebar.php';
   </div>
 
   <?php if ($bimbinganAktif): ?>
-    <div class="alert success" style="padding:20px; text-align:center;">
+    <div class="alert alert-static success" style="padding:20px; text-align:center;">
         <div style="font-size:30px; margin-bottom:10px;">🎓</div>
         <h3 style="margin:0 0 10px 0; color:var(--navy);">Dosen Pembimbing Telah Ditetapkan</h3>
         <p style="margin:0; font-size:13px; color:var(--slate);">SK Bimbingan Anda sudah terbit (No: <b><?= e($bimbinganAktif['no_sk']) ?></b>). Proses usulan telah ditutup.</p>
@@ -74,7 +74,7 @@ include __DIR__ . '/../includes/sidebar.php';
     <div class="split" style="--side:340px;">
         <div class="form-card">
             <?php if ($judulDisetujui['usulan_dosen']): ?>
-                <div class="alert info" style="margin-bottom:20px;">
+                <div class="alert alert-static info" style="margin-bottom:20px;">
                     <strong>⭐ Usulan Tersimpan:</strong> Anda telah mengusulkan <b><?= e($judulDisetujui['nama_dosen_usulan']) ?></b> sebagai pembimbing. Prodi akan meninjau ketersediaan kuota. Anda masih dapat mengubah usulan selama SK belum terbit.
                 </div>
             <?php endif; ?>

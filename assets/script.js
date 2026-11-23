@@ -28,7 +28,7 @@ document.addEventListener('click', (e) => {
 
 // ── Flash auto-dismiss ─────────────────────────
 setTimeout(() => {
-  document.querySelectorAll('.alert').forEach(el => {
+  document.querySelectorAll('.alert:not(.alert-static)').forEach(el => {
     el.style.transition = 'opacity .5s';
     el.style.opacity = '0';
     setTimeout(() => el.remove(), 500);

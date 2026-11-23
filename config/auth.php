@@ -186,7 +186,8 @@ function badge(string $status): string {
         'aktif'       => 'success',
         'selesai'     => 'success',
         'diajukan'    => 'info',
-        'dijadwalkan' => 'info',
+        'dijadwalkan' => 'warning',
+        'dikonfirmasi'=> 'info',
         'menunggu'    => 'info',
         'proses'      => 'info',
         'revisi'      => 'warning',
@@ -210,3 +211,5 @@ function e(?string $s): string {
 function fileUrl(?string $path): string {
     return BASE_URL . '/download.php?f=' . rawurlencode((string)$path);
 }
+
+require_once __DIR__ . '/format.php';

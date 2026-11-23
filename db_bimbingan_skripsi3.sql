@@ -305,7 +305,7 @@ CREATE TABLE `sesi_bimbingan` (
   `topik` text NOT NULL,
   `metode` enum('tatap_muka','zoom','gmeet','lainnya') NOT NULL DEFAULT 'tatap_muka',
   `lokasi_link` varchar(255) DEFAULT NULL,
-  `status` enum('dijadwalkan','selesai','batal') NOT NULL DEFAULT 'dijadwalkan'
+  `status` enum('dijadwalkan','dikonfirmasi','selesai','batal') NOT NULL DEFAULT 'dijadwalkan'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Setiap pertemuan sesi bimbingan';
 
 --

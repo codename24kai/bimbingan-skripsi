@@ -134,11 +134,11 @@ include __DIR__ . '/../includes/sidebar.php';
               <div>
                 <div class="catatan-dosen"><?= e($c['topik']) ?></div>
                 <div style="margin-top:6px;">
-                  <span class="badge <?= badge($c['keputusan']) ?>"><span class="badge-dot"></span><?= $c['keputusan'] ?></span>
-                  <?php if ($c['bab_terkait']): ?><span class="badge neutral" style="margin-left:6px;"><?= e($c['bab_terkait']) ?></span><?php endif; ?>
+                  <span class="badge <?= badge($c['keputusan']) ?>"><span class="badge-dot"></span><?= e(label($c['keputusan'])) ?></span>
+                  <?php if ($c['bab_terkait']): ?><span class="badge neutral" style="margin-left:6px;"><?= e(label($c['bab_terkait'])) ?></span><?php endif; ?>
                 </div>
               </div>
-              <div class="catatan-date"><?= date('d M Y', strtotime($c['tgl_sesi'])) ?></div>
+              <div class="catatan-date"><?= tgl($c['tgl_sesi']) ?></div>
             </div>
             <div class="catatan-text"><?= e($c['isi_catatan']) ?></div>
           </div>
@@ -151,14 +151,14 @@ include __DIR__ . '/../includes/sidebar.php';
       <h2>Tambah Catatan</h2>
       <p>Buat catatan setelah sesi selesai</p>
       <?php if (empty($sesiAvail)): ?>
-        <div class="alert info">Tidak ada sesi yang perlu dicatat saat ini.</div>
+        <div class="alert alert-static info">Tidak ada sesi yang perlu dicatat saat ini.</div>
       <?php else: ?>
         <form method="POST"><?= csrfField() ?>
           <div class="form-group">
             <label for="f_id_sesi" class="form-label">Pilih Sesi</label>
             <select id="f_id_sesi" class="form-input" name="id_sesi" required>
               <?php foreach ($sesiAvail as $s): ?>
-                <option value="<?= $s['id_sesi'] ?>"><?= date('d M Y', strtotime($s['tgl_sesi'])) ?> — <?= e(mb_strimwidth($s['topik'],0,40,'...')) ?></option>
+                <option value="<?= $s['id_sesi'] ?>"><?= tgl($s['tgl_sesi']) ?> — <?= e(mb_strimwidth($s['topik'],0,40,'...')) ?></option>
               <?php endforeach; ?>
             </select>
           </div>

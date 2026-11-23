@@ -170,7 +170,7 @@ include __DIR__ . '/../includes/sidebar.php';
                                   <?php endif; ?>
                               </div>
                           </td>
-                          <td style="font-size:12px; color:var(--slate);"><?= date('d M Y', strtotime($p['tgl_pengajuan'])) ?></td>
+                          <td style="font-size:12px; color:var(--slate);"><?= tgl($p['tgl_pengajuan']) ?></td>
                           <td style="text-align:right;">
                               <button type="button" class="btn btn-primary" style="padding:6px 12px; font-size:12px;" onclick="openReviewModal(<?= $jsonItem ?>)">🔍 Tinjau & Validasi</button>
                           </td>
