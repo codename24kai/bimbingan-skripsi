@@ -98,6 +98,24 @@ function label(?string $nilai): string {
         'mahasiswa'    => 'Mahasiswa',
         'dosen'        => 'Dosen',
         'admin'        => 'Admin',
+        // seminar & sidang
+        'seminar_proposal'     => 'Seminar proposal',
+        'sidang_akhir'         => 'Sidang akhir',
+        'disetujui_pembimbing' => 'Disetujui pembimbing',
+        'terjadwal'            => 'Terjadwal',
+        'lulus'                => 'Lulus',
+        'lulus_revisi'         => 'Lulus dengan revisi',
+        'tidak_lulus'          => 'Tidak lulus',
+        'ketua'                => 'Ketua penguji',
+        'anggota'              => 'Anggota penguji',
+        'pembimbing'           => 'Pembimbing',
+        'penguji'              => 'Penguji',
+        // pengumuman & template
+        'semua'                => 'Semua pengguna',
+        'proposal'             => 'Proposal',
+        'bab'                  => 'Template bab',
+        'pengesahan'           => 'Lembar pengesahan',
+        'formulir'             => 'Formulir',
     ];
     if (isset($map[$nilai])) return $map[$nilai];
     $bab = labelBab($nilai);

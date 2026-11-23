@@ -28,6 +28,54 @@ $rekapDosen = fetchAll(
      GROUP BY d.id_dosen ORDER BY total_sesi DESC'
 );
 
+// 2a. EKSPOR TAMBAHAN (D13): daftar mahasiswa, rekap judul per bidang, hasil ujian
+/** Kirim array baris sebagai CSV (pemisah titik koma agar langsung rapi di Excel Indonesia). */
+function kirimCsv(string $nama, array $header, array $rows): void {
+    header('Content-Type: text/csv; charset=utf-8');
+    header('Content-Disposition: attachment; filename="' . $nama . '_' . date('Ymd_Hi') . '.csv"');
+    $out = fopen('php://output', 'w');
+    fwrite($out, "\xEF\xBB\xBF");
+    fputcsv($out, $header, ';');
+    foreach ($rows as $r) fputcsv($out, array_values($r), ';');
+    fclose($out);
+    exit;
+}
+$ekspor = $_GET['export'] ?? '';
+if ($ekspor === 'mahasiswa') {
+    $where = '';
+    $p = [];
+    if (in_array($_GET['status'] ?? '', ['belum', 'proses', 'selesai'], true)) { $where = 'WHERE m.status_skripsi = ?'; $p[] = $_GET['status']; }
+    $rows = [];
+    foreach (fetchAll("SELECT m.id_mahasiswa, m.nim, u.nama_lengkap, ps.nama_prodi, m.angkatan, m.status_skripsi,
+                              (SELECT ud.nama_lengkap FROM bimbingan b JOIN dosen d ON d.id_dosen=b.id_dosen JOIN user ud ON ud.id_user=d.id_user
+                                WHERE b.id_mahasiswa=m.id_mahasiswa ORDER BY (b.status='aktif') DESC, b.id_bimbingan DESC LIMIT 1) AS pembimbing,
+                              (SELECT j.judul_indonesia FROM judul_skripsi j WHERE j.id_mahasiswa=m.id_mahasiswa ORDER BY j.id_judul DESC LIMIT 1) AS judul,
+                              (SELECT COUNT(*) FROM sesi_bimbingan sb JOIN bimbingan b ON b.id_bimbingan=sb.id_bimbingan WHERE b.id_mahasiswa=m.id_mahasiswa AND sb.status='selesai') AS sesi
+                       FROM mahasiswa m JOIN user u ON u.id_user=m.id_user JOIN program_studi ps ON ps.id_prodi=m.id_prodi
+                       $where ORDER BY ps.nama_prodi, m.nim", $p) as $m) {
+        $pg = progresSkripsi((int)$m['id_mahasiswa']);
+        $rows[] = [$m['nim'], $m['nama_lengkap'], $m['nama_prodi'], $m['angkatan'], label($m['status_skripsi']),
+                   $m['pembimbing'] ?? '-', $m['judul'] ?? '-', $m['sesi'], $pg['persen'] . '%', $pg['sekarang']];
+    }
+    kirimCsv('Daftar_Mahasiswa', ['NIM', 'Nama', 'Prodi', 'Angkatan', 'Status Skripsi', 'Pembimbing', 'Judul', 'Sesi Selesai', 'Progres', 'Tahap Sekarang'], $rows);
+} elseif ($ekspor === 'judul_bidang') {
+    kirimCsv('Rekap_Judul_per_Bidang', ['Bidang Penelitian', 'Total', 'Disetujui', 'Diajukan', 'Revisi', 'Ditolak'],
+        fetchAll('SELECT bidang_penelitian, COUNT(*), SUM(status="disetujui"), SUM(status="diajukan"), SUM(status="revisi"), SUM(status="ditolak")
+                  FROM judul_skripsi GROUP BY bidang_penelitian ORDER BY COUNT(*) DESC'));
+} elseif ($ekspor === 'ujian') {
+    $rows = [];
+    foreach (fetchAll('SELECT u.id_ujian, m.nim, um.nama_lengkap, u.jenis, u.status, u.tgl_ujian, u.ruang, ud.nama_lengkap AS pembimbing, u.hasil, u.nilai_akhir
+                       FROM ujian u JOIN bimbingan b ON b.id_bimbingan=u.id_bimbingan JOIN mahasiswa m ON m.id_mahasiswa=b.id_mahasiswa
+                       JOIN user um ON um.id_user=m.id_user JOIN dosen d ON d.id_dosen=b.id_dosen JOIN user ud ON ud.id_user=d.id_user
+                       ORDER BY u.tgl_ujian DESC, u.id_ujian DESC') as $u) {
+        $rows[] = [$u['nim'], $u['nama_lengkap'], label($u['jenis']), label($u['status']), $u['tgl_ujian'] ?? '-', $u['ruang'] ?? '-', $u['pembimbing'],
+                   implode(', ', array_column(pengujiUjian((int)$u['id_ujian']), 'nama_lengkap')) ?: '-',
+                   $u['hasil'] ? label($u['hasil']) : '-', $u['nilai_akhir'] !== null ? number_format((float)$u['nilai_akhir'], 2, ',', '') : '-',
+                   $u['nilai_akhir'] !== null ? nilaiHuruf((float)$u['nilai_akhir']) : '-'];
+    }
+    kirimCsv('Hasil_Seminar_Sidang', ['NIM', 'Nama', 'Jenis', 'Status', 'Tanggal', 'Ruang', 'Pembimbing', 'Penguji', 'Hasil', 'Nilai', 'Huruf'], $rows);
+}
+
 // 2. HANDLE EXPORT LAPORAN (PDF & EXCEL)
 if (isset($_GET['export'])) {
     $format = $_GET['export'];
@@ -149,9 +197,13 @@ include __DIR__ . '/../includes/sidebar.php';
             <a href="?export=pdf" target="_blank" style="display:block; padding:12px 16px; color:var(--navy); text-decoration:none; font-size:13px; border-bottom:1px solid var(--cream-dark); transition:background 0.2s;">
                 📄 Cetak Laporan (PDF)
             </a>
-            <a href="?export=excel" style="display:block; padding:12px 16px; color:var(--navy); text-decoration:none; font-size:13px; transition:background 0.2s;">
-                📊 Unduh Data (Excel/CSV)
+            <a href="?export=excel" style="display:block; padding:12px 16px; color:var(--navy); text-decoration:none; font-size:13px; border-bottom:1px solid var(--cream-dark); transition:background 0.2s;">
+                📊 Rekap per dosen (CSV)
             </a>
+            <a href="?export=mahasiswa" class="ekspor-link">Daftar mahasiswa + progres (CSV)</a>
+            <a href="?export=mahasiswa&amp;status=proses" class="ekspor-link">Mahasiswa sedang skripsi (CSV)</a>
+            <a href="?export=judul_bidang" class="ekspor-link">Rekap judul per bidang (CSV)</a>
+            <a href="?export=ujian" class="ekspor-link">Hasil seminar & sidang (CSV)</a>
         </div>
     </div>
   </div>

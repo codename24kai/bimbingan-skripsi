@@ -103,10 +103,10 @@ include __DIR__ . '/includes/sidebar.php';
                                             <?= e($n['pesan']) ?>
                                         </p>
                                         
-                                        <?php if (!empty($n['tautan'])): ?>
+                                        <?php if ($tn = tautanNotif($n['tautan'] ?? null)): ?>
                                             <div style="margin-bottom: 12px;">
-                                                <a href="<?= BASE_URL ?>/<?= e($n['tautan']) ?>" target="_blank" class="btn btn-primary" style="font-size: 11px; padding: 6px 12px; text-decoration: none; display: inline-flex; gap: 6px;">
-                                                    📄 Unduh Lampiran
+                                                <a href="<?= e($tn[0]) ?>" class="btn btn-primary" style="font-size: 11px; padding: 6px 12px; text-decoration: none; display: inline-flex; gap: 6px;">
+                                                    <?= e($tn[1]) ?>
                                                 </a>
                                             </div>
                                         <?php endif; ?>

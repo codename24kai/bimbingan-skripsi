@@ -428,6 +428,33 @@ erDiagram
 
 ---
 
+## 🆕 Fitur Tambahan (November 2026)
+
+> **Wajib:** jalankan `database/migrasi_2026_11_alur.sql` lalu `database/migrasi_2026_11_fitur.sql` di phpMyAdmin (tab SQL) pada database `db_bimbingan_skripsi`. Tanpa migrasi, halaman yang membutuhkan login menampilkan pesan untuk menjalankannya.
+
+| Fitur | Peran | Halaman |
+|---|---|---|
+| Pengumuman (sematkan, kedaluwarsa, target peran/prodi, notifikasi) | Admin buat, semua baca | `info/pengumuman.php`, kartu di dashboard |
+| Template dokumen (5 template bawaan + unggahan admin) | Semua | `info/template.php`, file di `assets/template/` |
+| Panduan alur skripsi dan cara pakai per peran, FAQ & bantuan | Semua | `info/panduan.php`, `info/faq.php` |
+| Kartu bimbingan (logbook) siap cetak / simpan PDF | Mahasiswa, dosen, admin | `cetak/kartu-bimbingan.php` |
+| Diskusi per dokumen + tanggapan per catatan revisi | Mahasiswa, dosen | `diskusi.php?dok=ID` |
+| Bandingkan dua versi dokumen berdampingan | Mahasiswa, dosen | `bandingkan.php?dok=ID` |
+| Progres skripsi per tahap (judul → Bab I–V → seminar → sidang) | Semua | Dashboard mahasiswa, Mahasiswa Bimbingan, ekspor |
+| Lupa kata sandi tanpa email (permintaan ke admin, kata sandi sementara) | Semua / admin | `lupa-sandi.php`, `admin/reset_sandi.php` |
+| Slot konsultasi dosen, dipesan mahasiswa (langsung terkonfirmasi) | Dosen, mahasiswa | `dosen/slot.php`, `mahasiswa/bimbingan.php` |
+| Kalender bulanan + agenda akademik | Semua (admin kelola agenda) | `kalender.php` |
+| Pengingat otomatis H-1 jadwal/ujian dan mahasiswa tidak aktif | Otomatis | dipicu dashboard; opsional `cron/pengingat.php` |
+| Seminar proposal & sidang akhir: daftar, persetujuan, jadwal, penguji, nilai rubrik, hasil | Semua | `mahasiswa/ujian.php`, `dosen/ujian.php`, `admin/ujian.php` |
+| Cek kemiripan judul saat mengetik dan di halaman validasi | Mahasiswa, dosen, admin | `api/cek-judul.php` |
+| Impor akun mahasiswa/dosen dari CSV (dengan pratinjau) | Admin | `admin/impor.php` |
+| Ekspor CSV: mahasiswa + progres, judul per bidang, hasil ujian | Admin | menu Buat Laporan di `admin/laporan.php` |
+| Beranda publik, direktori dosen, grafik dashboard admin | Pengunjung, mahasiswa, admin | `beranda.php`, `info/dosen.php`, `dashboard.php` |
+
+Pengingat berjalan otomatis maksimal sekali per jam saat ada yang membuka dashboard. Agar tetap jalan tanpa ada yang login, jadwalkan di Windows Task Scheduler: program `C:\xampp\php\php.exe`, argumen `C:\xampp\htdocs\...\bimbingan-skripsi\cron\pengingat.php`.
+
+---
+
 ## 🚀 Instalasi Project
 
 ### Prasyarat

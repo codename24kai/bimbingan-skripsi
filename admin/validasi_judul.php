@@ -152,6 +152,9 @@ include __DIR__ . '/../includes/sidebar.php';
                               <div style="font-weight:600; font-size:13px;"><?= e($p['nama_lengkap']) ?></div>
                               <div class="mono meta-sm">NIM: <?= e($p['nim']) ?></div>
                               <div style="font-size:11px; color:var(--info-text); margin-top:4px;">Iterasi ke-<?= $p['iterasi'] ?></div>
+                              <?php $mirip = judulMirip($p['judul_indonesia'], (int)$p['id_mahasiswa'], 3); if ($mirip): ?>
+                                <span class="badge <?= $mirip[0]['skor'] >= 60 ? 'danger' : 'warning' ?>" style="margin-top:6px;" title="<?= e(implode(' | ', array_map(fn($m) => $m['skor'] . '% ' . $m['judul_indonesia'], $mirip))) ?>">Mirip <?= (int)$mirip[0]['skor'] ?>% dengan judul lain</span>
+                              <?php endif; ?>
                           </td>
                           <td>
                               <div style="font-size:12px; font-weight:500; color:var(--navy);"><?= e($p['bidang_penelitian']) ?></div>

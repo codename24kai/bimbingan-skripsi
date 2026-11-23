@@ -97,7 +97,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </div>
 
         <div class="form-group">
-            <label for="password" class="form-label">Kata Sandi</label>
+            <div class="label-baris"><label for="password" class="form-label">Kata Sandi</label><a class="link fs-12" href="lupa-sandi.php">Lupa kata sandi?</a></div>
 
             <div style="position: relative; width: 100%;">
 
@@ -130,6 +130,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <a href="login-staff.php" class="btn btn-secondary btn-full" style="justify-content: center;">
             Masuk sebagai Admin / Dosen
         </a>
+        <a href="beranda.php" class="link fs-13" style="margin-top:10px;">Tentang SkripsiKu dan alur skripsi</a>
       </div>
     </div>
   </div>

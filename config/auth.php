@@ -131,6 +131,8 @@ function requireLogin(): void {
         header('Location: ' . BASE_URL . '/index.php');
         exit;
     }
+    // Tabel fitur baru wajib ada (database/migrasi_2026_11_fitur.sql)
+    wajibMigrasiFitur();
     // Paksa ganti password bawaan sebelum bisa membuka halaman lain
     if (!empty($_SESSION['must_change_password'])) {
         $script = basename($_SERVER['SCRIPT_NAME'] ?? '');
@@ -199,6 +201,11 @@ function badge(string $status): string {
         'nonaktif'    => 'neutral',
         'belum'       => 'neutral',
         'draft'       => 'neutral',
+        'terjadwal'   => 'info',
+        'disetujui_pembimbing' => 'info',
+        'lulus'       => 'success',
+        'lulus_revisi'=> 'warning',
+        'tidak_lulus' => 'danger',
     ];
     return $map[$status] ?? 'neutral';
 }
@@ -214,3 +221,4 @@ function fileUrl(?string $path): string {
 
 require_once __DIR__ . '/format.php';
 require_once __DIR__ . '/ui.php';
+require_once __DIR__ . '/fitur.php';

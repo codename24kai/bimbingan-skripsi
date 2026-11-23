@@ -103,6 +103,7 @@ include __DIR__ . '/../includes/sidebar.php';
           <?php if ($j['latar_belakang']): ?>
             <div class="validate-desc"><?= e(mb_strimwidth($j['latar_belakang'],0,300,'...')) ?></div>
           <?php endif; ?>
+          <?= kotakJudulMirip($j['judul_indonesia'], (int)$j['id_mahasiswa']) ?>
           <form method="POST" class="validate-actions"><?= csrfField() ?>
             <input type="hidden" name="id_judul" value="<?= $j['id_judul'] ?>">
             <button name="aksi" value="setujui" class="btn btn-success btn-sm">✅ Setujui</button>

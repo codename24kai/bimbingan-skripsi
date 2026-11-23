@@ -60,6 +60,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 foreach ($settings as $key => $val) {
                     execute("UPDATE pengaturan SET nilai_value = ? WHERE nama_key = ?", [$val, $key]);
                 }
+                // Pengaturan fitur baru (ditambah oleh migrasi_2026_11_fitur.sql)
+                simpanPengaturan('kontak_prodi', mb_substr(trim($_POST['kontak_prodi'] ?? ''), 0, 500));
+                simpanPengaturan('batas_tidak_aktif_hari', (string)max(7, min(180, (int)($_POST['batas_tidak_aktif_hari'] ?? 30))));
                 $db->commit();
                 setFlash('success', 'Konfigurasi umum berhasil disimpan.');
             } catch (\Exception $e) {
@@ -170,6 +173,16 @@ include __DIR__ . '/../includes/sidebar.php';
             </div>
         </div>
         <small style="color:var(--slate); font-size:12px; display:block; margin-bottom:16px;">Angka default akan otomatis terisi saat menambah dosen baru, sedangkan Batas Maksimal adalah kuota tertinggi yang tidak dapat dilampaui.</small>
+
+        <div class="form-group">
+            <label for="f_kontak_prodi" class="form-label">Kontak bagian akademik</label>
+            <textarea id="f_kontak_prodi" class="form-input" name="kontak_prodi" rows="2" maxlength="500" placeholder="Lokasi, jam layanan, nomor WhatsApp"><?= e($opt['kontak_prodi'] ?? '') ?></textarea>
+            <small class="meta">Tampil di halaman FAQ & Bantuan dan Lupa Kata Sandi.</small>
+        </div>
+        <div class="form-group">
+            <label for="f_batas_tidak_aktif" class="form-label">Pengingat jika tidak bimbingan selama (hari)</label>
+            <input id="f_batas_tidak_aktif" class="form-input" type="number" name="batas_tidak_aktif_hari" min="7" max="180" value="<?= e($opt['batas_tidak_aktif_hari'] ?? '30') ?>">
+        </div>
         
         <button type="submit" class="btn btn-gold" style="width:100%; justify-content:center;">💾 Simpan Konfigurasi</button>
       </form>

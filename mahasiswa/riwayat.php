@@ -39,9 +39,12 @@ include __DIR__ . '/../includes/sidebar.php';
 <div class="layout"><main class="main">
 <?php include __DIR__ . '/../includes/topbar.php'; ?>
 <div class="content">
-  <div class="page-header">
-    <h1>Riwayat Bimbingan</h1>
-    <p>Catatan lengkap seluruh sesi bimbingan skripsi Anda</p>
+  <div class="page-header page-header--aksi">
+    <div>
+      <h1>Riwayat Bimbingan</h1>
+      <p>Catatan lengkap seluruh sesi bimbingan skripsi Anda</p>
+    </div>
+    <a class="btn btn-secondary" href="<?= BASE_URL ?>/cetak/kartu-bimbingan.php"><?= icon('printer', 16) ?> Cetak kartu bimbingan</a>
   </div>
 
   <?php if (!empty($akanDatang)): ?>

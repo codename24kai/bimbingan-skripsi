@@ -230,3 +230,30 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 });
+// ── Cek kemiripan judul saat mengetik (D11) ───
+document.querySelectorAll('[data-cek-judul]').forEach(input => {
+  const kotak = document.getElementById(input.dataset.cekJudul);
+  if (!kotak) return;
+  const base = (document.querySelector('script[src*="assets/script.js"]')?.src || '').replace(/assets\/script\.js.*$/, '');
+  let timer;
+  const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  input.addEventListener('input', () => {
+    clearTimeout(timer);
+    const q = input.value.trim();
+    if (q.split(/\s+/).length < 3) { kotak.innerHTML = ''; return; }
+    timer = setTimeout(async () => {
+      try {
+        const res = await fetch(base + 'api/cek-judul.php?q=' + encodeURIComponent(q), { credentials: 'same-origin' });
+        const data = await res.json();
+        if (!data.hasil || !data.hasil.length) {
+          kotak.innerHTML = '<div class="cek-judul__ok">Tidak ditemukan judul yang mirip.</div>';
+          return;
+        }
+        kotak.innerHTML = '<div class="judul-mirip"><div class="judul-mirip__judul">Judul serupa yang sudah ada</div><ul>' +
+          data.hasil.map(h => '<li><span class="badge ' + (h.skor >= 60 ? 'danger' : 'warning') + '">' + h.skor + '%</span> ' + esc(h.judul) +
+            ' <span class="meta">· ' + esc(h.status) + (h.angkatan ? ', angkatan ' + esc(h.angkatan) : '') + (h.nama ? ', ' + esc(h.nama) : '') + '</span></li>').join('') +
+          '</ul><div class="meta">Ubah objek, fokus, atau metode agar judul Anda berbeda.</div></div>';
+      } catch (e) { kotak.innerHTML = ''; }
+    }, 450);
+  });
+});

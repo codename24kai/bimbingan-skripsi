@@ -70,7 +70,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 $sql = 'SELECT m.*,u.nama_lengkap,u.email,u.status AS status_user,ps.nama_prodi,u.id_user,
-               (SELECT ud.nama_lengkap FROM bimbingan b JOIN dosen d ON d.id_dosen=b.id_dosen JOIN user ud ON ud.id_user=d.id_user WHERE b.id_mahasiswa=m.id_mahasiswa AND b.status="aktif" LIMIT 1) AS nama_dosen
+               (SELECT ud.nama_lengkap FROM bimbingan b JOIN dosen d ON d.id_dosen=b.id_dosen JOIN user ud ON ud.id_user=d.id_user WHERE b.id_mahasiswa=m.id_mahasiswa AND b.status="aktif" LIMIT 1) AS nama_dosen,
+               (SELECT b.id_bimbingan FROM bimbingan b WHERE b.id_mahasiswa=m.id_mahasiswa AND b.status IN ("aktif","selesai") ORDER BY (b.status="aktif") DESC, b.id_bimbingan DESC LIMIT 1) AS id_bimbingan
         FROM mahasiswa m JOIN user u ON u.id_user=m.id_user JOIN program_studi ps ON ps.id_prodi=m.id_prodi';
 $params = [];
 if ($q) { $sql .= ' WHERE (u.nama_lengkap LIKE ? OR m.nim LIKE ?)'; $params = ["%$q%","%$q%"]; }
@@ -93,6 +94,7 @@ include __DIR__ . '/../includes/sidebar.php';
       <div class="search-input-wrap"><span class="search-icon">🔍</span><input name="q" aria-label="Cari mahasiswa" placeholder="Cari nama atau NIM..." value="<?= e($q) ?>"></div>
       <button type="submit" class="btn btn-secondary">Cari</button>
     </form>
+    <a class="btn btn-secondary" href="<?= BASE_URL ?>/admin/impor.php"><?= icon('import', 16) ?> Impor CSV</a>
     <button class="btn btn-primary" onclick="document.getElementById('modalTambah').style.display='flex'">+ Tambah Mahasiswa</button>
   </div>
 
@@ -133,6 +135,9 @@ include __DIR__ . '/../includes/sidebar.php';
                   <button type="button" class="btn-icon" title="Pratinjau Data" aria-label="Pratinjau Data <?= e($m['nama_lengkap']) ?>" onclick="openPreviewModal(<?= $jsonData ?>)"><?= icon('eye') ?></button>
                   
                   <button type="button" class="btn-icon" title="Edit Data" aria-label="Edit Data <?= e($m['nama_lengkap']) ?>" onclick="openEditModal(<?= $jsonData ?>)"><?= icon('pencil') ?></button>
+                  <?php if ($m['id_bimbingan']): ?>
+                    <a class="btn-icon" href="<?= BASE_URL ?>/cetak/kartu-bimbingan.php?id=<?= (int)$m['id_bimbingan'] ?>" title="Cetak kartu bimbingan" aria-label="Cetak kartu bimbingan <?= e($m['nama_lengkap']) ?>"><?= icon('printer') ?></a>
+                  <?php endif; ?>
                   
                   <form method="POST" style="display:inline;" data-confirm="Reset password <?= e($m['nama_lengkap']) ?>? Password lama tidak berlaku lagi dan password sementara akan ditampilkan." data-confirm-ok="Reset password"><?= csrfField() ?>
                     <input type="hidden" name="aksi" value="reset_password">
