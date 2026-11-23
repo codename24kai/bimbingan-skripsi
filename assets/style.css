@@ -1801,3 +1801,40 @@ a.avatar{text-decoration:none}
 .mb-4{margin-bottom:4px}
 .mb-20{margin-bottom:20px}
 .row-10{display:flex;align-items:center;gap:10px}
+
+/* ============================================================
+   RINGKASAN PENGAJUAN & PEMBIMBING
+   ============================================================ */
+.status-card{display:flex;align-items:center;gap:16px;flex-wrap:wrap;background:var(--white);border:1px solid var(--cream-dark);border-left:4px solid var(--info-text);border-radius:var(--radius);padding:18px 20px;box-shadow:var(--shadow)}
+.status-card--success{border-left-color:var(--success-text)}
+.status-card__icon{width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;background:rgba(74,144,217,.1);color:var(--info-text)}
+.status-card--success .status-card__icon{background:rgba(46,204,138,.12);color:var(--success-text)}
+.status-card__title{font-weight:600;color:var(--navy);font-size:15px;margin-bottom:2px}
+.status-card__aksi{display:flex;gap:8px;flex-wrap:wrap}
+.btn .icon{margin-right:6px}
+
+.judul-utama{font-family:'Playfair Display',serif;font-size:20px;line-height:1.45;color:var(--navy);margin-bottom:20px}
+.info-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px 24px}
+.info-grid--1{grid-template-columns:minmax(0,1fr)}
+.info-label{font-size:11px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--slate);margin-bottom:4px}
+.info-value{font-size:14px;color:var(--navy);font-weight:500;overflow-wrap:anywhere}
+.link{color:var(--info-text);text-decoration:underline}
+
+.latar summary{list-style:none;cursor:pointer;font-size:14px;line-height:1.65;color:var(--navy)}
+.latar summary::-webkit-details-marker{display:none}
+.latar__toggle{display:block;margin-top:6px;font-size:13px;font-weight:600;color:var(--info-text)}
+.latar[open] .latar__ringkas,.latar[open] .latar__toggle{display:none}
+.latar__penuh{font-size:14px;line-height:1.7;color:var(--navy)}
+.judul-alt{margin:0;padding-left:18px;font-size:13px;line-height:1.6;color:var(--slate)}
+.judul-alt li{margin-bottom:4px}
+
+.berkas-list{display:flex;flex-wrap:wrap;gap:10px}
+.berkas{display:inline-flex;align-items:center;gap:8px;padding:10px 14px;border:1px solid var(--cream-dark);border-radius:10px;background:var(--cream);color:var(--navy);font-size:13px;font-weight:500;text-decoration:none}
+.berkas:hover{border-color:var(--navy-light,var(--navy))}
+.berkas .icon:last-child{color:var(--slate)}
+
+.dosen-card__head{display:flex;align-items:center;gap:14px}
+.dosen-card__avatar{width:56px;height:56px;font-size:18px}
+.dosen-card__nama{font-family:'Playfair Display',serif;font-size:18px;color:var(--navy)}
+.aksi-stack{display:grid;gap:10px;margin-top:20px}
+@media(max-width:600px){.info-grid{grid-template-columns:minmax(0,1fr)}.status-card__aksi{width:100%}}
