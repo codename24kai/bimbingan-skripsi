@@ -210,10 +210,10 @@ include __DIR__ . '/../includes/sidebar.php';
                               <tr>
                                   <td>
                                       <div style="font-weight:600; font-size:13px;"><?= e($ap['nama_lengkap']) ?></div>
-                                      <div class="mono" style="font-size:11px; color:var(--slate);"><?= e($ap['nim']) ?></div>
+                                      <div class="mono meta-sm"><?= e($ap['nim']) ?></div>
                                   </td>
                                   
-                                  <td style="font-size:13px;">
+                                  <td class="fs-13">
                                       <?= e($ap['judul_indonesia']) ?>
                                       <div style="display:flex; gap:8px; align-items:center; margin-top:6px;">
                                           <div style="font-size:11px; color:var(--info-text);">ACC: <?= tgl($ap['tgl_pengajuan']) ?></div>
@@ -232,7 +232,7 @@ include __DIR__ . '/../includes/sidebar.php';
                                       <input type="hidden" name="semester" value="<?= $semesterDefault ?>">
                                       
                                       <td style="padding: 10px;">
-                                          <div style="font-size:11px; color:var(--slate); margin-bottom:4px;">Plotting Dosen Pembimbing:</div>
+                                          <div class="meta-sm mb-4">Plotting Dosen Pembimbing:</div>
                                           <select class="form-input" name="id_dosen" style="padding:6px; font-size:13px; margin-bottom:12px;" required>
                                               <option value="" disabled selected>-- Pilih Dosen --</option>
                                               
@@ -265,7 +265,7 @@ include __DIR__ . '/../includes/sidebar.php';
                                           </select>
                                           
                                           <input type="text" class="form-input" name="no_sk" placeholder="Nomor SK (Cth: 123/SK/UNPAM/2026)" style="padding:6px; font-size:12px; margin-bottom:8px;" required>
-                                          <div style="font-size:11px; color:var(--slate); margin-bottom:4px;">Unggah PDF SK Bimbingan:</div>
+                                          <div class="meta-sm mb-4">Unggah PDF SK Bimbingan:</div>
                                           <input type="file" name="file_sk" accept=".pdf" class="form-input" style="padding:4px; font-size:12px;" required>
                                       </td>
                                       
@@ -316,7 +316,7 @@ include __DIR__ . '/../includes/sidebar.php';
                         </div>
                         <div class="form-group">
                           <label for="f_file_sk" class="form-label">Upload File SK (PDF)</label>
-                          <input id="f_file_sk" class="form-input" type="file" name="file_sk" accept=".pdf" required style="padding: 7px;">
+                          <?= uploadZone('file_sk', 'Klik atau seret file PDF', '.pdf', 'Maksimal 5 MB', true) ?>
                         </div>
                     </div>
                     
@@ -345,7 +345,7 @@ include __DIR__ . '/../includes/sidebar.php';
                     <div style="font-weight:600; font-size:13px;"><?= e($r['nama_mhs']) ?></div>
                     <div class="mono" style="font-size:11px;color:var(--slate);"><?= $r['nim'] ?></div>
                 </td>
-                <td style="font-size:13px;"><?= e($r['nama_dosen']) ?></td>
+                <td class="fs-13"><?= e($r['nama_dosen']) ?></td>
                 <td style="max-width:200px;font-size:12px;"><?= e(mb_strimwidth($r['judul_indonesia'],0,40,'...')) ?></td>
                 
                 <td>
@@ -355,21 +355,21 @@ include __DIR__ . '/../includes/sidebar.php';
                             <a href="<?= e(fileUrl($r['file_sk'])) ?>" target="_blank" style="font-size:11px; color:var(--info-text); text-decoration:underline;">Lihat PDF</a>
                         <?php endif; ?>
                     <?php else: ?>
-                        <span style="font-size:11px; color:var(--slate);">-</span>
+                        <span class="meta-sm">-</span>
                     <?php endif; ?>
                 </td>
 
-                <td class="nowrap" style="font-size:12px;"><?= tgl($r['tgl_mulai']) ?></td>
+                <td class="nowrap fs-12"><?= tgl($r['tgl_mulai']) ?></td>
                 <td><span class="badge <?= badge($r['status']) ?>"><span class="badge-dot"></span><?= label($r['status']) ?></span></td>
                 <td>
                   <?php if ($r['status'] === 'aktif'): ?>
                     <div style="display:flex;gap:6px;flex-wrap:wrap;">
-                    <form method="POST" onsubmit="return confirm('Tandai bimbingan <?= e(addslashes($r['nama_mhs'])) ?> sebagai selesai? Status skripsinya akan menjadi Selesai.')"><?= csrfField() ?>
+                    <form method="POST" data-confirm="Tandai bimbingan <?= e($r['nama_mhs']) ?> sebagai selesai? Status skripsinya akan menjadi Selesai." data-confirm-ok="Tandai selesai" data-confirm-tone="primary"><?= csrfField() ?>
                       <input type="hidden" name="aksi" value="selesai">
                       <input type="hidden" name="id_bimbingan" value="<?= $r['id_bimbingan'] ?>">
                       <button class="btn btn-success" style="padding:4px 8px; font-size:11px;">🎓 Selesai</button>
                     </form>
-                    <form method="POST" onsubmit="return confirm('Hentikan relasi ini? Dosen dan mahasiswa tidak akan bisa melakukan proses bimbingan lagi.')"><?= csrfField() ?>
+                    <form method="POST" data-confirm="Hentikan relasi ini? Dosen dan mahasiswa tidak akan bisa melakukan proses bimbingan lagi." data-confirm-ok="Hentikan"><?= csrfField() ?>
                       <input type="hidden" name="aksi" value="hentikan">
                       <input type="hidden" name="id_bimbingan" value="<?= $r['id_bimbingan'] ?>">
                       <button class="btn btn-danger" style="padding:4px 8px; font-size:11px;">🛑 Hentikan</button>

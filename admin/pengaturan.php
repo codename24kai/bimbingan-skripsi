@@ -183,7 +183,7 @@ include __DIR__ . '/../includes/sidebar.php';
       <div class="card-body">
         <div class="table-wrap">
           <table>
-            <thead><tr><th>Kode</th><th>Program Studi</th><th>Akreditasi</th><th style="text-align:right;">Aksi</th></tr></thead>
+            <thead><tr><th>Kode</th><th>Program Studi</th><th>Akreditasi</th><th class="text-right">Aksi</th></tr></thead>
             <tbody>
               <?php foreach ($prodi as $p): 
                 $jsonProdi = htmlspecialchars(json_encode($p), ENT_QUOTES, 'UTF-8');
@@ -192,17 +192,17 @@ include __DIR__ . '/../includes/sidebar.php';
                   <td class="mono" style="font-size:12px; font-weight:600;"><?= e($p['kode_prodi']) ?></td>
                   <td>
                       <div style="font-size:13px; font-weight:500;"><?= e($p['nama_prodi']) ?></div>
-                      <div style="font-size:11px; color:var(--slate);">Jenjang: <?= e(label($p['jenjang'])) ?></div>
+                      <div class="meta-sm">Jenjang: <?= e(label($p['jenjang'])) ?></div>
                   </td>
                   <td>
                       <span class="badge info" style="font-weight:700;"><?= e($p['akreditasi'] ?? '—') ?></span>
                   </td>
-                  <td style="text-align:right;">
-                      <button type="button" class="btn-icon" title="Edit Prodi" onclick="openEditProdi(<?= $jsonProdi ?>)">✏️</button>
-                      <form method="POST" style="display:inline;" onsubmit="return confirm('Hapus prodi ini? Aksi akan digagalkan jika ada Dosen/Mahasiswa aktif di prodi ini.')"><?= csrfField() ?>
+                  <td class="text-right">
+                      <button type="button" class="btn-icon" title="Edit Prodi" aria-label="Edit Prodi <?= e($p['nama_prodi']) ?>" onclick="openEditProdi(<?= $jsonProdi ?>)"><?= icon('pencil') ?></button>
+                      <form method="POST" style="display:inline;" data-confirm="Hapus prodi <?= e($p['nama_prodi']) ?>? Penghapusan dibatalkan otomatis jika masih ada dosen atau mahasiswa di prodi ini." data-confirm-ok="Hapus"><?= csrfField() ?>
                           <input type="hidden" name="aksi" value="hapus_prodi">
                           <input type="hidden" name="id_prodi" value="<?= $p['id_prodi'] ?>">
-                          <button type="submit" class="btn-icon">🗑️</button>
+                          <button type="submit" class="btn-icon btn-icon--danger" title="Hapus Prodi" aria-label="Hapus Prodi <?= e($p['nama_prodi']) ?>"><?= icon('trash') ?></button>
                       </form>
                   </td>
                 </tr>
@@ -216,11 +216,11 @@ include __DIR__ . '/../includes/sidebar.php';
   </div>
 </div>
 
-<div id="modalTambahProdi" style="display:none;position:fixed;inset:0;background:rgba(11,31,58,.6);z-index:1000;align-items:center;justify-content:center;">
-  <div style="background:var(--white);border-radius:var(--radius);padding:32px;width:100%;max-width:450px;box-shadow:var(--shadow-lg);">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+<div class="modal-overlay" id="modalTambahProdi" style="display:none;">
+  <div class="modal-box">
+    <div class="modal-head">
       <h2 style="font-family:'Playfair Display',serif;font-size:18px;">Tambah Program Studi</h2>
-      <button onclick="document.getElementById('modalTambahProdi').style.display='none'" style="background:none;border:none;font-size:20px;cursor:pointer;">×</button>
+      <button type="button" aria-label="Tutup" class="modal-close" onclick="document.getElementById('modalTambahProdi').style.display='none'">×</button>
     </div>
     <form method="POST"><?= csrfField() ?>
       <input type="hidden" name="aksi" value="tambah_prodi">
@@ -254,11 +254,11 @@ include __DIR__ . '/../includes/sidebar.php';
   </div>
 </div>
 
-<div id="modalEditProdi" style="display:none;position:fixed;inset:0;background:rgba(11,31,58,.6);z-index:1000;align-items:center;justify-content:center;">
-  <div style="background:var(--white);border-radius:var(--radius);padding:32px;width:100%;max-width:450px;box-shadow:var(--shadow-lg);">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+<div class="modal-overlay" id="modalEditProdi" style="display:none;">
+  <div class="modal-box">
+    <div class="modal-head">
       <h2 style="font-family:'Playfair Display',serif;font-size:18px;">Edit Program Studi</h2>
-      <button onclick="document.getElementById('modalEditProdi').style.display='none'" style="background:none;border:none;font-size:20px;cursor:pointer;">×</button>
+      <button type="button" aria-label="Tutup" class="modal-close" onclick="document.getElementById('modalEditProdi').style.display='none'">×</button>
     </div>
     <form method="POST"><?= csrfField() ?>
       <input type="hidden" name="aksi" value="edit_prodi">

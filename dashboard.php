@@ -140,7 +140,7 @@ include __DIR__ . '/includes/sidebar.php';
         </div>
 
         <?php if (!$bimbingan): ?>
-        <div class="card langkah-card" style="margin-bottom:20px;">
+        <div class="card langkah-card mb-20">
           <div class="card-header">
             <div class="card-title">Langkah Skripsi Anda</div>
             <span class="badge info"><span class="badge-dot"></span><?= min($langkahAktif, count($langkah)) ?> dari <?= count($langkah) ?> selesai</span>
@@ -151,7 +151,7 @@ include __DIR__ . '/includes/sidebar.php';
                 $state = $done ? 'done' : ($i === $langkahAktif ? 'now' : 'todo'); ?>
                 <li class="langkah-item <?= $state ?>">
                   <span class="langkah-no"><?= $done ? '✓' : $i + 1 ?></span>
-                  <div style="min-width:0;">
+                  <div class="min-w-0">
                     <div class="langkah-title"><?= e($judulL) ?></div>
                     <?php if (!$done): ?><div class="langkah-sub"><?= e($ket) ?></div><?php endif; ?>
                     <?php if ($state === 'now' && $href): ?>
@@ -167,17 +167,17 @@ include __DIR__ . '/includes/sidebar.php';
 
         <div class="stats-grid">
           <div class="stat-card blue">
-            <div class="stat-icon">📝</div>
+            <div class="stat-icon" aria-hidden="true"><?= icon('pencil', 22) ?></div>
             <div class="stat-num"><?= $totalSesi ?></div>
             <div class="stat-label">Total Sesi Bimbingan</div>
           </div>
           <div class="stat-card green">
-            <div class="stat-icon">✅</div>
+            <div class="stat-icon" aria-hidden="true"><?= icon('check-circle', 22) ?></div>
             <div class="stat-num"><?= countRows('SELECT COUNT(*) FROM dokumen WHERE id_mahasiswa=? AND status="disetujui"',[$eid]) ?></div>
             <div class="stat-label">Dokumen Disetujui</div>
           </div>
           <div class="stat-card gold">
-            <div class="stat-icon">📄</div>
+            <div class="stat-icon" aria-hidden="true"><?= icon('file', 22) ?></div>
             <div class="stat-num"><?= $totalRevisi ?></div>
             <div class="stat-label">Revisi Pending</div>
             <?php if ($totalRevisi > 0): ?>
@@ -185,7 +185,7 @@ include __DIR__ . '/includes/sidebar.php';
             <?php endif; ?>
           </div>
           <div class="stat-card red">
-            <div class="stat-icon">🗓️</div>
+            <div class="stat-icon" aria-hidden="true"><?= icon('calendar', 22) ?></div>
             <div class="stat-num stat-num--text"><?= $nextSesi ? tglRelatif($nextSesi['tgl_sesi']) : '—' ?></div>
             <div class="stat-label">Bimbingan Berikutnya</div>
             <?php if ($nextSesi): ?>
@@ -196,7 +196,7 @@ include __DIR__ . '/includes/sidebar.php';
           </div>
         </div>
 
-        <div class="grid-3" style="margin-bottom:20px;">
+        <div class="grid-3 mb-20">
           <div class="card">
             <div class="card-header">
               <div class="card-title">Dokumen per Bab</div>
@@ -286,10 +286,10 @@ include __DIR__ . '/includes/sidebar.php';
         </div>
 
         <div class="stats-grid">
-          <div class="stat-card blue"><div class="stat-icon">🎒</div><div class="stat-num"><?= $jumlahMhs ?></div><div class="stat-label">Mahasiswa Bimbingan</div></div>
-          <div class="stat-card gold"><div class="stat-icon">⏳</div><div class="stat-num"><?= $judulPending ?></div><div class="stat-label">Judul Menunggu Validasi</div></div>
-          <div class="stat-card green"><div class="stat-icon">✅</div><div class="stat-num"><?= $sesiMingguIni ?></div><div class="stat-label">Sesi Minggu Ini</div></div>
-          <div class="stat-card red"><div class="stat-icon">📄</div><div class="stat-num"><?= $revisiBlm ?></div><div class="stat-label">Revisi Belum Dibalas</div></div>
+          <div class="stat-card blue"><div class="stat-icon" aria-hidden="true"><?= icon('users', 22) ?></div><div class="stat-num"><?= $jumlahMhs ?></div><div class="stat-label">Mahasiswa Bimbingan</div></div>
+          <div class="stat-card gold"><div class="stat-icon" aria-hidden="true"><?= icon('clock', 22) ?></div><div class="stat-num"><?= $judulPending ?></div><div class="stat-label">Judul Menunggu Validasi</div></div>
+          <div class="stat-card green"><div class="stat-icon" aria-hidden="true"><?= icon('check-circle', 22) ?></div><div class="stat-num"><?= $sesiMingguIni ?></div><div class="stat-label">Sesi Minggu Ini</div></div>
+          <div class="stat-card red"><div class="stat-icon" aria-hidden="true"><?= icon('file', 22) ?></div><div class="stat-num"><?= $revisiBlm ?></div><div class="stat-label">Revisi Belum Dibalas</div></div>
         </div>
 
         <div class="grid-2">
@@ -302,8 +302,8 @@ include __DIR__ . '/includes/sidebar.php';
                   <tbody>
                     <?php foreach ($listMhs as $m): ?>
                       <tr>
-                        <td style="font-weight:500;"><?= e($m['nama_lengkap']) ?></td>
-                        <td class="mono" style="font-size:12px;"><?= e($m['nim']) ?></td>
+                        <td class="fw-500"><?= e($m['nama_lengkap']) ?></td>
+                        <td class="mono fs-12"><?= e($m['nim']) ?></td>
                         <td><?= $m['total_sesi'] ?></td>
                         <td><span class="badge <?= badge($m['status_skripsi']) ?>"><span class="badge-dot"></span><?= e(label($m['status_skripsi'])) ?></span></td>
                       </tr>
@@ -349,13 +349,13 @@ include __DIR__ . '/includes/sidebar.php';
         </div>
 
         <div class="stats-grid">
-          <div class="stat-card blue"><div class="stat-icon">🎒</div><div class="stat-num"><?= $totalMhs ?></div><div class="stat-label">Total Mahasiswa</div></div>
-          <div class="stat-card green"><div class="stat-icon">👨‍🏫</div><div class="stat-num"><?= $totalDosen ?></div><div class="stat-label">Dosen Pembimbing</div></div>
-          <div class="stat-card gold"><div class="stat-icon">📋</div><div class="stat-num"><?= $aktifSkrpsi ?></div><div class="stat-label">Skripsi Aktif</div></div>
-          <div class="stat-card red"><div class="stat-icon">⏳</div><div class="stat-num"><?= $pending ?></div><div class="stat-label">Akun Non-aktif</div></div>
+          <div class="stat-card blue"><div class="stat-icon" aria-hidden="true"><?= icon('users', 22) ?></div><div class="stat-num"><?= $totalMhs ?></div><div class="stat-label">Total Mahasiswa</div></div>
+          <div class="stat-card green"><div class="stat-icon" aria-hidden="true"><?= icon('user', 22) ?></div><div class="stat-num"><?= $totalDosen ?></div><div class="stat-label">Dosen Pembimbing</div></div>
+          <div class="stat-card gold"><div class="stat-icon" aria-hidden="true"><?= icon('clipboard', 22) ?></div><div class="stat-num"><?= $aktifSkrpsi ?></div><div class="stat-label">Skripsi Aktif</div></div>
+          <div class="stat-card red"><div class="stat-icon" aria-hidden="true"><?= icon('clock', 22) ?></div><div class="stat-num"><?= $pending ?></div><div class="stat-label">Akun Non-aktif</div></div>
         </div>
 
-        <div class="grid-2" style="margin-bottom:20px;">
+        <div class="grid-2 mb-20">
           <div class="card">
             <div class="card-header"><div class="card-title">Statistik per Program Studi</div></div>
             <div class="card-body">
@@ -365,7 +365,7 @@ include __DIR__ . '/includes/sidebar.php';
                   <tbody>
                     <?php foreach ($statsProdi as $p): ?>
                       <tr>
-                        <td style="font-weight:500;"><?= e($p['nama_prodi']) ?></td>
+                        <td class="fw-500"><?= e($p['nama_prodi']) ?></td>
                         <td><?= $p['total_mhs'] ?></td>
                         <td><?= $p['aktif'] ?></td>
                         <td><?= $p['selesai'] ?></td>

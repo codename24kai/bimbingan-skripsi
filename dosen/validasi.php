@@ -93,7 +93,7 @@ include __DIR__ . '/../includes/sidebar.php';
     </div>
     <?php foreach ($pending as $j): ?>
       <div class="validate-card">
-        <div class="mini-avatar"><?= strtoupper(substr($j['nama_mhs'],0,2)) ?></div>
+        <div class="mini-avatar"><?= e(inisial($j['nama_mhs'])) ?></div>
         <div class="validate-body">
           <div class="validate-title"><?= e($j['judul_indonesia']) ?></div>
           <div class="validate-mhs">👤 <?= e($j['nama_mhs']) ?> · NIM: <?= e($j['nim']) ?> · Diajukan: <?= tgl($j['tgl_pengajuan']) ?> · Iterasi: <?= $j['iterasi'] ?></div>
@@ -108,7 +108,7 @@ include __DIR__ . '/../includes/sidebar.php';
             <button name="aksi" value="setujui" class="btn btn-success btn-sm">✅ Setujui</button>
             <button name="aksi" value="revisi"  class="btn btn-warn btn-sm">✏️ Minta Revisi</button>
             <button name="aksi" value="tolak"   class="btn btn-danger btn-sm"
-              data-confirm="Yakin ingin menolak pengajuan ini?">❌ Tolak</button>
+              data-confirm="Tolak pengajuan judul <?= e($j['nama_mhs']) ?>? Mahasiswa harus mengajukan judul baru." data-confirm-ok="Tolak judul">❌ Tolak</button>
             <?php if ($j['file_proposal']): ?>
               <a href="<?= e(fileUrl($j['file_proposal'])) ?>" target="_blank" class="btn btn-secondary btn-sm">📄 Lihat Proposal</a>
             <?php endif; ?>
@@ -131,12 +131,12 @@ include __DIR__ . '/../includes/sidebar.php';
             <tbody>
               <?php foreach ($semua as $j): ?>
                 <tr>
-                  <td style="font-weight:500;"><?= e($j['nama_mhs']) ?></td>
+                  <td class="fw-500"><?= e($j['nama_mhs']) ?></td>
                   <td style="max-width:280px;font-size:13px;"><?= e(mb_strimwidth($j['judul_indonesia'],0,80,'...')) ?></td>
-                  <td style="font-size:13px;"><?= e($j['bidang_penelitian']) ?></td>
+                  <td class="fs-13"><?= e($j['bidang_penelitian']) ?></td>
                   <td><span class="badge <?= badge($j['status']) ?>"><span class="badge-dot"></span><?= e(label($j['status'])) ?></span></td>
-                  <td style="text-align:center;"><?= $j['iterasi'] ?></td>
-                  <td style="font-size:12px;color:var(--slate);"><?= tgl($j['tgl_pengajuan']) ?></td>
+                  <td class="text-center"><?= $j['iterasi'] ?></td>
+                  <td class="meta"><?= tgl($j['tgl_pengajuan']) ?></td>
                 </tr>
               <?php endforeach; ?>
             </tbody>

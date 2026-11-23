@@ -68,8 +68,7 @@ if ($role === 'mahasiswa') {
     $extra = fetchOne('SELECT d.*,ps.nama_prodi FROM dosen d JOIN program_studi ps ON ps.id_prodi=d.id_prodi WHERE d.id_dosen=?', [$eid]) ?? [];
 }
 
-$initials = implode('', array_map(fn($w) => strtoupper($w[0]), array_filter(explode(' ', $userDB['nama_lengkap']))));
-$initials = substr($initials, 0, 2);
+$initials = inisial($userDB['nama_lengkap']);
 
 include __DIR__ . '/includes/header.php';
 include __DIR__ . '/includes/sidebar.php';

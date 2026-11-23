@@ -1730,3 +1730,74 @@ a.avatar{text-decoration:none}
 .nav-item--locked:hover{background:transparent;color:inherit}
 .nav-hint{display:block;font-size:11px;color:var(--slate-on-dark);margin-top:2px;font-weight:400}
 .catatan-date{font-family:inherit;font-size:12px;color:var(--slate)}
+
+/* ============================================================
+   KOMPONEN (PR C)
+   ============================================================ */
+.icon{display:inline-block;vertical-align:middle;flex-shrink:0}
+.btn-icon{color:var(--navy);width:34px;height:34px}
+.btn-icon--danger{color:var(--danger-text)}
+.btn-icon--danger:hover{background:rgba(232,84,84,.1);border-color:rgba(232,84,84,.3)}
+.aksi-cell{text-align:right;white-space:nowrap}
+.aksi-cell form{display:inline}
+.btn-danger-solid{background:var(--danger-text);color:#fff;border:1px solid var(--danger-text)}
+.btn-danger-solid:hover{background:#951F18}
+
+/* Modal konfirmasi */
+.confirm-dialog{margin:auto;inset:0;position:fixed;height:fit-content;border:none;border-radius:16px;padding:28px;max-width:420px;width:calc(100vw - 32px);box-shadow:0 24px 60px rgba(11,31,58,.3);color:var(--navy)}
+.confirm-dialog::backdrop{background:rgba(11,31,58,.55)}
+.confirm-dialog h2{font-family:'Playfair Display',serif;font-size:20px;margin:12px 0 8px}
+.confirm-dialog p{font-size:14px;line-height:1.55;color:var(--slate);margin:0 0 22px;overflow-wrap:anywhere}
+.confirm-icon{width:44px;height:44px;border-radius:50%;background:rgba(232,84,84,.12);color:var(--danger-text);display:flex;align-items:center;justify-content:center}
+.confirm-actions{display:flex;justify-content:flex-end;gap:10px;flex-wrap:wrap}
+
+/* Status loading */
+.is-loading{pointer-events:none;opacity:.75;cursor:progress}
+.spinner{display:inline-block;width:14px;height:14px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;animation:spin .7s linear infinite;margin-right:8px;vertical-align:-2px}
+@keyframes spin{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.spinner{animation-duration:2s}}
+
+/* Area unggah */
+.upload-zone{padding:24px 16px}
+.upload-icon{color:var(--navy-light,var(--navy));font-size:0;margin-bottom:8px}
+.upload-input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer}
+.upload-zone:focus-within{outline:2px solid var(--info-text);outline-offset:2px}
+.upload-zone.is-drag{border-color:var(--gold);background:rgba(201,168,76,.08)}
+.upload-zone.has-file{border-style:solid;border-color:var(--success-text);background:rgba(46,204,138,.06)}
+.upload-zone.has-file .upload-label{color:var(--success-text);overflow-wrap:anywhere}
+
+/* Ikon navigasi & stat */
+.nav-icon{display:inline-flex;width:20px;justify-content:center}
+.stat-icon .icon{width:22px;height:22px}
+.notif-btn .icon{color:var(--navy)}
+.logout-btn .icon{width:16px;height:16px}
+.stat-card.blue .stat-icon{color:var(--info-text)}
+.stat-card.green .stat-icon{color:var(--success-text)}
+.stat-card.gold .stat-icon{color:var(--gold-text)}
+.stat-card.red .stat-icon{color:var(--danger-text)}
+
+/* Modal (dulu inline style) */
+.modal-overlay{position:fixed;inset:0;background:rgba(11,31,58,.6);z-index:1000;align-items:center;justify-content:center;padding:16px}
+.modal-box{background:var(--white);border-radius:var(--radius);padding:32px;width:100%;max-width:450px;box-shadow:var(--shadow-lg)}
+.modal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;gap:12px}
+.modal-title{font-family:'Playfair Display',serif;font-size:20px}
+.modal-close{background:none;border:none;font-size:22px;line-height:1;cursor:pointer;color:var(--slate);width:32px;height:32px;border-radius:6px}
+.modal-close:hover{background:var(--cream);color:var(--navy)}
+
+/* Utilitas teks & tata letak */
+.muted{color:var(--slate);font-size:13px}
+.meta{font-size:12px;color:var(--slate)}
+.meta-sm{font-size:11px;color:var(--slate)}
+.text-slate{color:var(--slate)}
+.req{color:var(--danger-text)}
+.text-right{text-align:right}
+.text-center{text-align:center}
+.fw-500{font-weight:500}
+.fs-12{font-size:12px}
+.fs-13{font-size:13px}
+.fs-14{font-size:14px}
+.inline{display:inline}
+.min-w-0{min-width:0}
+.mb-4{margin-bottom:4px}
+.mb-20{margin-bottom:20px}
+.row-10{display:flex;align-items:center;gap:10px}

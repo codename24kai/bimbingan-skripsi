@@ -104,7 +104,7 @@ include __DIR__ . '/../includes/sidebar.php';
   <div class="page-header"><h1>Catatan Bimbingan</h1><p>Tambah dan kelola catatan untuk mahasiswa bimbingan</p></div>
 
   <!-- Pilih mahasiswa -->
-  <div class="card" style="margin-bottom:20px;">
+  <div class="card mb-20">
     <div class="card-body" style="padding:16px 24px;">
       <form method="GET" style="display:flex;gap:12px;align-items:center;">
         <label for="f_id_bimbingan" class="form-label" style="margin:0;white-space:nowrap;">Pilih Mahasiswa:</label>

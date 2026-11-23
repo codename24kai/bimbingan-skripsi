@@ -74,7 +74,7 @@ include __DIR__ . '/../includes/sidebar.php';
     <div class="split" style="--side:340px;">
         <div class="form-card">
             <?php if ($judulDisetujui['usulan_dosen']): ?>
-                <div class="alert alert-static info" style="margin-bottom:20px;">
+                <div class="alert alert-static info mb-20">
                     <strong>⭐ Usulan Tersimpan:</strong> Anda telah mengusulkan <b><?= e($judulDisetujui['nama_dosen_usulan']) ?></b> sebagai pembimbing. Prodi akan meninjau ketersediaan kuota. Anda masih dapat mengubah usulan selama SK belum terbit.
                 </div>
             <?php endif; ?>

@@ -1,9 +1,7 @@
 <?php
 // includes/topbar.php
 $user     = currentUser();
-$initials = implode('', array_map(fn($w) => strtoupper($w[0]),
-              array_filter(explode(' ', $user['nama_lengkap'] ?? 'U'))));
-$initials = substr($initials, 0, 2);
+$initials = inisial($user['nama_lengkap'] ?? '');
 
 // Fetch latest 5 notifications
 $notifs = fetchAll(
@@ -27,7 +25,7 @@ $typeIcon = ['info'=>'ℹ️','sukses'=>'✅','peringatan'=>'⚠️','error'=>'�
     <!-- Notification button -->
     <button type="button" class="notif-btn" id="notifBtn"
             aria-label="Notifikasi<?= $unreadCount > 0 ? ', ' . $unreadCount . ' belum dibaca' : '' ?>">
-      🔔
+      <?= icon('bell', 18) ?>
       <?php if ($unreadCount > 0): ?>
         <span class="notif-count" aria-hidden="true"><?= $unreadCount > 99 ? '99+' : $unreadCount ?></span>
       <?php endif; ?>

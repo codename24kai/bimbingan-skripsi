@@ -157,13 +157,13 @@ include __DIR__ . '/../includes/sidebar.php';
   </div>
 
   <div class="stats-grid">
-    <div class="stat-card blue"><div class="stat-icon">📊</div><div class="stat-num"><?= $totalSesi ?></div><div class="stat-label">Total Sesi Selesai</div></div>
-    <div class="stat-card green"><div class="stat-icon">🎓</div><div class="stat-num"><?= $totalSelesai ?></div><div class="stat-label">Skripsi Selesai</div></div>
-    <div class="stat-card gold"><div class="stat-icon">⏱️</div><div class="stat-num"><?= $avgSesi ?></div><div class="stat-label">Rata-rata Sesi/Skripsi</div></div>
-    <div class="stat-card red"><div class="stat-icon">⚠️</div><div class="stat-num"><?= $terlambat ?></div><div class="stat-label">Mahasiswa Tidak Aktif 30hr</div></div>
+    <div class="stat-card blue"><div class="stat-icon" aria-hidden="true"><?= icon('chart', 22) ?></div><div class="stat-num"><?= $totalSesi ?></div><div class="stat-label">Total Sesi Selesai</div></div>
+    <div class="stat-card green"><div class="stat-icon" aria-hidden="true"><?= icon('graduation', 22) ?></div><div class="stat-num"><?= $totalSelesai ?></div><div class="stat-label">Skripsi Selesai</div></div>
+    <div class="stat-card gold"><div class="stat-icon" aria-hidden="true"><?= icon('clock', 22) ?></div><div class="stat-num"><?= $avgSesi ?></div><div class="stat-label">Rata-rata Sesi/Skripsi</div></div>
+    <div class="stat-card red"><div class="stat-icon" aria-hidden="true"><?= icon('alert', 22) ?></div><div class="stat-num"><?= $terlambat ?></div><div class="stat-label">Mahasiswa Tidak Aktif 30hr</div></div>
   </div>
 
-  <div class="grid-2" style="margin-bottom:20px;">
+  <div class="grid-2 mb-20">
     <div class="card">
       <div class="card-header"><div class="card-title">Rekap Bimbingan per Dosen</div></div>
       <div class="card-body">
@@ -173,7 +173,7 @@ include __DIR__ . '/../includes/sidebar.php';
             <tbody>
               <?php foreach ($rekapDosen as $r): ?>
                 <tr>
-                  <td style="font-weight:500;"><?= e($r['nama_lengkap']) ?></td>
+                  <td class="fw-500"><?= e($r['nama_lengkap']) ?></td>
                   <td><?= $r['jml_mhs'] ?></td>
                   <td><?= $r['total_sesi'] ?></td>
                   <td><?= $r['selesai'] ?></td>
@@ -194,7 +194,7 @@ include __DIR__ . '/../includes/sidebar.php';
           <?php foreach ($distribusiJudul as $d): ?>
             <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--cream-dark);">
               <span class="badge <?= badge($d['status']) ?>"><span class="badge-dot"></span><?= e(label($d['status'])) ?></span>
-              <div style="display:flex;align-items:center;gap:10px;">
+              <div class="row-10">
                 <div style="width:80px;"><div class="progress-bar"><div class="progress-fill blue" style="width:<?= $total > 0 ? round($d['n']/$total*100) : 0 ?>%"></div></div></div>
                 <strong><?= $d['n'] ?></strong>
               </div>
@@ -210,7 +210,7 @@ include __DIR__ . '/../includes/sidebar.php';
             <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--cream-dark);">
               <div>
                 <div style="font-size:14px;font-weight:500;"><?= e($m['nama_lengkap']) ?></div>
-                <div style="font-size:12px;color:var(--slate);"><?= e($m['nim']) ?></div>
+                <div class="meta"><?= e($m['nim']) ?></div>
               </div>
               <span class="badge danger" style="height:fit-content;"><span class="badge-dot"></span><?= $m['total_pending'] ?> pending</span>
             </div>
@@ -229,12 +229,12 @@ include __DIR__ . '/../includes/sidebar.php';
           <tbody>
             <?php foreach ($logAktivitas as $log): ?>
               <tr>
-                <td class="mono" style="font-size:12px;"><?= tgl($log['created_at'], 'tglblnjam') ?></td>
-                <td style="font-weight:500;"><?= e($log['nama_lengkap']) ?></td>
+                <td class="mono fs-12"><?= tgl($log['created_at'], 'tglblnjam') ?></td>
+                <td class="fw-500"><?= e($log['nama_lengkap']) ?></td>
                 <td><span class="badge neutral"><?= e(label($log['role'])) ?></span></td>
-                <td style="font-size:13px;"><?= e($log['judul']) ?></td>
+                <td class="fs-13"><?= e($log['judul']) ?></td>
                 <td><span class="badge <?= badge($log['tipe']) ?>"><span class="badge-dot"></span><?= e(label($log['tipe'])) ?></span></td>
-                <td style="font-size:12px;color:var(--slate);"><?= e($log['modul'] ?? '—') ?></td>
+                <td class="meta"><?= e($log['modul'] ?? '—') ?></td>
               </tr>
             <?php endforeach; ?>
           </tbody>

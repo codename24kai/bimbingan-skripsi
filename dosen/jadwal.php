@@ -114,16 +114,16 @@ include __DIR__ . '/../includes/sidebar.php';
         <?php else: ?>
           <?php foreach ($pending as $p): ?>
             <div class="sesi-item">
-              <div style="min-width:0;">
-                <div style="font-size:14px;font-weight:600;"><?= e($p['nama_mhs']) ?> <span style="font-size:12px;color:var(--slate);">(<?= e($p['nim']) ?>)</span></div>
-                <div style="font-size:13px;margin-top:3px;"><strong><?= tgl($p['tgl_sesi'].' '.$p['waktu_mulai'], 'harijam') ?></strong> <span style="color:var(--slate);">· <?= tglRelatif($p['tgl_sesi']) ?></span></div>
+              <div class="min-w-0">
+                <div style="font-size:14px;font-weight:600;"><?= e($p['nama_mhs']) ?> <span class="meta">(<?= e($p['nim']) ?>)</span></div>
+                <div style="font-size:13px;margin-top:3px;"><strong><?= tgl($p['tgl_sesi'].' '.$p['waktu_mulai'], 'harijam') ?></strong> <span class="text-slate">· <?= tglRelatif($p['tgl_sesi']) ?></span></div>
                 <div style="font-size:13px;margin-top:3px;"><?= e($p['topik']) ?></div>
                 <div style="font-size:12px;color:var(--slate);margin-top:3px;"><?= (int)$p['durasi_menit'] ?> menit · <?= e(label($p['metode'])) ?><?= $p['lokasi_link'] ? ' · ' . e($p['lokasi_link']) : '' ?></div>
               </div>
               <form method="POST" class="sesi-aksi"><?= csrfField() ?>
                 <input type="hidden" name="id_sesi" value="<?= $p['id_sesi'] ?>">
                 <button name="aksi" value="terima" class="btn btn-success btn-sm">Terima</button>
-                <button name="aksi" value="tolak" class="btn btn-danger btn-sm" onclick="return confirm('Tolak jadwal ini? Mahasiswa akan diminta mengajukan jadwal lain.')">Tolak</button>
+                <button name="aksi" value="tolak" class="btn btn-danger btn-sm" data-confirm="Tolak jadwal ini? Mahasiswa akan diminta mengajukan jadwal lain." data-confirm-ok="Tolak jadwal">Tolak</button>
               </form>
             </div>
           <?php endforeach; ?>
@@ -142,16 +142,16 @@ include __DIR__ . '/../includes/sidebar.php';
         <?php else: ?>
           <?php foreach ($terkonfirm as $p): ?>
             <div class="sesi-item">
-              <div style="min-width:0;">
+              <div class="min-w-0">
                 <div style="font-size:14px;font-weight:600;"><?= e($p['nama_mhs']) ?></div>
-                <div style="font-size:13px;margin-top:3px;"><strong><?= tgl($p['tgl_sesi'].' '.$p['waktu_mulai'], 'harijam') ?></strong> <span style="color:var(--slate);">· <?= tglRelatif($p['tgl_sesi']) ?></span></div>
+                <div style="font-size:13px;margin-top:3px;"><strong><?= tgl($p['tgl_sesi'].' '.$p['waktu_mulai'], 'harijam') ?></strong> <span class="text-slate">· <?= tglRelatif($p['tgl_sesi']) ?></span></div>
                 <div style="font-size:13px;margin-top:3px;"><?= e($p['topik']) ?></div>
                 <div style="font-size:12px;color:var(--slate);margin-top:3px;"><?= (int)$p['durasi_menit'] ?> menit · <?= e(label($p['metode'])) ?><?= $p['lokasi_link'] ? ' · ' . e($p['lokasi_link']) : '' ?></div>
               </div>
               <form method="POST" class="sesi-aksi"><?= csrfField() ?>
                 <input type="hidden" name="id_sesi" value="<?= $p['id_sesi'] ?>">
                 <a href="<?= BASE_URL ?>/dosen/catatan.php?id_bimbingan=<?= (int)$p['id_bimbingan'] ?>" class="btn btn-secondary btn-sm">Tulis catatan</a>
-                <button name="aksi" value="tolak" class="btn btn-danger btn-sm" onclick="return confirm('Batalkan jadwal yang sudah dikonfirmasi? Mahasiswa akan diberi tahu.')">Batalkan</button>
+                <button name="aksi" value="tolak" class="btn btn-danger btn-sm" data-confirm="Batalkan jadwal yang sudah dikonfirmasi? Mahasiswa akan diberi tahu." data-confirm-ok="Batalkan jadwal">Batalkan</button>
               </form>
             </div>
           <?php endforeach; ?>

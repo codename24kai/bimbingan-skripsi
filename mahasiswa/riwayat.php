@@ -45,7 +45,7 @@ include __DIR__ . '/../includes/sidebar.php';
   </div>
 
   <?php if (!empty($akanDatang)): ?>
-    <div class="card" style="margin-bottom:20px;">
+    <div class="card mb-20">
       <div class="card-header">
         <div class="card-title">Akan Datang</div>
         <a href="<?= BASE_URL ?>/mahasiswa/bimbingan.php" style="font-size:13px;color:var(--info-text);text-decoration:underline;">Kelola jadwal</a>
@@ -53,7 +53,7 @@ include __DIR__ . '/../includes/sidebar.php';
       <div class="card-body">
         <?php foreach ($akanDatang as $a): ?>
           <div class="sesi-item">
-            <div style="min-width:0;">
+            <div class="min-w-0">
               <div style="font-size:14px;font-weight:600;"><?= e($a['topik']) ?></div>
               <div style="font-size:13px;color:var(--slate);margin-top:3px;"><?= tgl($a['tgl_sesi'].' '.$a['waktu_mulai'], 'harijam') ?> · <?= tglRelatif($a['tgl_sesi']) ?> · <?= e(label($a['metode'])) ?></div>
             </div>
@@ -87,9 +87,9 @@ include __DIR__ . '/../includes/sidebar.php';
                 <span class="badge <?= badge($r['keputusan']) ?>"><span class="badge-dot"></span>Keputusan: <?= e(mb_strtolower(label($r['keputusan']))) ?></span>
               <?php endif; ?>
               <?php if ($r['durasi_menit']): ?>
-                <span style="font-size:12px;color:var(--slate);"><?= (int)$r['durasi_menit'] ?> menit</span>
+                <span class="meta"><?= (int)$r['durasi_menit'] ?> menit</span>
               <?php endif; ?>
-              <span style="font-size:12px;color:var(--slate);"><?= e(label($r['metode'])) ?></span>
+              <span class="meta"><?= e(label($r['metode'])) ?></span>
               <?php if ($r['bab_terkait']): ?>
                 <span class="badge neutral"><?= e(label($r['bab_terkait'])) ?></span>
               <?php endif; ?>
@@ -100,7 +100,7 @@ include __DIR__ . '/../includes/sidebar.php';
         <?php if ($r['isi_catatan']): ?>
           <div class="catatan-text"><strong>Catatan Dosen:</strong> <?= e($r['isi_catatan']) ?></div>
         <?php else: ?>
-          <div class="catatan-text" style="color:var(--slate);"><?= $r['status']==='batal' ? 'Sesi ini dibatalkan.' : 'Dosen belum menulis catatan untuk sesi ini.' ?></div>
+          <div class="catatan-text text-slate"><?= $r['status']==='batal' ? 'Sesi ini dibatalkan.' : 'Dosen belum menulis catatan untuk sesi ini.' ?></div>
         <?php endif; ?>
       </div>
     <?php endforeach; ?>
