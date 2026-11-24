@@ -83,6 +83,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <div class="login-card">
       <h2>Selamat Datang 👋</h2>
       <p>Masuk ke portal khusus <b>Mahasiswa</b></p>
+      <?= tampilFlash() ?>
 
       <?php if ($error): ?>
         <div class="alert alert-static danger">⚠️ <?= htmlspecialchars($error) ?></div>
@@ -164,5 +165,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     });
 </script>
+<script>document.addEventListener("click",function(e){var t=e.target.closest("[data-tutup]");if(t){var b=t.closest(".alert,.status-card");if(b)b.remove();}});</script>
 </body>
 </html>

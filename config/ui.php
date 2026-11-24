@@ -71,3 +71,35 @@ function uploadZone(string $name, string $label, string $accept, string $hint, b
         . ($required ? ' required' : '') . ' class="upload-input">'
         . '</div>';
 }
+
+/**
+ * Pesan flash + kotak kredensial (password awal / hasil reset).
+ * Semua pesan TETAP tampil sampai pengguna menutupnya (tombol ×), tidak
+ * pernah hilang sendiri, supaya informasi penting tidak lenyap sebelum terbaca.
+ */
+function tampilFlash(): string {
+    $html = '';
+    $k = $_SESSION['kredensial'] ?? null;
+    unset($_SESSION['kredensial']);
+    if ($k) {
+        $html .= '<div class="status-card status-card--blok status-card--success mb-20 kredensial" role="alert">'
+            . '<button type="button" class="alert-close" data-tutup aria-label="Tutup">' . icon('x', 16) . '</button>'
+            . '<div class="status-card__title">' . e($k['judul']) . '</div>'
+            . '<p class="fs-14">' . e($k['nama']) . ' · login dengan <b>' . e($k['login']) . '</b></p>'
+            . '<p class="fs-14">Kata sandi:</p>'
+            . '<div class="sandi-box mono">' . e($k['sandi']) . '</div>'
+            . '<button type="button" class="btn btn-secondary btn-sm" data-salin="' . e($k['sandi']) . '">' . icon('clipboard', 14) . ' Salin</button>'
+            . '<p class="fs-13 text-slate" style="margin-top:8px;">Sampaikan langsung ke pengguna. Pengguna wajib menggantinya saat login pertama. '
+            . 'Kotak ini tidak ditampilkan lagi setelah halaman dimuat ulang.</p>'
+            . '</div>';
+    }
+    $f = getFlash();
+    if ($f) {
+        $tipe = in_array($f['type'], ['success', 'danger', 'warning', 'info'], true) ? $f['type'] : 'info';
+        $html .= '<div class="alert ' . $tipe . '" role="' . ($tipe === 'danger' ? 'alert' : 'status') . '">'
+            . '<span class="alert-msg">' . e($f['msg']) . '</span>'
+            . '<button type="button" class="alert-close" data-tutup aria-label="Tutup pesan">' . icon('x', 16) . '</button>'
+            . '</div>';
+    }
+    return $html;
+}

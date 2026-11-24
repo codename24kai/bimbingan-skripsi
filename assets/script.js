@@ -26,14 +26,30 @@ document.addEventListener('click', (e) => {
   }
 });
 
-// ── Flash auto-dismiss ─────────────────────────
-setTimeout(() => {
-  document.querySelectorAll('.alert:not(.alert-static)').forEach(el => {
-    el.style.transition = 'opacity .5s';
-    el.style.opacity = '0';
-    setTimeout(() => el.remove(), 500);
-  });
-}, 4000);
+// ── Pesan flash: tidak hilang sendiri, ditutup lewat tombol × ─────
+// (Dulu pesan hilang setelah 4 detik sehingga info penting seperti
+// kata sandi hasil reset bisa lenyap sebelum terbaca.)
+document.addEventListener('click', (e) => {
+  const tutup = e.target.closest('[data-tutup]');
+  if (tutup) {
+    tutup.closest('.alert, .status-card')?.remove();
+    return;
+  }
+  const salin = e.target.closest('[data-salin]');
+  if (salin) {
+    const teks = salin.dataset.salin;
+    const selesai = () => { salin.textContent = 'Tersalin'; };
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(teks).then(selesai, () => {});
+    } else {
+      // Fallback untuk http://localhost tanpa Clipboard API
+      const t = document.createElement('textarea');
+      t.value = teks; document.body.appendChild(t); t.select();
+      try { document.execCommand('copy'); selesai(); } catch (_) {}
+      t.remove();
+    }
+  }
+});
 
 // ── Modal konfirmasi (pengganti confirm() bawaan browser) ─────────
 // Pakai: <form data-confirm="Pesan" data-confirm-ok="Hapus"> atau pada tombol submit.

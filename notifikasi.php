@@ -4,10 +4,7 @@ require_once __DIR__ . '/config/app.php';
 require_once __DIR__ . '/config/db.php';
 require_once __DIR__ . '/config/auth.php';
 
-if (!isLoggedIn()) {
-    header('Location: ' . BASE_URL . '/index.php');
-    exit;
-}
+requireLogin();
 
 $pageTitle  = 'Semua Notifikasi';
 $activePage = 'notifikasi'; 
@@ -19,6 +16,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
     if ($aksi === 'tandai_semua') {
         execute('UPDATE notifikasi SET is_read = 1 WHERE id_user = ?', [$id_user]);
+        // Dari panel lonceng: kembali ke halaman asal (hanya path relatif aplikasi)
+        $kembali = (string)($_POST['kembali'] ?? '');
+        if ($kembali !== '' && preg_match('~^[A-Za-z0-9_/-]+\.php(\?[^\s#]*)?$~', $kembali) && !str_contains($kembali, '..')) {
+            header('Location: ' . BASE_URL . '/' . $kembali);
+            exit;
+        }
         setFlash('success', 'Semua notifikasi telah ditandai sebagai dibaca.');
     } elseif ($aksi === 'hapus') {
         $id_notif = (int)$_POST['id_notif'];
@@ -27,6 +30,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     
     header('Location: ' . BASE_URL . '/notifikasi.php');
+    exit;
+}
+
+// Klik notifikasi: tandai dibaca lalu buka halaman tujuannya
+if (isset($_GET['buka'])) {
+    $n = fetchOne('SELECT id_notif, tautan FROM notifikasi WHERE id_notif = ? AND id_user = ?', [(int)$_GET['buka'], $id_user]);
+    if ($n) {
+        execute('UPDATE notifikasi SET is_read = 1 WHERE id_notif = ?', [$n['id_notif']]);
+        $tn = tautanNotif($n['tautan'] ?? null);
+        if ($tn) {
+            header('Location: ' . $tn[0]);
+            exit;
+        }
+    }
+    header('Location: ' . BASE_URL . '/notifikasi.php' . ($n ? '#n' . (int)$n['id_notif'] : ''));
     exit;
 }
 
@@ -50,9 +68,7 @@ include __DIR__ . '/includes/sidebar.php';
         <?php include __DIR__ . '/includes/topbar.php'; ?>
         
         <div class="content">
-            <?php $flash = getFlash(); if ($flash): ?>
-                <div class="alert <?= $flash['type'] ?>"><?= e($flash['msg']) ?></div>
-            <?php endif; ?>
+            <?= tampilFlash() ?>
 
             <div class="page-header" style="display: flex; justify-content: space-between; align-items: center;">
                 <div>
@@ -83,7 +99,7 @@ include __DIR__ . '/includes/sidebar.php';
                             <?php foreach ($semua_notif as $n): 
                                 $isUnread = $n['is_read'] == 0;
                             ?>
-                                <div style="display: flex; align-items: flex-start; gap: 16px; padding: 20px; border-bottom: 1px solid var(--cream-dark); background-color: <?= $isUnread ? 'rgba(74, 144, 217, 0.04)' : 'transparent' ?>;">
+                                <div id="n<?= (int)$n['id_notif'] ?>" style="display: flex; align-items: flex-start; gap: 16px; padding: 20px; border-bottom: 1px solid var(--cream-dark); background-color: <?= $isUnread ? 'rgba(74, 144, 217, 0.04)' : 'transparent' ?>;">
                                     
                                     <div style="font-size: 24px; flex-shrink: 0;">
                                         <?= $typeIcon[$n['tipe']] ?? 'ℹ️' ?>
@@ -105,7 +121,7 @@ include __DIR__ . '/includes/sidebar.php';
                                         
                                         <?php if ($tn = tautanNotif($n['tautan'] ?? null)): ?>
                                             <div style="margin-bottom: 12px;">
-                                                <a href="<?= e($tn[0]) ?>" class="btn btn-primary" style="font-size: 11px; padding: 6px 12px; text-decoration: none; display: inline-flex; gap: 6px;">
+                                                <a href="<?= BASE_URL ?>/notifikasi.php?buka=<?= (int)$n['id_notif'] ?>" class="btn btn-primary" style="font-size: 11px; padding: 6px 12px; text-decoration: none; display: inline-flex; gap: 6px;">
                                                     <?= e($tn[1]) ?>
                                                 </a>
                                             </div>

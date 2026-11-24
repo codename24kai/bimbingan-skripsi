@@ -2038,3 +2038,15 @@ body.beranda{background:var(--cream)}
 .beranda-alur p{font-size:13px;color:var(--slate);margin-top:4px;line-height:1.5}
 .beranda-kaki{text-align:center;padding:24px 16px;font-size:13px;color:var(--slate)}
 @media (max-width:768px){.beranda-hero{grid-template-columns:minmax(0,1fr)}}
+
+/* Flash: tetap tampil sampai ditutup */
+.alert .alert-msg{flex:1;min-width:0}
+.alert-close{margin-left:auto;flex-shrink:0;background:none;border:0;color:inherit;opacity:.7;cursor:pointer;padding:4px;border-radius:6px;display:inline-flex;line-height:0}
+.alert-close:hover,.alert-close:focus-visible{opacity:1;background:rgba(0,0,0,.06)}
+.kredensial{position:relative;padding-right:48px}
+.kredensial .alert-close{position:absolute;top:12px;right:12px}
+
+/* Panel notifikasi */
+.notif-panel-header form{margin:0}
+.notif-panel-header button.link-btn{background:none;border:0;padding:0;font:inherit;font-size:12px;color:var(--info-text);font-weight:500;cursor:pointer}
+.notif-panel-header .notif-panel-aksi{display:flex;gap:12px;align-items:center}
