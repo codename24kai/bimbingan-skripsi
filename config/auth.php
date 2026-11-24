@@ -163,7 +163,7 @@ function requireLogin(): void {
         header('Location: ' . BASE_URL . '/index.php');
         exit;
     }
-    // Tabel fitur baru wajib ada (database/migrasi_2026_11_fitur.sql)
+    // Tabel fitur baru wajib ada (database/db_bimbingan_skripsi.sql versi terbaru)
     wajibMigrasiFitur();
     // Paksa ganti password bawaan sebelum bisa membuka halaman lain
     if (!empty($_SESSION['must_change_password'])) {

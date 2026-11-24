@@ -29,7 +29,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $mhsOk   = countRows('SELECT COUNT(*) FROM mahasiswa m JOIN user u ON u.id_user=m.id_user WHERE m.id_mahasiswa=? AND u.status="aktif"', [$id_mhs]);
 
         if (!skSiap()) {
-            setFlash('danger', 'Gagal: jalankan dulu database/migrasi_2026_11_sk.sql di phpMyAdmin agar SK bisa terbit otomatis.');
+            setFlash('danger', 'Gagal: database masih versi lama. Impor ulang database/db_bimbingan_skripsi.sql di phpMyAdmin agar SK bisa terbit otomatis.');
         } elseif ($existing > 0) {
             setFlash('danger', 'Gagal: Mahasiswa tersebut sudah memiliki relasi bimbingan yang masih aktif.');
         } elseif (!$mhsOk) {
@@ -76,7 +76,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif ($aksi === 'buat_ulang_sk') {
         $idB = (int)($_POST['id_bimbingan'] ?? 0);
         if (!skSiap()) {
-            setFlash('danger', 'Gagal: jalankan dulu database/migrasi_2026_11_sk.sql di phpMyAdmin.');
+            setFlash('danger', 'Gagal: database masih versi lama. Impor ulang database/db_bimbingan_skripsi.sql di phpMyAdmin.');
         } elseif (!countRows('SELECT COUNT(*) FROM bimbingan WHERE id_bimbingan=?', [$idB])) {
             setFlash('danger', 'Relasi bimbingan tidak ditemukan.');
         } else {
@@ -180,7 +180,7 @@ include __DIR__ . '/../includes/sidebar.php';
 <div class="content">
   <?= tampilFlash() ?>
   <?php if (!$skSiap): ?>
-    <div class="alert alert-static danger">Database belum diperbarui untuk SK otomatis. Buka phpMyAdmin, pilih database <b><?= e(DB_NAME) ?></b>, lalu jalankan file <code>database/migrasi_2026_11_sk.sql</code> di tab SQL.</div>
+    <div class="alert alert-static danger">Database belum mendukung SK otomatis. Buka phpMyAdmin, lalu impor ulang file <code>database/db_bimbingan_skripsi.sql</code> ke database <b><?= e(DB_NAME) ?></b>.</div>
   <?php endif; ?>
   
   <div class="page-header" style="display:flex; justify-content:space-between; align-items:flex-end;">

@@ -2,7 +2,7 @@
 // ============================================================
 //  config/sk.php — Penerbitan SK Bimbingan otomatis:
 //  nomor SK berurutan per tahun, kode verifikasi, dan file PDF.
-//  Butuh migrasi database/migrasi_2026_11_sk.sql.
+//  Butuh tabel sk_nomor & kolom SK di database/db_bimbingan_skripsi.sql.
 // ============================================================
 require_once __DIR__ . '/pdf.php';
 

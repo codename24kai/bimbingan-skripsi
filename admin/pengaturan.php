@@ -60,7 +60,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 foreach ($settings as $key => $val) {
                     execute("UPDATE pengaturan SET nilai_value = ? WHERE nama_key = ?", [$val, $key]);
                 }
-                // Pengaturan fitur baru (ditambah oleh migrasi_2026_11_fitur.sql)
+                // Pengaturan fitur baru (kontak prodi & batas tidak aktif)
                 simpanPengaturan('kontak_prodi', mb_substr(trim($_POST['kontak_prodi'] ?? ''), 0, 500));
                 simpanPengaturan('batas_tidak_aktif_hari', (string)max(7, min(180, (int)($_POST['batas_tidak_aktif_hari'] ?? 30))));
                 $db->commit();
