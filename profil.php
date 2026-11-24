@@ -147,16 +147,16 @@ include __DIR__ . '/includes/sidebar.php';
           <?php $mustChange = !empty($_SESSION['must_change_password']); ?>
           <div class="form-group">
             <label for="f_old_password" class="form-label">Password Lama<?= $mustChange ? '' : ' (wajib jika mengganti password)' ?></label>
-            <input id="f_old_password" class="form-input" type="password" name="old_password" placeholder="••••••••" autocomplete="current-password"<?= $mustChange ? ' required' : '' ?>>
+            <?= inputSandi('f_old_password', 'old_password', 'placeholder="••••••••" autocomplete="current-password"' . ($mustChange ? ' required' : '')) ?>
           </div>
           <div class="form-row">
             <div class="form-group">
               <label for="f_new_password" class="form-label">Password Baru<?= $mustChange ? '' : ' (kosongkan jika tidak diganti)' ?></label>
-              <input id="f_new_password" class="form-input" type="password" name="new_password" placeholder="Minimal <?= MIN_PASSWORD_LENGTH ?> karakter" minlength="<?= MIN_PASSWORD_LENGTH ?>" autocomplete="new-password"<?= $mustChange ? ' required' : '' ?>>
+              <?= inputSandi('f_new_password', 'new_password', 'placeholder="Minimal ' . MIN_PASSWORD_LENGTH . ' karakter" minlength="' . MIN_PASSWORD_LENGTH . '" autocomplete="new-password"' . ($mustChange ? ' required' : '')) ?>
             </div>
             <div class="form-group">
               <label for="f_confirm_password" class="form-label">Konfirmasi Password Baru</label>
-              <input id="f_confirm_password" class="form-input" type="password" name="confirm_password" placeholder="••••••••" autocomplete="new-password"<?= $mustChange ? ' required' : '' ?>>
+              <?= inputSandi('f_confirm_password', 'confirm_password', 'placeholder="••••••••" autocomplete="new-password"' . ($mustChange ? ' required' : '')) ?>
             </div>
           </div>
         </div>
