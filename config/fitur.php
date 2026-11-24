@@ -26,7 +26,7 @@ function tautanNotif(?string $tautan): ?array {
     return [BASE_URL . '/' . ltrim($tautan, '/'), 'Buka'];
 }
 
-/** Cek tabel ada (dipakai untuk memberi tahu jika migrasi belum dijalankan). */
+/** Cek tabel ada (dipakai untuk memberi tahu jika database masih versi lama). */
 function tabelAda(string $nama): bool {
     static $cache = [];
     if (!isset($cache[$nama])) {
@@ -37,13 +37,13 @@ function tabelAda(string $nama): bool {
     return $cache[$nama];
 }
 
-/** Hentikan halaman dengan pesan ramah jika migrasi fitur belum dijalankan. */
+/** Hentikan halaman dengan pesan ramah jika database masih versi lama. */
 function wajibMigrasiFitur(): void {
     if (tabelAda('pengumuman')) return;
     http_response_code(500);
     exit('<div style="font-family:sans-serif;max-width:560px;margin:60px auto;line-height:1.6">'
-        . '<h2>Database belum diperbarui</h2><p>Fitur ini membutuhkan tabel baru. Buka phpMyAdmin, pilih database '
-        . '<b>' . e(DB_NAME) . '</b>, lalu jalankan file <code>database/migrasi_2026_11_fitur.sql</code> di tab SQL.</p>'
+        . '<h2>Database belum diperbarui</h2><p>Fitur ini membutuhkan tabel baru. Buka phpMyAdmin, lalu impor ulang file '
+        . '<code>database/db_bimbingan_skripsi.sql</code> (tab Import) ke database <b>' . e(DB_NAME) . '</b>.</p>'
         . '<p><a href="' . BASE_URL . '/dashboard.php">Kembali ke dashboard</a></p></div>');
 }
 

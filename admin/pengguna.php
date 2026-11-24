@@ -1,7 +1,6 @@
 <?php
 // admin/pengguna.php — Kelola akun mahasiswa dan dosen dalam satu halaman.
-// Tab dipilih lewat ?peran=mahasiswa|dosen. Menggantikan admin/mahasiswa.php
-// dan admin/dosen.php (keduanya kini hanya mengalihkan ke sini).
+// Tab dipilih lewat ?peran=mahasiswa|dosen.
 require_once __DIR__ . '/../config/app.php';
 require_once __DIR__ . '/../config/db.php';
 require_once __DIR__ . '/../config/auth.php';
