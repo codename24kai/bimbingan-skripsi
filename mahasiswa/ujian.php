@@ -41,7 +41,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $bimbingan && $bimbingan['status'] 
             'info', 'ujian', 'dosen/ujian.php');
         setFlash('success', 'Pendaftaran terkirim. Menunggu persetujuan dosen pembimbing.');
     } catch (Exception $ex) {
-        setFlash('danger', $ex->getMessage());
+        setFlash('danger', pesanGalat($ex, ''));
     }
     header('Location: ' . BASE_URL . '/mahasiswa/ujian.php');
     exit;
@@ -63,7 +63,7 @@ include __DIR__ . '/../includes/sidebar.php';
 <div class="layout"><main class="main">
 <?php include __DIR__ . '/../includes/topbar.php'; ?>
 <div class="content">
-  <?php $flash = getFlash(); if ($flash): ?><div class="alert <?= e($flash['type']) ?>"><?= e($flash['msg']) ?></div><?php endif; ?>
+  <?= tampilFlash() ?>
   <div class="page-header"><h1>Seminar & Sidang</h1><p>Daftar seminar proposal dan sidang akhir, lalu pantau jadwal, penguji, dan hasilnya</p></div>
 
   <?php if (!$bimbingan): ?>

@@ -26,7 +26,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $isAdmin) {
                 [mb_substr($nama, 0, 150), $kat, mb_substr($ket, 0, 255) ?: null, $path, (int)ceil(($_FILES['file']['size'] ?? 0) / 1024)]);
             setFlash('success', 'Template berhasil ditambahkan.');
         } catch (Exception $ex) {
-            setFlash('danger', $ex->getMessage());
+            setFlash('danger', pesanGalat($ex, ''));
         }
     } elseif ($aksi === 'hapus') {
         $t = fetchOne('SELECT file_path FROM template_dokumen WHERE id_template=?', [(int)($_POST['id_template'] ?? 0)]);
@@ -56,7 +56,7 @@ include __DIR__ . '/../includes/sidebar.php';
 <div class="layout"><main class="main">
 <?php include __DIR__ . '/../includes/topbar.php'; ?>
 <div class="content">
-  <?php $flash = getFlash(); if ($flash): ?><div class="alert <?= e($flash['type']) ?>"><?= e($flash['msg']) ?></div><?php endif; ?>
+  <?= tampilFlash() ?>
 
   <div class="page-header">
     <h1>Template Dokumen</h1>

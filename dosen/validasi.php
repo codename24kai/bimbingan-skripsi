@@ -20,10 +20,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                        JOIN user u ON u.id_user=m.id_user
                        WHERE j.id_judul=?
                          AND EXISTS (SELECT 1 FROM bimbingan b
-                                     WHERE b.id_mahasiswa = j.id_mahasiswa AND b.id_dosen = ?)', [$id_judul, $eid]);
+                                     WHERE b.id_mahasiswa = j.id_mahasiswa AND b.id_dosen = ? AND b.status = "aktif")', [$id_judul, $eid]);
 
     if (!$judul) {
         setFlash('danger', 'Pengajuan judul tidak ditemukan atau bukan milik mahasiswa bimbingan Anda.');
+        header('Location: ' . BASE_URL . '/dosen/validasi.php');
+        exit;
+    }
+    // Judul yang sudah final (disetujui/ditolak) atau sedang direvisi tidak boleh diubah lagi
+    if ($judul['status'] !== 'diajukan') {
+        setFlash('danger', 'Judul ini sudah berstatus "' . label($judul['status']) . '" dan tidak bisa divalidasi ulang.');
+        header('Location: ' . BASE_URL . '/dosen/validasi.php');
+        exit;
+    }
+    if (!in_array($aksi, ['setujui', 'revisi', 'tolak'], true)) {
+        setFlash('danger', 'Aksi tidak dikenal.');
         header('Location: ' . BASE_URL . '/dosen/validasi.php');
         exit;
     }
@@ -31,21 +42,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($judul) {
         if ($aksi === 'setujui') {
             execute('UPDATE judul_skripsi SET status="disetujui" WHERE id_judul=?', [$id_judul]);
-            execute('INSERT INTO notifikasi (id_user,judul,pesan,tipe,modul) VALUES (?,?,?,?,?)',
+            execute('INSERT INTO notifikasi (id_user,judul,pesan,tipe,modul,tautan) VALUES (?,?,?,?,?,"mahasiswa/pengajuan.php")',
                 [$judul['id_user_mhs'], 'Judul Skripsi Disetujui',
                  'Selamat! Judul skripsi Anda telah disetujui oleh dosen pembimbing.','sukses','judul']);
             setFlash('success', 'Judul berhasil disetujui.');
 
         } elseif ($aksi === 'revisi') {
             execute('UPDATE judul_skripsi SET status="revisi",iterasi=iterasi+1 WHERE id_judul=?', [$id_judul]);
-            execute('INSERT INTO notifikasi (id_user,judul,pesan,tipe,modul) VALUES (?,?,?,?,?)',
+            execute('INSERT INTO notifikasi (id_user,judul,pesan,tipe,modul,tautan) VALUES (?,?,?,?,?,"mahasiswa/pengajuan.php")',
                 [$judul['id_user_mhs'], 'Judul Perlu Direvisi',
                  'Dosen meminta revisi atas pengajuan judul Anda.','peringatan','judul']);
             setFlash('warning', 'Pengajuan dikembalikan untuk direvisi.');
 
         } elseif ($aksi === 'tolak') {
             execute('UPDATE judul_skripsi SET status="ditolak" WHERE id_judul=?', [$id_judul]);
-            execute('INSERT INTO notifikasi (id_user,judul,pesan,tipe,modul) VALUES (?,?,?,?,?)',
+            execute('INSERT INTO notifikasi (id_user,judul,pesan,tipe,modul,tautan) VALUES (?,?,?,?,?,"mahasiswa/pengajuan.php")',
                 [$judul['id_user_mhs'], 'Judul Ditolak',
                  'Maaf, pengajuan judul Anda ditolak. Silakan ajukan judul baru.','error','judul']);
             setFlash('danger', 'Pengajuan judul ditolak.');
@@ -61,7 +72,7 @@ $pending = fetchAll(
      JOIN mahasiswa m ON m.id_mahasiswa=j.id_mahasiswa
      JOIN user u ON u.id_user=m.id_user
      JOIN bimbingan b ON b.id_mahasiswa=m.id_mahasiswa
-     WHERE b.id_dosen=? AND j.status="diajukan"
+     WHERE b.id_dosen=? AND b.status="aktif" AND j.status="diajukan"
      ORDER BY j.tgl_pengajuan ASC', [$eid]
 );
 
@@ -81,7 +92,7 @@ include __DIR__ . '/../includes/sidebar.php';
 <div class="layout"><main class="main">
 <?php include __DIR__ . '/../includes/topbar.php'; ?>
 <div class="content">
-  <?php $flash = getFlash(); if ($flash): ?><div class="alert <?= $flash['type'] ?>"><?= e($flash['msg']) ?></div><?php endif; ?>
+  <?= tampilFlash() ?>
   <div class="page-header">
     <h1>Validasi Judul Skripsi</h1>
     <p>Tinjau dan berikan keputusan atas pengajuan judul mahasiswa bimbingan</p>

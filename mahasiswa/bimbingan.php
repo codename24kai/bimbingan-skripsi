@@ -20,7 +20,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $bimbingan && ($_POST['aksi'] ?? ''
     try {
         // Kunci baris slot agar dua mahasiswa tidak memesan kursi terakhir bersamaan
         $slot = fetchOne('SELECT * FROM slot_dosen WHERE id_slot=? AND id_dosen=? AND tgl >= CURDATE() FOR UPDATE', [$idSlot, $bimbingan['id_dosen']]);
-        if (!$slot) throw new Exception('Slot tidak ditemukan atau sudah lewat.');
+        if (!$slot || strtotime($slot['tgl'] . ' ' . $slot['jam_mulai']) < time()) throw new Exception('Slot tidak ditemukan atau sudah lewat.');
         if ($topik === '') throw new Exception('Isi topik yang akan dibahas.');
         $terisi = countRows('SELECT COUNT(*) FROM sesi_bimbingan WHERE id_slot=? AND status IN ("dijadwalkan","dikonfirmasi","selesai")', [$idSlot]);
         if ($terisi >= $slot['kuota']) throw new Exception('Slot sudah penuh. Pilih slot lain.');
@@ -37,9 +37,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $bimbingan && ($_POST['aksi'] ?? ''
             (currentUser()['nama_lengkap'] ?? 'Mahasiswa') . ' memesan slot ' . tgl($slot['tgl'] . ' ' . $slot['jam_mulai'], 'harijam') . '. Topik: ' . mb_strimwidth($topik, 0, 100, '…'),
             'info', 'jadwal', 'dosen/jadwal.php');
         setFlash('success', 'Slot berhasil dipesan dan langsung terkonfirmasi.');
-    } catch (Exception $ex) {
-        $db->rollBack();
-        setFlash('danger', $ex->getMessage());
+    } catch (Throwable $ex) {
+        if ($db->inTransaction()) $db->rollBack();
+        setFlash('danger', pesanGalat($ex));
     }
     header('Location: ' . BASE_URL . '/mahasiswa/bimbingan.php');
     exit;
@@ -57,8 +57,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $bimbingan) {
     if (!in_array($durasi, [30,45,60], true)) $durasi = 45;
     if (!$tgl || !$waktu || !$topik) {
         setFlash('danger', 'Tanggal, waktu, dan topik bimbingan wajib diisi.');
-    } elseif ($tgl < date('Y-m-d')) {
-        setFlash('danger', 'Tanggal bimbingan tidak boleh di masa lalu.');
+    } elseif (!tanggalValid($tgl) || !jamValid($waktu)) {
+        setFlash('danger', 'Format tanggal atau jam tidak valid.');
+    } elseif (strtotime($tgl . ' ' . $waktu) < time()) {
+        setFlash('danger', 'Waktu bimbingan tidak boleh di masa lalu.');
+    } elseif (mb_strlen($topik) > 1000) {
+        setFlash('danger', 'Topik bimbingan maksimal 1.000 karakter.');
+    } elseif (countRows('SELECT COUNT(*) FROM sesi_bimbingan WHERE id_bimbingan=? AND tgl_sesi=? AND status IN ("dijadwalkan","dikonfirmasi")', [$bimbingan['id_bimbingan'], $tgl])) {
+        setFlash('danger', 'Anda sudah punya jadwal bimbingan pada tanggal tersebut.');
     } else {
         execute('INSERT INTO sesi_bimbingan (id_bimbingan,tgl_sesi,waktu_mulai,durasi_menit,topik,metode,status)
                  VALUES (?,?,?,?,?,?,"dijadwalkan")',
@@ -67,7 +73,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $bimbingan) {
         // Notif dosen
         $dosenUser = fetchOne('SELECT id_user FROM dosen WHERE id_dosen=?', [$bimbingan['id_dosen']]);
         if ($dosenUser) {
-            execute('INSERT INTO notifikasi (id_user,judul,pesan,tipe,modul) VALUES (?,?,?,?,?)',
+            execute('INSERT INTO notifikasi (id_user,judul,pesan,tipe,modul,tautan) VALUES (?,?,?,?,?,"dosen/jadwal.php")',
                 [$dosenUser['id_user'], 'Permintaan Jadwal Bimbingan',
                  'Mahasiswa mengajukan sesi bimbingan pada ' . tgl($tgl . ' ' . $waktu, 'harijam') . '. Buka Jadwal Konsultasi untuk menerima atau menolak.',
                  'info', 'jadwal']);
@@ -101,7 +107,7 @@ include __DIR__ . '/../includes/sidebar.php';
 <div class="layout"><main class="main">
 <?php include __DIR__ . '/../includes/topbar.php'; ?>
 <div class="content">
-  <?php $flash = getFlash(); if ($flash): ?><div class="alert <?= $flash['type'] ?>"><?= e($flash['msg']) ?></div><?php endif; ?>
+  <?= tampilFlash() ?>
   <div class="page-header"><h1>Jadwal Bimbingan</h1><p>Ajukan jadwal konsultasi dengan dosen pembimbing</p></div>
 
   <?php if (!$bimbingan): ?>

@@ -15,20 +15,30 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-// Password bawaan untuk akun baru / data contoh. Pengguna yang login dengan
-// salah satu password ini wajib menggantinya sebelum memakai sistem.
+// Password bawaan data contoh lama. Pengguna yang login dengan salah satu
+// password ini wajib menggantinya sebelum memakai sistem.
 const DEFAULT_PASSWORDS = ['mhs123', 'dosen123', 'admin123', 'mahasiswa123'];
 const MIN_PASSWORD_LENGTH = 8;
-// Password sementara hasil reset admin selalu diawali prefix ini, sehingga
-// pengguna wajib menggantinya saat login pertama (tanpa perlu kolom baru).
+// Password awal akun baru dan hasil reset admin: "uab#" + 6 digit terakhir
+// NIM (mahasiswa) atau NIP (dosen), mis. NIM 231011400123 → uab#400123.
+const PASSWORD_AWAL_PREFIX = 'uab#';
+// Password sementara acak lama (untuk akun tanpa NIM/NIP, mis. admin).
 const TEMP_PASSWORD_PREFIX = 'Reset-';
 
-function isDefaultOrTempPassword(string $password): bool {
-    return in_array($password, DEFAULT_PASSWORDS, true)
-        || str_starts_with($password, TEMP_PASSWORD_PREFIX);
+/** Password awal dari nomor induk: uab# + 6 digit terakhir (dipadatkan 0 di depan bila kurang). */
+function passwordAwal(string $nomorInduk): string {
+    $digit = preg_replace('/\D/', '', $nomorInduk);
+    return PASSWORD_AWAL_PREFIX . str_pad(substr($digit, -6), 6, '0', STR_PAD_LEFT);
 }
 
-/** Buat password sementara acak, mis. "Reset-k7Qm2xPa". */
+/** True jika password adalah password bawaan / awal / sementara yang wajib diganti. */
+function isDefaultOrTempPassword(string $password): bool {
+    return in_array($password, DEFAULT_PASSWORDS, true)
+        || str_starts_with($password, TEMP_PASSWORD_PREFIX)
+        || preg_match('/^uab#\d{6}$/i', $password) === 1;
+}
+
+/** Buat password sementara acak, mis. "Reset-k7Qm2xPa" (hanya untuk akun tanpa NIM/NIP). */
 function generateTempPassword(): string {
     $chars = 'abcdefghijkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789';
     $out = '';
@@ -39,17 +49,30 @@ function generateTempPassword(): string {
 }
 
 /**
- * Reset password user dengan role tertentu menjadi password sementara.
- * Mengembalikan password sementara, atau null jika user tidak ditemukan.
+ * Reset password user ke password awal (uab# + 6 digit terakhir NIM/NIP).
+ * Akun tanpa nomor induk (admin) mendapat password sementara acak.
+ * Mengembalikan password baru, atau null jika user tidak ditemukan.
  */
 function resetUserPassword(int $idUser, string $role): ?string {
-    $user = fetchOne('SELECT id_user FROM user WHERE id_user=? AND role=?', [$idUser, $role]);
+    $user = fetchOne(
+        'SELECT u.id_user, COALESCE(m.nim, d.nip) AS nomor FROM user u
+         LEFT JOIN mahasiswa m ON m.id_user = u.id_user
+         LEFT JOIN dosen d ON d.id_user = u.id_user
+         WHERE u.id_user=? AND u.role=?', [$idUser, $role]);
     if (!$user) {
         return null;
     }
-    $temp = generateTempPassword();
-    execute('UPDATE user SET password_hash=? WHERE id_user=?', [hashPassword($temp), $idUser]);
-    return $temp;
+    $baru = preg_match('/\d/', (string)$user['nomor']) ? passwordAwal((string)$user['nomor']) : generateTempPassword();
+    execute('UPDATE user SET password_hash=? WHERE id_user=?', [hashPassword($baru), $idUser]);
+    return $baru;
+}
+
+/**
+ * Simpan kredensial untuk ditampilkan sekali di halaman berikutnya dalam kotak
+ * yang TIDAK hilang otomatis (lihat tampilFlash() di config/ui.php).
+ */
+function setKredensial(string $judul, string $nama, string $login, string $sandi): void {
+    $_SESSION['kredensial'] = ['judul' => $judul, 'nama' => $nama, 'login' => $login, 'sandi' => $sandi];
 }
 
 // ── CSRF ─────────────────────────────────────────────────────
@@ -131,13 +154,22 @@ function requireLogin(): void {
         header('Location: ' . BASE_URL . '/index.php');
         exit;
     }
+    // Akun yang dinonaktifkan / dihapus admin langsung keluar dari sesi aktifnya
+    $akun = fetchOne('SELECT status, role FROM user WHERE id_user=?', [userId()]);
+    if (!$akun || $akun['status'] !== 'aktif' || $akun['role'] !== ($_SESSION['role'] ?? '')) {
+        $_SESSION = [];
+        session_regenerate_id(true);
+        setFlash('danger', 'Sesi Anda berakhir karena akun dinonaktifkan atau dihapus. Hubungi bagian akademik.');
+        header('Location: ' . BASE_URL . '/index.php');
+        exit;
+    }
     // Tabel fitur baru wajib ada (database/migrasi_2026_11_fitur.sql)
     wajibMigrasiFitur();
     // Paksa ganti password bawaan sebelum bisa membuka halaman lain
     if (!empty($_SESSION['must_change_password'])) {
         $script = basename($_SERVER['SCRIPT_NAME'] ?? '');
         if (!in_array($script, ['profil.php', 'logout.php'], true)) {
-            $_SESSION['flash'] = ['type' => 'warning', 'msg' => 'Anda masih memakai password bawaan. Silakan ganti password terlebih dahulu.'];
+            $_SESSION['flash'] = ['type' => 'warning', 'msg' => 'Anda masih memakai password awal/bawaan. Silakan ganti password terlebih dahulu.'];
             header('Location: ' . BASE_URL . '/profil.php');
             exit;
         }
@@ -209,6 +241,30 @@ function badge(string $status): string {
     ];
     return $map[$status] ?? 'neutral';
 }
+
+/**
+ * Pesan galat yang aman ditampilkan. Galat database tidak pernah ditampilkan
+ * mentah (bisa membocorkan struktur tabel); detailnya dicatat ke log server.
+ */
+function pesanGalat(Throwable $e, string $awalan = 'Gagal'): string {
+    if ($e instanceof PDOException) {
+        error_log('[SkripsiKu] ' . $e->getMessage());
+        if (($e->errorInfo[1] ?? 0) === 1062) {
+            return ($awalan === '' ? 'Gagal' : $awalan) . ': data yang sama sudah terdaftar (mis. email, NIM, atau NIP). Periksa kembali isian Anda.';
+        }
+        return ($awalan === '' ? 'Gagal' : $awalan) . ': terjadi kesalahan pada database. Coba lagi atau hubungi admin.';
+    }
+    return $awalan === '' ? $e->getMessage() : $awalan . ': ' . $e->getMessage();
+}
+
+// Galat yang tidak tertangkap: tampilkan halaman ramah, bukan pesan SQL mentah.
+set_exception_handler(function (Throwable $e) {
+    error_log('[SkripsiKu] ' . $e);
+    if (!headers_sent()) http_response_code(500);
+    echo '<div style="font-family:sans-serif;max-width:560px;margin:60px auto;line-height:1.6">'
+       . '<h2>Terjadi kesalahan</h2><p>Permintaan Anda tidak dapat diproses. Periksa kembali isian Anda lalu coba lagi. '
+       . 'Jika masalah berlanjut, hubungi admin.</p><p><a href="javascript:history.back()">Kembali</a></p></div>';
+});
 
 function e(?string $s): string {
     return htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8');

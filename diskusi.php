@@ -52,6 +52,10 @@ $idsVersi = array_column($versi, 'id_dokumen');
 $ph = implode(',', array_fill(0, count($idsVersi), '?'));
 $versiDari = array_column($versi, 'versi', 'id_dokumen');
 
+// Utas dibuka = semua pesan baru di bab ini (versi mana pun) sudah dibaca.
+// Badge angka di tombol diskusi dan lonceng notifikasi memakai data yang sama.
+tandaiNotifDibaca(array_map(fn($id) => 'diskusi.php?dok=' . $id, $idsVersi));
+
 $revisi = fetchAll("SELECT r.*, d.versi FROM revisi r JOIN dokumen d ON d.id_dokumen = r.id_dokumen
                     WHERE r.id_dokumen IN ($ph) ORDER BY r.tgl_revisi", $idsVersi);
 $komentar = fetchAll("SELECT k.*, u.nama_lengkap, u.role FROM komentar_dokumen k JOIN user u ON u.id_user = k.id_user
@@ -76,7 +80,7 @@ include __DIR__ . '/includes/sidebar.php';
 <div class="layout"><main class="main">
 <?php include __DIR__ . '/includes/topbar.php'; ?>
 <div class="content">
-  <?php $flash = getFlash(); if ($flash): ?><div class="alert <?= e($flash['type']) ?>"><?= e($flash['msg']) ?></div><?php endif; ?>
+  <?= tampilFlash() ?>
 
   <a class="link fs-13" href="<?= BASE_URL . '/' . $kembali ?>">&larr; Kembali</a>
   <div class="page-header" style="margin-top:8px;">

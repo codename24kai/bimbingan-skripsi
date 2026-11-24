@@ -17,9 +17,8 @@ const WAJIB_IMPOR = [
     'mahasiswa' => ['nama_lengkap', 'email', 'nim', 'angkatan', 'kode_prodi'],
     'dosen'     => ['nama_lengkap', 'email', 'nip', 'kode_prodi'],
 ];
-const JABATAN = ['Tenaga Pengajar', 'Asisten Ahli', 'Lektor', 'Lektor Kepala', 'Guru Besar'];
-const KEAHLIAN = ['Rekayasa Perangkat Lunak & Web', 'Pemrograman Mobile', 'Kecerdasan Buatan & Machine Learning', 'Data Science & Analitik',
-                  'Internet of Things (IoT)', 'Keamanan Siber & Jaringan', 'Manajemen Sistem Informasi'];
+const JABATAN = JABATAN_DOSEN;
+const KEAHLIAN = KEAHLIAN_DOSEN;
 
 // Unduh contoh CSV
 if (isset($_GET['contoh']) && isset(KOLOM_IMPOR[$_GET['contoh']])) {
@@ -66,11 +65,13 @@ function cekBaris(array $r, string $jenis, array $prodi, array &$sudah): array {
     if (!isset($prodi[strtoupper($r['kode_prodi'] ?? '')])) $masalah[] = 'kode_prodi tidak dikenal';
     if ($jenis === 'mahasiswa') {
         $nim = $r['nim'] ?? '';
-        if ($nim && !preg_match('/^[0-9A-Za-z.\-]{5,20}$/', $nim)) $masalah[] = 'format NIM';
+        if ($nim && (!preg_match('/^[0-9A-Za-z.\-]{5,20}$/', $nim) || !preg_match('/\d/', $nim))) $masalah[] = 'format NIM';
         if ($nim && (isset($sudah['no'][$nim]) || countRows('SELECT COUNT(*) FROM mahasiswa WHERE nim=?', [$nim]))) $masalah[] = 'NIM sudah terdaftar';
         if (($r['angkatan'] ?? '') !== '' && !preg_match('/^(19|20)\d{2}$/', $r['angkatan'])) $masalah[] = 'angkatan harus 4 digit tahun';
     } else {
         $nip = $r['nip'] ?? '';
+        if ($nip && (!preg_match('/^[0-9A-Za-z.\-]{5,20}$/', $nip) || !preg_match('/\d/', $nip))) $masalah[] = 'format NIP';
+        if (($r['kuota_bimbingan'] ?? '') !== '' && !ctype_digit($r['kuota_bimbingan'])) $masalah[] = 'kuota_bimbingan harus angka';
         if ($nip && (isset($sudah['no'][$nip]) || countRows('SELECT COUNT(*) FROM dosen WHERE nip=?', [$nip]))) $masalah[] = 'NIP sudah terdaftar';
         if (($r['jabatan_fungsional'] ?? '') !== '' && !in_array($r['jabatan_fungsional'], JABATAN, true)) $masalah[] = 'jabatan_fungsional tidak dikenal';
         if (($r['keahlian'] ?? '') !== '' && !in_array($r['keahlian'], KEAHLIAN, true)) $masalah[] = 'keahlian tidak dikenal';
@@ -109,7 +110,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     try {
                         $db->beginTransaction();
                         $idUser = execute('INSERT INTO user (nama_lengkap,email,password_hash,role,status) VALUES (?,?,?,?,"aktif")',
-                            [mb_substr($r['nama_lengkap'], 0, 100), strtolower($r['email']), hashPassword($jenis === 'mahasiswa' ? 'mhs123' : 'dosen123'), $jenis]);
+                            [mb_substr($r['nama_lengkap'], 0, 100), strtolower($r['email']), hashPassword(passwordAwal($jenis === 'mahasiswa' ? $r['nim'] : $r['nip'])), $jenis]);
                         $idProdi = $prodi[strtoupper($r['kode_prodi'])];
                         if ($jenis === 'mahasiswa') {
                             execute('INSERT INTO mahasiswa (id_user,id_prodi,nim,angkatan,status_skripsi,no_telepon) VALUES (?,?,?,?,"belum",?)',
@@ -130,7 +131,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
             if ($simpan) {
                 setFlash($hasil['ok'] ? 'success' : 'warning', $hasil['ok'] . ' akun ' . $jenis . ' berhasil diimpor' . ($hasil['gagal'] ? ', ' . $hasil['gagal'] . ' baris dilewati.' : '.')
-                    . ' Kata sandi awal: ' . ($jenis === 'mahasiswa' ? 'mhs123' : 'dosen123') . ' (wajib diganti saat login).');
+                    . ' Kata sandi awal tiap akun: uab# + 6 digit terakhir ' . ($jenis === 'mahasiswa' ? 'NIM' : 'NIP') . ' (wajib diganti saat login pertama).');
             }
         }
     }
@@ -151,7 +152,7 @@ include __DIR__ . '/../includes/sidebar.php';
 <div class="layout"><main class="main">
 <?php include __DIR__ . '/../includes/topbar.php'; ?>
 <div class="content">
-  <?php $flash = getFlash(); if ($flash): ?><div class="alert <?= e($flash['type']) ?>"><?= e($flash['msg']) ?></div><?php endif; ?>
+  <?= tampilFlash() ?>
   <div class="page-header"><h1>Impor Data</h1><p>Tambahkan banyak akun mahasiswa atau dosen sekaligus dari file CSV</p></div>
 
   <div class="split" style="--side:360px;">
@@ -217,7 +218,7 @@ include __DIR__ . '/../includes/sidebar.php';
         </div>
         <div class="row-10" style="flex-wrap:wrap;">
           <button class="btn btn-secondary" name="aksi" value="cek">Cek dulu</button>
-          <button class="btn btn-gold" name="aksi" value="impor" data-confirm="Impor semua baris yang valid? Akun langsung aktif dengan kata sandi bawaan." data-confirm-ok="Impor" data-confirm-tone="primary">Impor sekarang</button>
+          <button class="btn btn-gold" name="aksi" value="impor" data-confirm="Impor semua baris yang valid? Akun langsung aktif dengan kata sandi awal uab# + 6 digit terakhir NIM/NIP." data-confirm-ok="Impor" data-confirm-tone="primary">Impor sekarang</button>
         </div>
       </form>
     </div>

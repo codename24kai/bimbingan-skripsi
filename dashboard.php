@@ -146,9 +146,7 @@ include __DIR__ . '/includes/sidebar.php';
     <?php include __DIR__ . '/includes/topbar.php'; ?>
     <div class="content">
 
-      <?php $flash = getFlash(); if ($flash): ?>
-        <div class="alert <?= $flash['type'] ?>"><?= e($flash['msg']) ?></div>
-      <?php endif; ?>
+      <?= tampilFlash() ?>
 
       <?php if (!empty($pengumuman)): ?>
         <section class="card pengumuman-ringkas mb-20" aria-label="Pengumuman">

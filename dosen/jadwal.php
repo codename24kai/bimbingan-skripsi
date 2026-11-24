@@ -30,14 +30,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if ($aksi === 'terima' && $sesi['status'] === 'dijadwalkan') {
         execute('UPDATE sesi_bimbingan SET status="dikonfirmasi" WHERE id_sesi=?', [$id_sesi]);
-        execute('INSERT INTO notifikasi (id_user,judul,pesan,tipe,modul) VALUES (?,?,?,?,?)',
+        execute('INSERT INTO notifikasi (id_user,judul,pesan,tipe,modul,tautan) VALUES (?,?,?,?,?,"mahasiswa/bimbingan.php")',
             [$sesi['id_user_mhs'], 'Jadwal Bimbingan Dikonfirmasi',
              'Dosen mengonfirmasi jadwal bimbingan Anda pada ' . tgl($sesi['tgl_sesi'].' '.$sesi['waktu_mulai'], 'harijam') . '.',
              'sukses', 'jadwal']);
         setFlash('success', 'Jadwal dikonfirmasi. Sesi dipindahkan ke daftar Jadwal Terkonfirmasi.');
     } elseif ($aksi === 'tolak' && in_array($sesi['status'], ['dijadwalkan', 'dikonfirmasi'], true)) {
         execute('UPDATE sesi_bimbingan SET status="batal" WHERE id_sesi=?', [$id_sesi]);
-        execute('INSERT INTO notifikasi (id_user,judul,pesan,tipe,modul) VALUES (?,?,?,?,?)',
+        execute('INSERT INTO notifikasi (id_user,judul,pesan,tipe,modul,tautan) VALUES (?,?,?,?,?,"mahasiswa/bimbingan.php")',
             [$sesi['id_user_mhs'], 'Jadwal Bimbingan Dibatalkan',
              'Dosen membatalkan jadwal bimbingan pada ' . tgl($sesi['tgl_sesi'], 'hari') . '. Silakan ajukan jadwal lain.',
              'peringatan', 'jadwal']);
@@ -89,7 +89,7 @@ include __DIR__ . '/../includes/sidebar.php';
 <div class="layout"><main class="main">
 <?php include __DIR__ . '/../includes/topbar.php'; ?>
 <div class="content">
-  <?php $flash = getFlash(); if ($flash): ?><div class="alert <?= $flash['type'] ?>"><?= e($flash['msg']) ?></div><?php endif; ?>
+  <?= tampilFlash() ?>
   <div class="page-header"><h1>Jadwal Konsultasi</h1><p>Kelola permintaan dan konfirmasi jadwal bimbingan mahasiswa</p></div>
 
   <?php if (!empty($perluCatatan)): ?>

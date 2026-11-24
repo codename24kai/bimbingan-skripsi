@@ -26,8 +26,8 @@ $faq = [
         ['Jadwal saya belum dikonfirmasi dosen, apa yang harus dilakukan?', 'Pilih slot konsultasi yang dibuka dosen agar langsung terkonfirmasi. Jika tetap tidak ada slot, tanyakan melalui diskusi dokumen atau hubungi dosen langsung.'],
     ],
     'Akun' => [
-        ['Saya lupa kata sandi.', 'Klik "Lupa kata sandi?" di halaman login, isi email dan NIM atau NIP. Admin akan membuat kata sandi sementara dan menyampaikannya langsung kepada Anda.'],
-        ['Mengapa saya diminta mengganti kata sandi saat login?', 'Akun baru dan akun yang direset admin memakai kata sandi sementara. Demi keamanan, Anda wajib menggantinya dengan kata sandi minimal 8 karakter.'],
+        ['Saya lupa kata sandi.', 'Klik "Lupa kata sandi?" di halaman login, isi email dan NIM atau NIP. Admin akan mereset kata sandi Anda ke kata sandi awal (uab# + 6 digit terakhir NIM/NIP) dan memberi tahu Anda.'],
+        ['Mengapa saya diminta mengganti kata sandi saat login?', 'Akun baru dan akun yang direset admin memakai kata sandi awal uab# + 6 digit terakhir NIM/NIP yang mudah ditebak. Demi keamanan, Anda wajib menggantinya dengan kata sandi minimal 8 karakter.'],
         ['Data saya (nama, NIM, prodi) salah.', 'Nama dan nomor telepon bisa diubah di Profil Saya. NIM, prodi, dan email hanya bisa diubah admin.'],
     ],
 ];

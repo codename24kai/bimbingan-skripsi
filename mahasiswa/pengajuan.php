@@ -38,8 +38,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $metode      = trim($_POST['metode_penelitian'] ?? '');
     $latar       = trim($_POST['latar_belakang'] ?? '');
 
-    if (empty($judul_utama) || empty($judul_alt1) || empty($bidang) || empty($metode) || empty($latar)) {
+    $opsi = array_filter([mb_strtolower($judul_utama), mb_strtolower($judul_alt1), mb_strtolower($judul_alt2)]);
+    if (countRows('SELECT COUNT(*) FROM judul_skripsi WHERE id_mahasiswa=? AND status="diajukan"', [$eid])) {
+        setFlash('warning', 'Pengajuan Anda sebelumnya masih menunggu validasi. Tunggu hasilnya sebelum mengajukan lagi.');
+    } elseif (empty($judul_utama) || empty($judul_alt1) || empty($bidang) || empty($metode) || empty($latar)) {
         setFlash('danger', 'Judul Utama, Judul Alternatif 1, Bidang, Metode, dan Latar Belakang wajib diisi!');
+    } elseif (!in_array($bidang, KEAHLIAN_DOSEN, true) || !in_array($metode, METODE_PENELITIAN, true)) {
+        setFlash('danger', 'Bidang atau metode penelitian tidak valid. Pilih dari daftar yang tersedia.');
+    } elseif (max(array_map('mb_strlen', [$judul_utama, $judul_alt1, $judul_alt2])) > 300) {
+        setFlash('danger', 'Setiap judul maksimal 300 karakter.');
+    } elseif (count($opsi) !== count(array_unique($opsi))) {
+        setFlash('danger', 'Pilihan judul tidak boleh sama satu sama lain.');
     } else {
         $db = getDB();
         $db->beginTransaction();
@@ -84,12 +93,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             );
 
             $db->commit();
+            kirimNotifAdmin('Pengajuan judul baru', (currentUser()['nama_lengkap'] ?? 'Mahasiswa') . ' mengajukan judul: ' . mb_strimwidth($judul_utama, 0, 120, '…'),
+                'info', 'judul', 'admin/validasi_judul.php');
             setFlash('success', 'Pengajuan dengan opsi judul berhasil dikirim! Menunggu verifikasi Kaprodi.');
             header('Location: ' . BASE_URL . '/mahasiswa/pengajuan.php');
             exit;
-        } catch (\Exception $e) {
-            $db->rollBack();
-            setFlash('danger', 'Gagal: ' . $e->getMessage());
+        } catch (\Throwable $e) {
+            if ($db->inTransaction()) $db->rollBack();
+            // Jangan tinggalkan file yatim jika pengajuan gagal disimpan
+            hapusUpload($filePathProposal ?? null);
+            hapusUpload($filePathTranskrip ?? null);
+            setFlash('danger', pesanGalat($e));
         }
     }
 }
@@ -101,9 +115,7 @@ include __DIR__ . '/../includes/sidebar.php';
 <?php include __DIR__ . '/../includes/topbar.php'; ?>
 <div class="content">
 
-  <?php $flash = getFlash(); if ($flash): ?>
-    <div class="alert <?= $flash['type'] ?>"><?= e($flash['msg']) ?></div>
-  <?php endif; ?>
+  <?= tampilFlash() ?>
 
   <div class="page-header">
     <h1>Pengajuan Judul Skripsi</h1>
@@ -226,6 +238,16 @@ include __DIR__ . '/../includes/sidebar.php';
 
   <?php else: ?>
     <div class="split" style="--side:340px; margin-top:20px;">
+      <?php $menungguValidasi = array_filter($riwayat, fn($r) => $r['status'] === 'diajukan'); ?>
+      <?php if ($menungguValidasi): ?>
+      <div class="status-card status-card--info" style="height:fit-content;">
+        <div class="status-card__icon"><?= icon('clock', 26) ?></div>
+        <div class="min-w-0" style="flex:1;">
+          <div class="status-card__title">Pengajuan sedang divalidasi</div>
+          <div class="muted">Pengajuan judul Anda menunggu keputusan Kaprodi/dosen. Formulir dibuka lagi bila pengajuan ditolak atau diminta revisi.</div>
+        </div>
+      </div>
+      <?php else: ?>
       <div class="form-card">
           <h2>Formulir Pengajuan Judul</h2>
           <p style="color:var(--slate); font-size:13px; margin-bottom:20px;">Isi minimal 2 pilihan judul. Dosen akan memilih atau meminta revisi.</p>
@@ -240,12 +262,12 @@ include __DIR__ . '/../includes/sidebar.php';
             <div class="form-row">
                 <div class="form-group">
                   <label for="f_judul_alternatif_1" class="form-label">Judul Cadangan 1 <span class="req" aria-hidden="true">*</span></label>
-                  <input id="f_judul_alternatif_1" class="form-input" name="judul_alternatif_1" required placeholder="Pilihan judul kedua" data-cek-judul="cekJudulAlt1">
+                  <input id="f_judul_alternatif_1" class="form-input" name="judul_alternatif_1" required placeholder="Pilihan judul kedua" value="<?= e($_POST['judul_alternatif_1'] ?? '') ?>" data-cek-judul="cekJudulAlt1">
                   <div id="cekJudulAlt1" class="cek-judul" aria-live="polite"></div>
                 </div>
                 <div class="form-group">
                   <label for="f_judul_alternatif_2" class="form-label">Judul Cadangan 2 <span style="font-weight:400;color:var(--slate);">(opsional)</span></label>
-                  <input id="f_judul_alternatif_2" class="form-input" name="judul_alternatif_2" placeholder="Pilihan judul ketiga" data-cek-judul="cekJudulAlt2">
+                  <input id="f_judul_alternatif_2" class="form-input" name="judul_alternatif_2" placeholder="Pilihan judul ketiga" value="<?= e($_POST['judul_alternatif_2'] ?? '') ?>" data-cek-judul="cekJudulAlt2">
                   <div id="cekJudulAlt2" class="cek-judul" aria-live="polite"></div>
                 </div>
             </div>
@@ -255,8 +277,8 @@ include __DIR__ . '/../includes/sidebar.php';
                 <label for="f_bidang_penelitian" class="form-label">Konsentrasi / Bidang Ilmu <span class="req" aria-hidden="true">*</span></label>
                 <select id="f_bidang_penelitian" class="form-input" name="bidang_penelitian" required>
                   <option value="" disabled selected>Pilih Bidang...</option>
-                  <?php foreach (['Rekayasa Perangkat Lunak & Web','Pemrograman Mobile','Kecerdasan Buatan & Machine Learning','Data Science & Analitik','Internet of Things (IoT)','Keamanan Siber & Jaringan','Manajemen Sistem Informasi'] as $b): ?>
-                    <option value="<?= $b ?>"><?= $b ?></option>
+                  <?php foreach (KEAHLIAN_DOSEN as $b): ?>
+                    <option value="<?= e($b) ?>" <?= ($_POST['bidang_penelitian'] ?? '') === $b ? 'selected' : '' ?>><?= e($b) ?></option>
                   <?php endforeach; ?>
                 </select>
               </div>
@@ -264,8 +286,8 @@ include __DIR__ . '/../includes/sidebar.php';
                 <label for="f_metode_penelitian" class="form-label">Metode Penelitian <span class="req" aria-hidden="true">*</span></label>
                 <select id="f_metode_penelitian" class="form-input" name="metode_penelitian" required>
                   <option value="" disabled selected>Pilih Metode...</option>
-                  <?php foreach (['Agile Software Development','Waterfall Model','RAD (Rapid Application Development)','Prototyping','CRISP-DM (Data Science)','Riset Eksperimental','Kuantitatif','Kualitatif','Lainnya'] as $m): ?>
-                    <option value="<?= $m ?>"><?= $m ?></option>
+                  <?php foreach (METODE_PENELITIAN as $m): ?>
+                    <option value="<?= e($m) ?>" <?= ($_POST['metode_penelitian'] ?? '') === $m ? 'selected' : '' ?>><?= e($m) ?></option>
                   <?php endforeach; ?>
                 </select>
               </div>
@@ -273,7 +295,7 @@ include __DIR__ . '/../includes/sidebar.php';
 
             <div class="form-group">
               <label for="f_latar_belakang" class="form-label">Latar Belakang Singkat <span class="req" aria-hidden="true">*</span></label>
-              <textarea id="f_latar_belakang" class="form-input" name="latar_belakang" required rows="5" placeholder="Jelaskan masalah yang ingin Anda selesaikan dan mengapa penting. Cukup satu ringkasan untuk semua pilihan judul."></textarea>
+              <textarea id="f_latar_belakang" class="form-input" name="latar_belakang" required rows="5" placeholder="Jelaskan masalah yang ingin Anda selesaikan dan mengapa penting. Cukup satu ringkasan untuk semua pilihan judul."><?= e($_POST['latar_belakang'] ?? '') ?></textarea>
             </div>
 
             <div class="form-row">
@@ -292,6 +314,7 @@ include __DIR__ . '/../includes/sidebar.php';
             </div>
           </form>
       </div>
+      <?php endif; ?>
       <div>
       <div class="card">
         <div class="card-header"><div class="card-title">Riwayat Pengajuan</div></div>

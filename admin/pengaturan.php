@@ -67,7 +67,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 setFlash('success', 'Konfigurasi umum berhasil disimpan.');
             } catch (\Exception $e) {
                 $db->rollBack();
-                setFlash('danger', 'Gagal menyimpan pengaturan: ' . $e->getMessage());
+                setFlash('danger', pesanGalat($e, 'Gagal menyimpan pengaturan'));
             }
         }
 
@@ -127,7 +127,7 @@ include __DIR__ . '/../includes/sidebar.php';
 <div class="layout"><main class="main">
 <?php include __DIR__ . '/../includes/topbar.php'; ?>
 <div class="content">
-  <?php $flash = getFlash(); if ($flash): ?><div class="alert <?= $flash['type'] ?>"><?= e($flash['msg']) ?></div><?php endif; ?>
+  <?= tampilFlash() ?>
   
   <div class="page-header">
       <h1>Pengaturan Sistem</h1>
