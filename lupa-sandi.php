@@ -1,6 +1,6 @@
 <?php
 // lupa-sandi.php — Permintaan reset kata sandi ke admin (D3).
-// Tidak memakai email: admin membuat kata sandi sementara lalu menyampaikannya langsung.
+// Tidak memakai email: admin mereset ke kata sandi awal (uab# + 6 digit terakhir NIM/NIP).
 require_once __DIR__ . '/config/app.php';
 require_once __DIR__ . '/config/db.php';
 require_once __DIR__ . '/config/auth.php';
@@ -69,13 +69,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <?php if ($terkirim): ?>
       <div class="status-card status-card--blok status-card--success" style="margin-top:16px;">
         <div class="status-card__title">Permintaan terkirim</div>
-        <p class="fs-14" style="line-height:1.6;">Jika email dan NIM/NIP cocok, admin akan membuat kata sandi sementara. Ambil kata sandi tersebut langsung di bagian akademik atau tunggu dihubungi. Setelah login, Anda akan diminta membuat kata sandi baru.</p>
+        <p class="fs-14" style="line-height:1.6;">Jika email dan NIM/NIP cocok, admin akan mereset kata sandi Anda ke kata sandi awal (uab# + 6 digit terakhir NIM/NIP). Tunggu konfirmasi dari bagian akademik. Setelah login, Anda akan diminta membuat kata sandi baru.</p>
       </div>
       <?php $kontak = tabelAda('pengumuman') ? pengaturan('kontak_prodi') : ''; if ($kontak): ?>
         <p class="fs-13 text-slate" style="margin-top:14px;line-height:1.6;"><b>Bagian akademik:</b> <?= e($kontak) ?></p>
       <?php endif; ?>
     <?php else: ?>
       <p>Isi email dan NIM (mahasiswa) atau NIP (dosen). Permintaan akan dikirim ke admin.</p>
+      <?= tampilFlash() ?>
       <?php if ($error): ?><div class="alert alert-static danger"><?= e($error) ?></div><?php endif; ?>
       <form method="POST"><?= csrfField() ?>
         <div class="form-group">

@@ -11,7 +11,7 @@ $activePage = 'reset_sandi';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $id  = (int)($_POST['id_permintaan'] ?? 0);
-    $req = fetchOne('SELECT p.*, u.role, u.nama_lengkap FROM permintaan_reset p JOIN user u ON u.id_user=p.id_user
+    $req = fetchOne('SELECT p.*, u.role, u.nama_lengkap, u.email FROM permintaan_reset p JOIN user u ON u.id_user=p.id_user
                      WHERE p.id_permintaan=? AND p.status="menunggu"', [$id]);
     if (!$req) {
         setFlash('danger', 'Permintaan tidak ditemukan atau sudah diproses.');
@@ -21,8 +21,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             setFlash('danger', 'Akun tidak ditemukan.');
         } else {
             execute('UPDATE permintaan_reset SET status="selesai", diproses_at=NOW() WHERE id_permintaan=?', [$id]);
-            // Simpan di sesi agar bisa ditampilkan sekali dalam kotak yang tidak hilang otomatis
-            $_SESSION['sandi_sementara'] = ['nama' => $req['nama_lengkap'], 'sandi' => $temp];
+            kirimNotif((int)$req['id_user'], 'Kata sandi direset', 'Permintaan reset kata sandi Anda sudah diproses admin. Segera ganti kata sandi setelah login.', 'info', 'akun', 'profil.php');
+            // Ditampilkan sekali dalam kotak yang tidak hilang otomatis
+            setKredensial('Kata sandi berhasil direset', $req['nama_lengkap'], $req['email'], $temp);
         }
     } elseif (($_POST['aksi'] ?? '') === 'tolak') {
         execute('UPDATE permintaan_reset SET status="ditolak", catatan=?, diproses_at=NOW() WHERE id_permintaan=?',
@@ -33,8 +34,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     exit;
 }
 
-$sandiBaru = $_SESSION['sandi_sementara'] ?? null;
-unset($_SESSION['sandi_sementara']);
 
 $menunggu = fetchAll(
     'SELECT p.*, u.nama_lengkap, u.email, u.role, u.last_login, COALESCE(m.nim, d.nip) AS nomor
@@ -53,22 +52,13 @@ include __DIR__ . '/../includes/sidebar.php';
 <div class="layout"><main class="main">
 <?php include __DIR__ . '/../includes/topbar.php'; ?>
 <div class="content">
-  <?php $flash = getFlash(); if ($flash): ?><div class="alert <?= e($flash['type']) ?>"><?= e($flash['msg']) ?></div><?php endif; ?>
+  <?= tampilFlash() ?>
 
   <div class="page-header">
     <h1>Reset Kata Sandi</h1>
-    <p>Permintaan dari halaman "Lupa kata sandi". Pastikan identitas pemohon sebelum menyerahkan kata sandi sementara.</p>
+    <p>Permintaan dari halaman "Lupa kata sandi". Pastikan identitas pemohon sebelum menyerahkan kata sandi baru. Kata sandi direset ke format awal <b>uab#</b> + 6 digit terakhir NIM/NIP dan wajib diganti saat login.</p>
   </div>
 
-  <?php if ($sandiBaru): ?>
-    <div class="status-card status-card--blok status-card--success mb-20">
-      <div class="status-card__title">Kata sandi sementara untuk <?= e($sandiBaru['nama']) ?></div>
-      <p class="fs-14">Catat sekarang, kata sandi ini tidak ditampilkan lagi:</p>
-      <div class="sandi-box mono" id="sandiBaru"><?= e($sandiBaru['sandi']) ?></div>
-      <button type="button" class="btn btn-secondary btn-sm" onclick="navigator.clipboard?.writeText(document.getElementById('sandiBaru').textContent);this.textContent='Tersalin'">Salin</button>
-      <p class="fs-13 text-slate" style="margin-top:8px;">Pengguna wajib menggantinya saat login.</p>
-    </div>
-  <?php endif; ?>
 
   <div class="card mb-20">
     <div class="card-header"><div class="card-title">Menunggu diproses</div><span class="badge <?= $menunggu ? 'warning' : 'neutral' ?>"><?= count($menunggu) ?></span></div>
@@ -87,7 +77,7 @@ include __DIR__ . '/../includes/sidebar.php';
               <td class="nowrap"><?= $p['last_login'] ? tgl($p['last_login'], 'jam') : '-' ?></td>
               <td class="text-right">
                 <div class="aksi-stack" style="justify-content:flex-end;">
-                  <form method="POST" data-confirm="Buat kata sandi sementara untuk <?= e($p['nama_lengkap']) ?>? Kata sandi lama tidak berlaku lagi." data-confirm-ok="Reset" data-confirm-tone="primary"><?= csrfField() ?>
+                  <form method="POST" data-confirm="Reset kata sandi <?= e($p['nama_lengkap']) ?> ke kata sandi awal (uab# + 6 digit terakhir NIM/NIP)? Kata sandi lama tidak berlaku lagi." data-confirm-ok="Reset" data-confirm-tone="primary"><?= csrfField() ?>
                     <input type="hidden" name="aksi" value="reset"><input type="hidden" name="id_permintaan" value="<?= (int)$p['id_permintaan'] ?>">
                     <button class="btn btn-primary btn-sm"><?= icon('key', 14) ?> Reset</button>
                   </form>

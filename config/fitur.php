@@ -409,3 +409,68 @@ function kotakJudulMirip(string $judul, int $idMhs): string {
     }
     return $html . '</ul></div>';
 }
+
+// ── Pilihan baku (harus sama dengan ENUM di database) ───────
+
+const JABATAN_DOSEN = ['Tenaga Pengajar', 'Asisten Ahli', 'Lektor', 'Lektor Kepala', 'Guru Besar'];
+const KEAHLIAN_DOSEN = ['Rekayasa Perangkat Lunak & Web', 'Pemrograman Mobile', 'Kecerdasan Buatan & Machine Learning',
+    'Data Science & Analitik', 'Internet of Things (IoT)', 'Keamanan Siber & Jaringan', 'Manajemen Sistem Informasi'];
+const METODE_PENELITIAN = ['Agile Software Development', 'Waterfall Model', 'RAD (Rapid Application Development)', 'Prototyping',
+    'CRISP-DM (Data Science)', 'Riset Eksperimental', 'Kuantitatif', 'Kualitatif', 'Lainnya'];
+const JENIS_BAB = ['BAB I', 'BAB II', 'BAB III', 'BAB IV', 'BAB V', 'Proposal', 'Lampiran', 'Lainnya'];
+
+/** Validasi tanggal Y-m-d yang benar-benar ada di kalender. */
+function tanggalValid(string $tgl): bool {
+    $d = DateTime::createFromFormat('!Y-m-d', $tgl);
+    return $d && $d->format('Y-m-d') === $tgl;
+}
+
+/** Validasi jam HH:MM (opsional :SS). */
+function jamValid(string $jam): bool {
+    return preg_match('/^([01]\d|2[0-3]):[0-5]\d(:[0-5]\d)?$/', $jam) === 1;
+}
+
+// ── Notifikasi terkait halaman ──────────────────────────────
+
+/**
+ * Tandai sudah dibaca semua notifikasi milik pengguna yang tautannya menuju
+ * halaman tertentu (path relatif dari BASE_URL, tanpa #fragmen).
+ */
+function tandaiNotifDibaca(array $tautan): void {
+    $tautan = array_values(array_unique(array_filter($tautan)));
+    if (!$tautan || !userId()) return;
+    $ph = implode(',', array_fill(0, count($tautan), '?'));
+    execute("UPDATE notifikasi SET is_read=1 WHERE id_user=? AND is_read=0 AND SUBSTRING_INDEX(tautan,'#',1) IN ($ph)",
+        array_merge([userId()], $tautan));
+}
+
+/** Path halaman yang sedang dibuka relatif dari BASE_URL, mis. "diskusi.php?dok=3". */
+function halamanIni(): string {
+    $basePath = rtrim((string)parse_url(BASE_URL, PHP_URL_PATH), '/');
+    $uri = (string)($_SERVER['REQUEST_URI'] ?? '');
+    $path = (string)parse_url($uri, PHP_URL_PATH);
+    $query = (string)parse_url($uri, PHP_URL_QUERY);
+    if ($basePath !== '' && str_starts_with($path, $basePath . '/')) {
+        $path = substr($path, strlen($basePath) + 1);
+    } else {
+        $path = ltrim($path, '/');
+    }
+    return $path . ($query !== '' ? '?' . $query : '');
+}
+
+/**
+ * Jumlah pesan diskusi yang belum dibaca pengguna, per (id_mahasiswa|jenis_bab).
+ * Sumbernya notifikasi "Pesan baru" yang belum dibaca, sehingga angka di tombol
+ * diskusi selalu sama dengan lonceng notifikasi dan hilang begitu utas dibuka.
+ */
+function pesanBelumDibaca(): array {
+    $rows = fetchAll(
+        "SELECT d.id_mahasiswa, d.jenis_bab, COUNT(*) AS n
+         FROM notifikasi n
+         JOIN dokumen d ON d.id_dokumen = CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(n.tautan,'#',1),'dok=',-1) AS UNSIGNED)
+         WHERE n.id_user = ? AND n.is_read = 0 AND n.modul = 'diskusi' AND n.tautan LIKE 'diskusi.php?dok=%'
+         GROUP BY d.id_mahasiswa, d.jenis_bab", [userId()]);
+    $hasil = [];
+    foreach ($rows as $r) $hasil[$r['id_mahasiswa'] . '|' . $r['jenis_bab']] = (int)$r['n'];
+    return $hasil;
+}

@@ -24,7 +24,7 @@ $alur = [
 
 $caraPakai = [
     'mahasiswa' => ['Mahasiswa', [
-        ['Mengganti kata sandi', 'Buka Profil Saya, isi kata sandi lama dan baru (minimal 8 karakter). Akun baru wajib mengganti kata sandi bawaan saat login pertama.'],
+        ['Mengganti kata sandi', 'Buka Profil Saya, isi kata sandi lama dan baru (minimal 8 karakter). Akun baru memakai kata sandi awal uab# + 6 digit terakhir NIM/NIP dan wajib menggantinya saat login pertama.'],
         ['Mengajukan jadwal bimbingan', 'Buka Jadwal Bimbingan. Pilih slot yang dibuka dosen (langsung terkonfirmasi), atau ajukan waktu sendiri dan tunggu konfirmasi dosen.'],
         ['Mengunggah dokumen', 'Buka Dokumen & Revisi, pilih bab, lalu seret file PDF atau DOCX (maks 10 MB). Mengunggah bab yang sama lagi akan membuat versi baru (v2, v3, dan seterusnya).'],
         ['Membalas catatan revisi', 'Di Dokumen & Revisi, klik ikon diskusi pada dokumen. Tulis pertanyaan atau tanggapan; dosen mendapat notifikasi.'],
@@ -39,11 +39,11 @@ $caraPakai = [
         ['Menyetujui dan menilai ujian', 'Buka Seminar & Sidang. Setujui pendaftaran mahasiswa bimbingan Anda, dan isi rubrik nilai untuk ujian yang Anda bimbing atau uji.'],
     ]],
     'admin' => ['Admin', [
-        ['Menambah banyak akun sekaligus', 'Buka Impor Data, unduh contoh CSV, isi di Excel, simpan sebagai CSV, lalu unggah. Kata sandi awal wajib diganti saat login pertama.'],
+        ['Menambah banyak akun sekaligus', 'Buka Impor Data, unduh contoh CSV, isi di Excel, simpan sebagai CSV, lalu unggah. Kata sandi awal tiap akun adalah uab# + 6 digit terakhir NIM/NIP dan wajib diganti saat login pertama.'],
         ['Menerbitkan SK pembimbing', 'Buka Relasi & SK, pilih mahasiswa dari antrean, tetapkan dosen, lalu unggah file SK.'],
         ['Membuat pengumuman', 'Buka Pengumuman, isi judul dan isi, pilih target (semua, mahasiswa, atau dosen) dan prodi. Centang Sematkan untuk menaruhnya paling atas.'],
         ['Menjadwalkan seminar dan sidang', 'Buka Seminar & Sidang. Pendaftaran yang sudah disetujui pembimbing bisa dijadwalkan dan diberi penguji, lalu hasilnya ditetapkan setelah ujian.'],
-        ['Menangani lupa kata sandi', 'Permintaan dari halaman Lupa Kata Sandi muncul di Reset Kata Sandi. Klik Reset, lalu sampaikan kata sandi sementara langsung ke pemilik akun.'],
+        ['Menangani lupa kata sandi', 'Permintaan dari halaman Lupa Kata Sandi muncul di Reset Kata Sandi. Klik Reset (kata sandi kembali ke uab# + 6 digit terakhir NIM/NIP), lalu sampaikan langsung ke pemilik akun.'],
         ['Mengisi kalender akademik', 'Buka Kalender, lalu tambahkan agenda seperti batas pendaftaran sidang. Agenda tampil di kalender semua pengguna.'],
     ]],
 ];

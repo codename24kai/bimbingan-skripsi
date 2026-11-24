@@ -20,8 +20,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $mustChange = !empty($_SESSION['must_change_password']);
 
     $error = '';
-    if ($nama === '') {
-        $error = 'Nama lengkap wajib diisi.';
+    if ($nama === '' || mb_strlen($nama) > 100) {
+        $error = 'Nama lengkap wajib diisi (maksimal 100 karakter).';
+    } elseif ($noTlp !== '' && !preg_match('/^\+?[0-9 \-]{8,15}$/', $noTlp)) {
+        $error = 'Nomor telepon tidak valid (8–15 digit, boleh diawali +).';
     } elseif ($mustChange && $newPw === '') {
         $error = 'Anda wajib mengganti password bawaan sebelum melanjutkan.';
     } elseif ($newPw !== '') {
@@ -33,7 +35,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } elseif ($newPw !== $confirmPw) {
             $error = 'Konfirmasi password baru tidak cocok.';
         } elseif (isDefaultOrTempPassword($newPw) || $newPw === $oldPw) {
-            $error = 'Gunakan password baru yang berbeda dari password lama atau bawaan.';
+            $error = 'Gunakan password baru yang berbeda dari password lama atau password awal (format uab#…).';
         }
     }
 
@@ -45,7 +47,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     execute('UPDATE user SET nama_lengkap=? WHERE id_user=?', [$nama, $uid]);
     if ($role === 'mahasiswa') {
-        execute('UPDATE mahasiswa SET no_telepon=? WHERE id_mahasiswa=?', [$noTlp, $eid]);
+        execute('UPDATE mahasiswa SET no_telepon=? WHERE id_mahasiswa=?', [$noTlp !== '' ? $noTlp : null, $eid]);
     }
     if ($newPw !== '') {
         execute('UPDATE user SET password_hash=? WHERE id_user=?', [hashPassword($newPw), $uid]);
@@ -76,7 +78,7 @@ include __DIR__ . '/includes/sidebar.php';
 <div class="layout"><main class="main">
 <?php include __DIR__ . '/includes/topbar.php'; ?>
 <div class="content">
-  <?php $flash = getFlash(); if ($flash): ?><div class="alert <?= $flash['type'] ?>"><?= e($flash['msg']) ?></div><?php endif; ?>
+  <?= tampilFlash() ?>
   <div class="page-header"><h1>Profil Saya</h1><p>Kelola informasi akun Anda</p></div>
 
   <div class="split split--left" style="--side:280px;">
