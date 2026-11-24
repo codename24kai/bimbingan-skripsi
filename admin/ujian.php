@@ -78,7 +78,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     } catch (Exception $ex) {
         if ($db->inTransaction()) $db->rollBack();
-        setFlash('danger', $ex->getMessage());
+        setFlash('danger', pesanGalat($ex, ''));
     }
     header('Location: ' . BASE_URL . '/admin/ujian.php?tab=' . urlencode($_POST['tab'] ?? 'jadwalkan') . '#u' . (int)($_POST['id_ujian'] ?? 0));
     exit;
@@ -110,7 +110,7 @@ include __DIR__ . '/../includes/sidebar.php';
 <div class="layout"><main class="main">
 <?php include __DIR__ . '/../includes/topbar.php'; ?>
 <div class="content">
-  <?php $flash = getFlash(); if ($flash): ?><div class="alert <?= e($flash['type']) ?>"><?= e($flash['msg']) ?></div><?php endif; ?>
+  <?= tampilFlash() ?>
   <div class="page-header"><h1>Seminar & Sidang</h1><p>Jadwalkan ujian, tunjuk penguji, lalu tetapkan hasil dari nilai pembimbing dan penguji</p></div>
 
   <nav class="tab-nav mb-20" aria-label="Status ujian">

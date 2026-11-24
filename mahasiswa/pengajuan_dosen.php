@@ -40,12 +40,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['id_dosen'])) {
         setFlash('danger', 'Gagal: SK Bimbingan Anda sudah terbit, tidak dapat mengubah usulan dosen lagi.');
     } else {
         $id_dosen_usul = (int)$_POST['id_dosen'];
-        if (!fetchOne('SELECT id_dosen FROM dosen WHERE id_dosen=?', [$id_dosen_usul])) {
-            setFlash('danger', 'Dosen yang dipilih tidak ditemukan.');
+        if (!fetchOne('SELECT d.id_dosen FROM dosen d JOIN user u ON u.id_user=d.id_user
+                       WHERE d.id_dosen=? AND u.status="aktif" AND d.kuota_bimbingan > d.terisi', [$id_dosen_usul])) {
+            setFlash('danger', 'Dosen yang dipilih tidak ditemukan atau kuota bimbingannya sudah penuh.');
             header('Location: ' . BASE_URL . '/mahasiswa/pengajuan_dosen.php');
             exit;
         }
         execute('UPDATE judul_skripsi SET usulan_dosen=? WHERE id_judul=?', [$id_dosen_usul, $judulDisetujui['id_judul']]);
+        kirimNotifAdmin('Usulan pembimbing baru', (currentUser()['nama_lengkap'] ?? 'Mahasiswa') . ' mengusulkan dosen pembimbing dan menunggu penerbitan SK.', 'info', 'relasi', 'admin/relasi.php');
         setFlash('success', 'Usulan dosen pembimbing berhasil dikirim dan akan ditinjau oleh Kaprodi.');
         
         // Reload data
@@ -56,7 +58,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['id_dosen'])) {
 // Ambil daftar dosen yang kuotanya masih tersedia
 $dosenList = fetchAll('SELECT d.id_dosen, u.nama_lengkap, (d.kuota_bimbingan-d.terisi) AS sisa, d.keahlian 
                        FROM dosen d JOIN user u ON u.id_user=d.id_user 
-                       WHERE d.kuota_bimbingan > d.terisi 
+                       WHERE d.kuota_bimbingan > d.terisi AND u.status = "aktif" 
                        ORDER BY u.nama_lengkap');
 
 $pembimbing = $bimbinganAktif ? profilDosen((int)$bimbinganAktif['id_dosen_sk']) : null;
@@ -93,7 +95,7 @@ include __DIR__ . '/../includes/sidebar.php';
 <div class="layout"><main class="main">
 <?php include __DIR__ . '/../includes/topbar.php'; ?>
 <div class="content">
-  <?php $flash = getFlash(); if ($flash): ?><div class="alert <?= $flash['type'] ?>"><?= e($flash['msg']) ?></div><?php endif; ?>
+  <?= tampilFlash() ?>
 
   <div class="page-header">
     <h1>Usulan Dosen Pembimbing</h1>

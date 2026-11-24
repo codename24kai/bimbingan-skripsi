@@ -22,19 +22,25 @@ $listBimb = fetchAll(
 // Handle POST: add catatan
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $id_sesi   = (int)($_POST['id_sesi'] ?? 0);
-    $isi       = trim($_POST['isi_catatan'] ?? '');
-    $keputusan = $_POST['keputusan'] ?? 'disetujui';
-    $bab       = trim($_POST['bab_terkait'] ?? '');
+    $isi       = trim((string)($_POST['isi_catatan'] ?? ''));
+    $keputusan = (string)($_POST['keputusan'] ?? 'disetujui');
+    $bab       = mb_substr(trim((string)($_POST['bab_terkait'] ?? '')), 0, 50);
     $backUrl   = BASE_URL . '/dosen/catatan.php' . ($id_bimb ? '?id_bimbingan='.$id_bimb : '');
 
     // Pastikan sesi ini milik mahasiswa bimbingan dosen yang sedang login
     $sesiMilik = fetchOne(
-        'SELECT sb.id_sesi FROM sesi_bimbingan sb
+        'SELECT sb.id_sesi, sb.status, sb.tgl_sesi FROM sesi_bimbingan sb
          JOIN bimbingan b ON b.id_bimbingan = sb.id_bimbingan
-         WHERE sb.id_sesi = ? AND b.id_dosen = ?', [$id_sesi, $eid]
+         WHERE sb.id_sesi = ? AND b.id_dosen = ? AND b.status = "aktif"', [$id_sesi, $eid]
     );
     if (!$sesiMilik) {
         setFlash('danger', 'Sesi bimbingan tidak ditemukan atau bukan milik mahasiswa bimbingan Anda.');
+        header('Location: ' . $backUrl);
+        exit;
+    }
+    // Sesi yang dibatalkan atau belum berlangsung tidak bisa diberi catatan (dan tidak boleh jadi "selesai")
+    if ($sesiMilik['status'] === 'batal' || $sesiMilik['tgl_sesi'] > date('Y-m-d')) {
+        setFlash('danger', 'Catatan hanya bisa diisi untuk sesi yang sudah berlangsung dan tidak dibatalkan.');
         header('Location: ' . $backUrl);
         exit;
     }
@@ -57,9 +63,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                              JOIN user u ON u.id_user=m.id_user
                              WHERE b.id_bimbingan=?', [$sesi['id_bimbingan']]);
         if ($mhsUser) {
-            execute('INSERT INTO notifikasi (id_user,judul,pesan,tipe,modul) VALUES (?,?,?,?,?)',
+            execute('INSERT INTO notifikasi (id_user,judul,pesan,tipe,modul,tautan) VALUES (?,?,?,?,?,"mahasiswa/riwayat.php")',
                 [$mhsUser['id_user'], 'Catatan Bimbingan Baru',
-                 'Dosen telah menambahkan catatan bimbingan. Keputusan: ' . $keputusan,
+                 'Dosen telah menambahkan catatan bimbingan. Keputusan: ' . label($keputusan),
                  $keputusan==='disetujui' ? 'sukses' : 'peringatan', 'bimbingan']);
         }
     }
@@ -100,7 +106,7 @@ include __DIR__ . '/../includes/sidebar.php';
 <div class="layout"><main class="main">
 <?php include __DIR__ . '/../includes/topbar.php'; ?>
 <div class="content">
-  <?php $flash = getFlash(); if ($flash): ?><div class="alert <?= $flash['type'] ?>"><?= e($flash['msg']) ?></div><?php endif; ?>
+  <?= tampilFlash() ?>
   <div class="page-header"><h1>Catatan Bimbingan</h1><p>Tambah dan kelola catatan untuk mahasiswa bimbingan</p></div>
 
   <!-- Pilih mahasiswa -->

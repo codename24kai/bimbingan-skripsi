@@ -11,7 +11,7 @@ $activePage = 'validasi_judul';
 // Handle aksi validasi (Setujui / Tolak)
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $aksi     = $_POST['aksi'] ?? '';
-    $id_judul = (int)$_POST['id_judul'];
+    $id_judul = (int)($_POST['id_judul'] ?? 0);
 
     // Ambil data judul dari database (jangan percaya id_user dari form)
     $pengajuan = fetchOne(
@@ -51,19 +51,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             execute('UPDATE judul_skripsi SET status="disetujui", judul_indonesia=? WHERE id_judul=?', [$judul_terpilih, $id_judul]);
             
             // Kirim Notifikasi
-            execute('INSERT INTO notifikasi (id_user, judul, pesan, tipe, modul) VALUES (?, ?, ?, "sukses", "judul")', 
+            execute('INSERT INTO notifikasi (id_user, judul, pesan, tipe, modul, tautan) VALUES (?, ?, ?, "sukses", "judul", "mahasiswa/pengajuan_dosen.php")', 
                     [$id_user_mhs, 'Judul Skripsi Disetujui!', 'Selamat! Judul Anda telah disetujui. Silakan tunggu penetapan Dosen Pembimbing.']);
             
             setFlash('success', 'Judul berhasil disetujui dan diteruskan ke antrean plotting pembimbing.');
 
         } elseif ($aksi === 'tolak') {
-            $catatan = trim($_POST['catatan_penolakan'] ?? 'Judul tidak memenuhi kriteria kelayakan prodi.');
+            $catatan = mb_substr(trim((string)($_POST['catatan_penolakan'] ?? '')), 0, 500) ?: 'Judul tidak memenuhi kriteria kelayakan prodi.';
             
             // Update status
             execute('UPDATE judul_skripsi SET status="ditolak" WHERE id_judul=?', [$id_judul]);
             
             // Kirim Notifikasi
-            execute('INSERT INTO notifikasi (id_user, judul, pesan, tipe, modul) VALUES (?, ?, ?, "error", "judul")', 
+            execute('INSERT INTO notifikasi (id_user, judul, pesan, tipe, modul, tautan) VALUES (?, ?, ?, "error", "judul", "mahasiswa/pengajuan.php")', 
                     [$id_user_mhs, 'Pengajuan Judul Ditolak', 'Pengajuan Anda ditolak. Catatan: ' . $catatan]);
             
             setFlash('warning', 'Pengajuan judul telah ditolak.');
@@ -76,7 +76,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         setFlash('danger', 'Gagal memproses validasi. Silakan coba lagi.');
     } catch (\Exception $e) {
         $db->rollBack();
-        setFlash('danger', 'Gagal memproses validasi: ' . $e->getMessage());
+        setFlash('danger', pesanGalat($e, 'Gagal memproses validasi'));
     }
     
     header('Location: ' . BASE_URL . '/admin/validasi_judul.php');
@@ -109,7 +109,7 @@ include __DIR__ . '/../includes/sidebar.php';
 <div class="layout"><main class="main">
 <?php include __DIR__ . '/../includes/topbar.php'; ?>
 <div class="content">
-  <?php $flash = getFlash(); if ($flash): ?><div class="alert <?= $flash['type'] ?>"><?= e($flash['msg']) ?></div><?php endif; ?>
+  <?= tampilFlash() ?>
 
   <div class="page-header" style="display:flex; justify-content:space-between; align-items:flex-end;">
       <div>

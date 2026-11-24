@@ -114,7 +114,7 @@ include __DIR__ . '/includes/sidebar.php';
 <div class="layout"><main class="main">
 <?php include __DIR__ . '/includes/topbar.php'; ?>
 <div class="content">
-  <?php $flash = getFlash(); if ($flash): ?><div class="alert <?= e($flash['type']) ?>"><?= e($flash['msg']) ?></div><?php endif; ?>
+  <?= tampilFlash() ?>
   <div class="page-header"><h1>Kalender</h1><p>Jadwal bimbingan, seminar, sidang, dan tanggal penting akademik</p></div>
 
   <div class="card mb-20">

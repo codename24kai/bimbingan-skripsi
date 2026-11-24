@@ -14,17 +14,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
     // Logika ini menangani baik alur 'Ajuan' maupun 'Manual'
     if ($aksi === 'buat') {
-        $id_mhs   = (int)$_POST['id_mahasiswa'];
-        $id_dosen = (int)$_POST['id_dosen'];
-        $id_judul = (int)$_POST['id_judul'];
+        $id_mhs   = (int)($_POST['id_mahasiswa'] ?? 0);
+        $id_dosen = (int)($_POST['id_dosen'] ?? 0);
+        $id_judul = (int)($_POST['id_judul'] ?? 0);
         $semester = trim($_POST['semester'] ?? '');
         $no_sk    = trim($_POST['no_sk'] ?? ''); // Tangkap No SK
 
         // Validasi: Pastikan mahasiswa tidak memiliki bimbingan aktif ganda
         $existing = countRows('SELECT COUNT(*) FROM bimbingan WHERE id_mahasiswa=? AND status="aktif"', [$id_mhs]);
         
+        $judulOk = countRows('SELECT COUNT(*) FROM judul_skripsi WHERE id_judul=? AND id_mahasiswa=? AND status="disetujui"', [$id_judul, $id_mhs]);
+        $dosenOk = fetchOne('SELECT d.kuota_bimbingan, d.terisi FROM dosen d JOIN user u ON u.id_user=d.id_user WHERE d.id_dosen=? AND u.status="aktif"', [$id_dosen]);
+        $mhsOk   = countRows('SELECT COUNT(*) FROM mahasiswa m JOIN user u ON u.id_user=m.id_user WHERE m.id_mahasiswa=? AND u.status="aktif"', [$id_mhs]);
+
         if ($existing > 0) {
             setFlash('danger', 'Gagal: Mahasiswa tersebut sudah memiliki relasi bimbingan yang masih aktif.');
+        } elseif (!$mhsOk) {
+            setFlash('danger', 'Gagal: mahasiswa tidak ditemukan atau akunnya nonaktif.');
+        } elseif (!$judulOk) {
+            setFlash('danger', 'Gagal: judul yang dipilih bukan judul disetujui milik mahasiswa tersebut.');
+        } elseif (!$dosenOk) {
+            setFlash('danger', 'Gagal: dosen tidak ditemukan atau akunnya nonaktif.');
+        } elseif ((int)$dosenOk['terisi'] >= (int)$dosenOk['kuota_bimbingan']) {
+            setFlash('danger', 'Gagal: kuota bimbingan dosen tersebut sudah penuh.');
+        } elseif ($semester === '' || mb_strlen($semester) > 20) {
+            setFlash('danger', 'Gagal: semester wajib diisi (maksimal 20 karakter).');
+        } elseif (mb_strlen($no_sk) > 100) {
+            setFlash('danger', 'Gagal: nomor SK maksimal 100 karakter.');
         } elseif (empty($no_sk) || empty($_FILES['file_sk']['name'])) {
             setFlash('danger', 'Gagal: Nomor SK dan Dokumen SK Bimbingan wajib diisi!');
         } else {
@@ -73,9 +89,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 $db->commit();
                 setFlash('success', 'Relasi berhasil dibuat. SK telah diterbitkan dan notifikasi dikirim.');
-            } catch (\Exception $e) {
-                $db->rollBack();
-                setFlash('danger', 'Gagal memproses plotting: ' . $e->getMessage());
+            } catch (\Throwable $e) {
+                if ($db->inTransaction()) $db->rollBack();
+                hapusUpload($filePath ?? null);
+                setFlash('danger', pesanGalat($e, 'Gagal memproses plotting'));
             }
         }
     } elseif ($aksi === 'hentikan' || $aksi === 'selesai') {
@@ -88,7 +105,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } elseif ($aksi === 'selesai') {
             execute('UPDATE bimbingan SET status="selesai",tgl_selesai=CURDATE() WHERE id_bimbingan=?', [$idB]);
             execute('UPDATE mahasiswa SET status_skripsi="selesai" WHERE id_mahasiswa=?', [$bimb['id_mahasiswa']]);
-            execute('INSERT INTO notifikasi (id_user,judul,pesan,tipe,modul) VALUES (?,?,?,?,?)',
+            execute('INSERT INTO notifikasi (id_user,judul,pesan,tipe,modul,tautan) VALUES (?,?,?,?,?,"dashboard.php")',
                 [$bimb['id_user'], 'Bimbingan Skripsi Selesai',
                  'Selamat! Proses bimbingan skripsi Anda telah dinyatakan selesai.', 'sukses', 'bimbingan']);
             setFlash('success', 'Bimbingan ditandai selesai. Status skripsi mahasiswa menjadi "Selesai".');
@@ -127,7 +144,7 @@ $mhsTanpaBimb = fetchAll(
 // Pastikan d.keahlian ditarik dari database
 $dosenList = fetchAll('SELECT d.id_dosen, u.nama_lengkap, (d.kuota_bimbingan-d.terisi) AS sisa, d.keahlian 
                        FROM dosen d JOIN user u ON u.id_user=d.id_user 
-                       WHERE d.kuota_bimbingan > d.terisi 
+                       WHERE d.kuota_bimbingan > d.terisi AND u.status = "aktif"
                        ORDER BY u.nama_lengkap');
 $judulList = fetchAll('SELECT j.id_judul,j.judul_indonesia,m.nim FROM judul_skripsi j JOIN mahasiswa m ON m.id_mahasiswa=j.id_mahasiswa WHERE j.status="disetujui"');
 
@@ -160,7 +177,7 @@ include __DIR__ . '/../includes/sidebar.php';
 <div class="layout"><main class="main">
 <?php include __DIR__ . '/../includes/topbar.php'; ?>
 <div class="content">
-  <?php $flash = getFlash(); if ($flash): ?><div class="alert <?= $flash['type'] ?>"><?= e($flash['msg']) ?></div><?php endif; ?>
+  <?= tampilFlash() ?>
   
   <div class="page-header" style="display:flex; justify-content:space-between; align-items:flex-end;">
       <div>

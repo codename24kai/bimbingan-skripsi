@@ -19,12 +19,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         exit;
     }
 
+    // Menu ini terkunci sampai SK bimbingan terbit; jangan bisa ditembus lewat URL langsung
+    $bimbAktif = fetchOne('SELECT b.id_bimbingan, d.id_user AS uid_dosen FROM bimbingan b JOIN dosen d ON d.id_dosen=b.id_dosen
+                           WHERE b.id_mahasiswa=? AND b.status="aktif" LIMIT 1', [$eid]);
+    if (!$bimbAktif) {
+        setFlash('danger', 'Dokumen hanya bisa dikelola setelah SK bimbingan terbit dan bimbingan masih aktif.');
+        header('Location: ' . BASE_URL . '/dashboard.php');
+        exit;
+    }
+
     if ($_POST['action'] === 'upload') {
         $nama  = trim($_POST['nama_dokumen'] ?? '');
         $jenis = trim($_POST['jenis_bab'] ?? '');
 
         if (!$nama || !$jenis || empty($_FILES['file']['name'])) {
             setFlash('danger', 'Harap isi semua field dan pilih file.');
+        } elseif (!in_array($jenis, JENIS_BAB, true)) {
+            setFlash('danger', 'Jenis / bab dokumen tidak valid.');
+        } elseif (mb_strlen($nama) > 150) {
+            setFlash('danger', 'Nama dokumen maksimal 150 karakter.');
+        } elseif (countRows('SELECT COUNT(*) FROM dokumen WHERE id_mahasiswa=? AND jenis_bab=? AND status="disetujui"', [$eid, $jenis])
+                  && !in_array($jenis, ['Lampiran', 'Lainnya'], true)) {
+            setFlash('warning', label($jenis) . ' sudah disetujui pembimbing, jadi tidak perlu diunggah ulang. Lanjutkan ke bab berikutnya.');
         } else {
             $db = getDB();
             $db->beginTransaction();
@@ -75,10 +91,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                     [$eid, $nama, $jenis, $versi, 'uploads/'.$fname, $size]);
 
                 $db->commit();
-                setFlash('success', 'Dokumen berhasil diunggah. Versi telah diperbarui.');
-            } catch (Exception $e) {
-                $db->rollBack();
-                setFlash('danger', $e->getMessage());
+                kirimNotif((int)$bimbAktif['uid_dosen'], 'Dokumen baru: ' . label($jenis),
+                    (currentUser()['nama_lengkap'] ?? 'Mahasiswa') . ' mengunggah ' . $nama . ' (v' . $versi . ') dan menunggu review.',
+                    'info', 'dokumen', 'dosen/revisi.php');
+                setFlash('success', 'Dokumen berhasil diunggah sebagai versi ' . $versi . ' dan pembimbing sudah diberi tahu.');
+            } catch (Throwable $e) {
+                if ($db->inTransaction()) $db->rollBack();
+                if (!empty($fname)) @unlink(UPLOAD_DIR . $fname);
+                setFlash('danger', pesanGalat($e));
             }
         }
         
@@ -87,17 +107,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         $nama   = trim($_POST['nama_dokumen'] ?? '');
         $jenis  = trim($_POST['jenis_bab'] ?? '');
         
-        if ($nama && $jenis) {
-            execute('UPDATE dokumen SET nama_dokumen=?, jenis_bab=? WHERE id_dokumen=? AND id_mahasiswa=?', [$nama, $jenis, $id_dok, $eid]);
-            setFlash('success', 'Metadata dokumen berhasil diperbarui.');
+        $lama = fetchOne('SELECT jenis_bab, status FROM dokumen WHERE id_dokumen=? AND id_mahasiswa=?', [$id_dok, $eid]);
+        if (!$lama) {
+            setFlash('danger', 'Dokumen tidak ditemukan.');
+        } elseif ($lama['status'] !== 'menunggu') {
+            setFlash('danger', 'Dokumen yang sudah direview pembimbing tidak bisa diubah. Unggah versi baru bila perlu.');
+        } elseif ($nama === '' || mb_strlen($nama) > 150 || !in_array($jenis, JENIS_BAB, true)) {
+            setFlash('danger', 'Nama dokumen atau jenis bab tidak valid.');
+        } elseif ($jenis !== $lama['jenis_bab']) {
+            // Mengganti bab akan merusak urutan versi kedua bab; minta unggah ulang saja
+            setFlash('danger', 'Jenis bab tidak bisa diganti setelah diunggah. Hapus dokumen ini lalu unggah ulang dengan bab yang benar.');
+        } else {
+            execute('UPDATE dokumen SET nama_dokumen=? WHERE id_dokumen=? AND id_mahasiswa=?', [$nama, $id_dok, $eid]);
+            setFlash('success', 'Nama dokumen berhasil diperbarui.');
         }
         
     } elseif ($_POST['action'] === 'hapus') {
         $id_dok = (int)$_POST['id_dokumen'];
         
         // Ambil path file untuk menghapus file fisik di server
-        $dok = fetchOne('SELECT file_path FROM dokumen WHERE id_dokumen=? AND id_mahasiswa=?', [$id_dok, $eid]);
-        if ($dok) {
+        $dok = fetchOne('SELECT file_path, status FROM dokumen WHERE id_dokumen=? AND id_mahasiswa=?', [$id_dok, $eid]);
+        if (!$dok) {
+            setFlash('danger', 'Dokumen tidak ditemukan.');
+        } elseif ($dok['status'] !== 'menunggu') {
+            // Dokumen yang sudah direview menyimpan catatan revisi & diskusi; jangan sampai hilang
+            setFlash('danger', 'Dokumen yang sudah direview pembimbing tidak bisa dihapus karena menyimpan catatan revisi.');
+        } else {
             $filePath = __DIR__ . '/../' . $dok['file_path'];
             if (file_exists($filePath)) {
                 @unlink($filePath); // Hapus file fisik
@@ -116,7 +151,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
 $dokumen = fetchAll(
     'SELECT d.*, COUNT(r.id_revisi) AS total_revisi,
             SUM(CASE WHEN r.status="belum" THEN 1 ELSE 0 END) AS revisi_pending,
-            (SELECT COUNT(*) FROM komentar_dokumen k WHERE k.id_dokumen = d.id_dokumen) AS jml_pesan,
             (SELECT COUNT(*) FROM dokumen d2 WHERE d2.id_mahasiswa = d.id_mahasiswa AND d2.jenis_bab = d.jenis_bab) AS jml_versi
      FROM dokumen d
      LEFT JOIN revisi r ON r.id_dokumen=d.id_dokumen
@@ -125,13 +159,16 @@ $dokumen = fetchAll(
      ORDER BY d.jenis_bab, d.versi DESC', [$eid]
 );
 
+$belumDibaca = pesanBelumDibaca();
+$bisaUnggah = countRows('SELECT COUNT(*) FROM bimbingan WHERE id_mahasiswa=? AND status="aktif"', [$eid]) > 0;
+
 include __DIR__ . '/../includes/header.php';
 include __DIR__ . '/../includes/sidebar.php';
 ?>
 <div class="layout"><main class="main">
 <?php include __DIR__ . '/../includes/topbar.php'; ?>
 <div class="content">
-  <?php $flash = getFlash(); if ($flash): ?><div class="alert <?= $flash['type'] ?>"><?= e($flash['msg']) ?></div><?php endif; ?>
+  <?= tampilFlash() ?>
 
   <div class="page-header">
     <h1>Dokumen & Revisi</h1>
@@ -176,16 +213,18 @@ include __DIR__ . '/../includes/sidebar.php';
                       <td class="text-right">
                         <div style="display:flex;gap:6px; justify-content:flex-end;">
                           <a href="<?= e(fileUrl($d['file_path'])) ?>" target="_blank" class="btn-icon" title="Unduh File" aria-label="Unduh <?= e($d['nama_dokumen']) ?>"><?= icon('download') ?></a>
-                          <a href="<?= BASE_URL ?>/diskusi.php?dok=<?= (int)$d['id_dokumen'] ?>" class="btn-icon btn-icon--hitung" title="Diskusi dengan dosen" aria-label="Diskusi <?= e($d['nama_dokumen']) ?>"><?= icon('chat') ?><?php if ($d['jml_pesan']): ?><span class="hitung"><?= (int)$d['jml_pesan'] ?></span><?php endif; ?></a>
+                          <a href="<?= BASE_URL ?>/diskusi.php?dok=<?= (int)$d['id_dokumen'] ?>" class="btn-icon btn-icon--hitung" title="Diskusi dengan dosen" aria-label="Diskusi <?= e($d['nama_dokumen']) ?>"><?= icon('chat') ?><?php $baru = $belumDibaca[$d['id_mahasiswa'] . '|' . $d['jenis_bab']] ?? 0; if ($baru): ?><span class="hitung" title="<?= $baru ?> pesan belum dibaca"><?= $baru ?></span><?php endif; ?></a>
                           <?php if ($d['jml_versi'] > 1): ?>
                             <a href="<?= BASE_URL ?>/bandingkan.php?dok=<?= (int)$d['id_dokumen'] ?>" class="btn-icon" title="Bandingkan versi" aria-label="Bandingkan versi <?= e($d['nama_dokumen']) ?>"><?= icon('columns') ?></a>
                           <?php endif; ?>
+<?php if ($d['status'] === 'menunggu'): ?>
                           <button type="button" class="btn-icon" title="Edit Dokumen" aria-label="Edit Dokumen <?= e($d['nama_dokumen']) ?>" onclick="openEditModal(<?= $jsonData ?>)"><?= icon('pencil') ?></button>
                           <form method="POST" style="display:inline;" data-confirm="Hapus dokumen <?= e($d['nama_dokumen']) ?> (v<?= (int)$d['versi'] ?>)? File akan dihapus permanen." data-confirm-ok="Hapus"><?= csrfField() ?>
                               <input type="hidden" name="action" value="hapus">
                               <input type="hidden" name="id_dokumen" value="<?= $d['id_dokumen'] ?>">
                               <button type="submit" class="btn-icon btn-icon--danger" title="Hapus Dokumen" aria-label="Hapus Dokumen <?= e($d['nama_dokumen']) ?>"><?= icon('trash') ?></button>
                           </form>
+                          <?php endif; ?>
                         </div>
                       </td>
                     </tr>
@@ -223,6 +262,9 @@ include __DIR__ . '/../includes/sidebar.php';
     <div class="form-card" style="height:fit-content;">
       <h2>Unggah Dokumen</h2>
       <p>Upload dokumen skripsi terbaru Anda</p>
+      <?php if (!$bisaUnggah): ?>
+        <div class="alert alert-static info">Unggah dokumen terbuka setelah SK bimbingan terbit dan selama bimbingan masih aktif.</div>
+      <?php else: ?>
       <form method="POST" enctype="multipart/form-data"><?= csrfField() ?>
         <input type="hidden" name="action" value="upload">
         <div class="form-group">
@@ -233,7 +275,7 @@ include __DIR__ . '/../includes/sidebar.php';
           <label for="f_jenis_bab" class="form-label">Jenis / Bab</label>
           <select id="f_jenis_bab" class="form-input" name="jenis_bab" required>
             <option value="" disabled selected>Pilih bab...</option>
-            <?php foreach (['BAB I','BAB II','BAB III','BAB IV','BAB V','Proposal','Lampiran', 'Lainnya'] as $b): ?>
+            <?php foreach (JENIS_BAB as $b): ?>
               <option value="<?= $b ?>"><?= $b ?></option>
             <?php endforeach; ?>
           </select>
@@ -244,6 +286,7 @@ include __DIR__ . '/../includes/sidebar.php';
         </div>
         <button type="submit" class="btn btn-gold btn-full">📤 Upload Dokumen</button>
       </form>
+      <?php endif; ?>
     </div>
   </div>
 </div>
@@ -257,6 +300,7 @@ include __DIR__ . '/../includes/sidebar.php';
     <form method="POST"><?= csrfField() ?>
       <input type="hidden" name="action" value="edit">
       <input type="hidden" name="id_dokumen" id="edit_id_dok">
+      <input type="hidden" name="jenis_bab" id="edit_jenis_hidden">
       
       <div class="form-group">
         <label for="edit_nama" class="form-label">Nama Dokumen</label>
@@ -265,15 +309,15 @@ include __DIR__ . '/../includes/sidebar.php';
       
       <div class="form-group">
         <label for="edit_jenis" class="form-label">Jenis / Bab</label>
-        <select class="form-input" name="jenis_bab" id="edit_jenis" required>
-          <?php foreach (['BAB I','BAB II','BAB III','BAB IV','BAB V','Proposal','Lampiran', 'Lainnya'] as $b): ?>
+        <select class="form-input" name="jenis_bab" id="edit_jenis" required disabled>
+          <?php foreach (JENIS_BAB as $b): ?>
             <option value="<?= $b ?>"><?= $b ?></option>
           <?php endforeach; ?>
         </select>
       </div>
       
       <div class="alert alert-static info" style="font-size:12px; padding:10px;">
-          Fitur ini hanya untuk mengubah metadata (Nama dan Jenis Bab). Jika Anda ingin memperbarui isi file, silakan <b>Unggah Dokumen</b> baru di panel sebelah kanan agar sistem dapat menaikkan versinya (v2, v3, dst).
+          Hanya nama dokumen yang bisa diubah, dan hanya selama dokumen belum direview. Salah pilih bab? Hapus lalu unggah ulang. Jika Anda ingin memperbarui isi file, silakan <b>Unggah Dokumen</b> baru di panel sebelah kanan agar sistem dapat menaikkan versinya (v2, v3, dst).
       </div>
       
       <div class="form-actions" style="margin-top:20px;">
@@ -289,6 +333,7 @@ function openEditModal(data) {
     document.getElementById('edit_id_dok').value = data.id_dokumen;
     document.getElementById('edit_nama').value = data.nama_dokumen;
     document.getElementById('edit_jenis').value = data.jenis_bab;
+    document.getElementById('edit_jenis_hidden').value = data.jenis_bab;
     document.getElementById('modalEdit').style.display = 'flex';
 }
 </script>

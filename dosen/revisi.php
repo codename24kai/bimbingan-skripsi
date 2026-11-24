@@ -17,20 +17,22 @@ $id_dosen = $dosenData['id_dosen'];
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['aksi'])) {
     if ($_POST['aksi'] === 'beri_revisi') {
         $id_dokumen = (int)$_POST['id_dokumen'];
-        $status_dok = trim($_POST['status_dokumen']); // 'direvisi' atau 'disetujui'
-        $prioritas  = trim($_POST['prioritas']);
-        $halaman    = trim($_POST['halaman_revisi'] ?? '');
-        $catatan    = trim($_POST['catatan_revisi']);
+        $status_dok = trim((string)($_POST['status_dokumen'] ?? '')); // 'direvisi' atau 'disetujui'
+        $prioritas  = trim((string)($_POST['prioritas'] ?? ''));
+        $halaman    = mb_substr(trim((string)($_POST['halaman_revisi'] ?? '')), 0, 100);
+        $catatan    = trim((string)($_POST['catatan_revisi'] ?? ''));
 
         // Dokumen harus milik mahasiswa bimbingan dosen yang sedang login
         $dokMilik = fetchOne(
-            'SELECT d.id_dokumen FROM dokumen d
+            'SELECT d.id_dokumen, d.status FROM dokumen d
              JOIN bimbingan b ON b.id_mahasiswa = d.id_mahasiswa
-             WHERE d.id_dokumen = ? AND b.id_dosen = ?', [$id_dokumen, $id_dosen]
+             WHERE d.id_dokumen = ? AND b.id_dosen = ? AND b.status = "aktif"', [$id_dokumen, $id_dosen]
         );
 
         if (!$dokMilik) {
             setFlash('danger', 'Dokumen tidak ditemukan atau bukan milik mahasiswa bimbingan Anda.');
+        } elseif ($dokMilik['status'] !== 'menunggu') {
+            setFlash('danger', 'Dokumen ini sudah direview (' . label($dokMilik['status']) . '). Tunggu mahasiswa mengunggah versi baru, atau lanjutkan lewat Diskusi.');
         } elseif (!in_array($status_dok, ['direvisi', 'disetujui'], true)
                   || !in_array($prioritas, ['minor', 'mayor', 'kritis'], true)) {
             setFlash('danger', 'Status dokumen atau prioritas tidak valid.');
@@ -57,15 +59,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['aksi'])) {
                         : 'Dosen pembimbing memberikan catatan revisi pada dokumen '.$dokInfo['nama_dokumen'].'.';
                     $tipeNotif = ($status_dok === 'disetujui') ? 'sukses' : 'peringatan';
                     
-                    execute('INSERT INTO notifikasi (id_user, judul, pesan, tipe, modul) VALUES (?, ?, ?, ?, "dokumen")', 
-                            [$dokInfo['id_user'], 'Update Revisi Dokumen', $pesanNotif, $tipeNotif]);
+                    kirimNotif((int)$dokInfo['id_user'], 'Update Revisi Dokumen', $pesanNotif, $tipeNotif, 'dokumen', 'mahasiswa/dokumen.php');
                 }
 
                 $db->commit();
                 setFlash('success', 'Catatan revisi berhasil dikirim dan status dokumen telah diperbarui.');
-            } catch (Exception $e) {
+            } catch (Throwable $e) {
                 $db->rollBack();
-                setFlash('danger', 'Gagal menyimpan revisi: ' . $e->getMessage());
+                setFlash('danger', pesanGalat($e, 'Gagal menyimpan revisi'));
             }
         }
         header('Location: ' . BASE_URL . '/dosen/revisi.php');
@@ -78,7 +79,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['aksi'])) {
 $dokumenList = fetchAll(
     'SELECT d.*, m.nim, u.nama_lengkap AS nama_mhs,
             COUNT(r.id_revisi) AS total_revisi,
-            (SELECT COUNT(*) FROM komentar_dokumen k WHERE k.id_dokumen = d.id_dokumen) AS jml_pesan,
             (SELECT COUNT(*) FROM dokumen d2 WHERE d2.id_mahasiswa = d.id_mahasiswa AND d2.jenis_bab = d.jenis_bab) AS jml_versi
      FROM dokumen d
      JOIN mahasiswa m ON d.id_mahasiswa = m.id_mahasiswa
@@ -91,13 +91,15 @@ $dokumenList = fetchAll(
     [$id_dosen]
 );
 
+$belumDibaca = pesanBelumDibaca();
+
 include __DIR__ . '/../includes/header.php';
 include __DIR__ . '/../includes/sidebar.php';
 ?>
 <div class="layout"><main class="main">
 <?php include __DIR__ . '/../includes/topbar.php'; ?>
 <div class="content">
-  <?php $flash = getFlash(); if ($flash): ?><div class="alert <?= $flash['type'] ?>"><?= e($flash['msg']) ?></div><?php endif; ?>
+  <?= tampilFlash() ?>
 
   <div class="page-header" style="display:flex; justify-content:space-between; align-items:flex-end;">
       <div>
@@ -151,11 +153,13 @@ include __DIR__ . '/../includes/sidebar.php';
                   <td class="text-right">
                     <div style="display:flex;gap:6px; justify-content:flex-end;">
                       <a href="<?= e(fileUrl($d['file_path'])) ?>" target="_blank" class="btn btn-secondary" style="padding:4px 8px; font-size:11px;" title="Unduh File">⬇️ Unduh</a>
-                      <a href="<?= BASE_URL ?>/diskusi.php?dok=<?= (int)$d['id_dokumen'] ?>" class="btn btn-secondary" style="padding:4px 8px; font-size:11px;" title="Diskusi dengan mahasiswa"><?= icon('chat', 14) ?> Diskusi<?= $d['jml_pesan'] ? ' (' . (int)$d['jml_pesan'] . ')' : '' ?></a>
+                      <a href="<?= BASE_URL ?>/diskusi.php?dok=<?= (int)$d['id_dokumen'] ?>" class="btn btn-secondary" style="padding:4px 8px; font-size:11px;" title="Diskusi dengan mahasiswa"><?= icon('chat', 14) ?> Diskusi<?php $baru = $belumDibaca[$d['id_mahasiswa'] . '|' . $d['jenis_bab']] ?? 0; if ($baru): ?> <span class="badge info" title="<?= $baru ?> pesan belum dibaca"><?= $baru ?> baru</span><?php endif; ?></a>
                       <?php if ($d['jml_versi'] > 1): ?>
                         <a href="<?= BASE_URL ?>/bandingkan.php?dok=<?= (int)$d['id_dokumen'] ?>" class="btn btn-secondary" style="padding:4px 8px; font-size:11px;" title="Bandingkan dengan versi sebelumnya"><?= icon('columns', 14) ?> Bandingkan</a>
                       <?php endif; ?>
-                      <button type="button" class="btn btn-primary" style="padding:4px 8px; font-size:11px;" onclick="openReviewModal(<?= $jsonData ?>)">✍️ Beri Revisi</button>
+                      <?php if ($d['status'] === 'menunggu'): ?>
+                        <button type="button" class="btn btn-primary" style="padding:4px 8px; font-size:11px;" onclick="openReviewModal(<?= $jsonData ?>)">✍️ Beri Revisi</button>
+                      <?php endif; ?>
                     </div>
                   </td>
                 </tr>
