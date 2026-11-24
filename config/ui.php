@@ -22,6 +22,7 @@ const ICON_PATHS = [
     'bell'      => '<path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>',
     'lock'      => '<rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>',
     'eye'       => '<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',
+    'eye-off'   => '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><path d="m1 1 22 22"/>',
     'pencil'    => '<path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/>',
     'key'       => '<circle cx="7.5" cy="15.5" r="5.5"/><path d="m21 2-9.6 9.6"/><path d="m15.5 7.5 3 3L22 7l-3-3"/>',
     'trash'     => '<path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M10 11v6"/><path d="M14 11v6"/>',
@@ -102,4 +103,17 @@ function tampilFlash(): string {
             . '</div>';
     }
     return $html;
+}
+
+/**
+ * Input kata sandi dengan tombol mata untuk melihat/menyembunyikan isinya.
+ * $atribut = atribut HTML tambahan untuk <input> (sudah aman, jangan isi dari input pengguna).
+ * Perilaku tombol ada di assets/script.js ([data-lihat-sandi]).
+ */
+function inputSandi(string $id, string $name, string $atribut = ''): string {
+    return '<div class="input-sandi">'
+        . '<input id="' . e($id) . '" class="form-input" type="password" name="' . e($name) . '" ' . $atribut . '>'
+        . '<button type="button" class="input-sandi__btn" data-lihat-sandi aria-label="Tampilkan kata sandi" aria-pressed="false">'
+        . '<span class="ikon-tutup">' . icon('eye-off', 18) . '</span><span class="ikon-buka" hidden>' . icon('eye', 18) . '</span></button>'
+        . '</div>';
 }

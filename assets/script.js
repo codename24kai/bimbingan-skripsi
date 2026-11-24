@@ -273,3 +273,17 @@ document.querySelectorAll('[data-cek-judul]').forEach(input => {
     }, 450);
   });
 });
+
+// Tombol mata pada input kata sandi (inputSandi() di config/ui.php)
+document.addEventListener('click', e => {
+  const btn = e.target.closest('[data-lihat-sandi]');
+  if (!btn) return;
+  const input = btn.parentElement.querySelector('input');
+  if (!input) return;
+  const tampil = input.type === 'password';
+  input.type = tampil ? 'text' : 'password';
+  btn.setAttribute('aria-pressed', tampil ? 'true' : 'false');
+  btn.setAttribute('aria-label', tampil ? 'Sembunyikan kata sandi' : 'Tampilkan kata sandi');
+  btn.querySelector('.ikon-tutup').hidden = tampil;
+  btn.querySelector('.ikon-buka').hidden = !tampil;
+});

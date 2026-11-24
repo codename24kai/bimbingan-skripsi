@@ -2050,3 +2050,16 @@ body.beranda{background:var(--cream)}
 .notif-panel-header form{margin:0}
 .notif-panel-header button.link-btn{background:none;border:0;padding:0;font:inherit;font-size:12px;color:var(--info-text);font-weight:500;cursor:pointer}
 .notif-panel-header .notif-panel-aksi{display:flex;gap:12px;align-items:center}
+
+/* Input kata sandi dengan tombol lihat/sembunyikan */
+.input-sandi { position: relative; }
+.input-sandi .form-input { padding-right: 44px; }
+.input-sandi__btn {
+  position: absolute; top: 0; right: 0; height: 100%; width: 42px;
+  display: flex; align-items: center; justify-content: center;
+  background: none; border: 0; border-radius: 0 var(--radius-sm, 8px) var(--radius-sm, 8px) 0;
+  color: var(--slate); cursor: pointer;
+}
+.input-sandi__btn:hover, .input-sandi__btn[aria-pressed="true"] { color: var(--navy); }
+.input-sandi__btn:focus-visible { outline: 2px solid var(--navy); outline-offset: -2px; }
+.input-sandi__btn [hidden] { display: none; }
