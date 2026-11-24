@@ -99,6 +99,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             setFlash('danger', 'Gagal memperbarui Program Studi.');
         }
         
+    } elseif ($aksi === 'simpan_sk') {
+        foreach (['sk_institusi', 'sk_unit', 'sk_alamat', 'sk_tempat', 'sk_penandatangan', 'sk_jabatan_ttd'] as $k) {
+            $v = mb_substr(trim((string)($_POST[$k] ?? '')), 0, 150);
+            if ($v !== '') simpanPengaturan($k, $v);
+        }
+        setFlash('success', 'Pengaturan SK disimpan. SK berikutnya memakai data ini.');
+
     } elseif ($aksi === 'hapus_prodi') {
         try {
             execute('DELETE FROM program_studi WHERE id_prodi=?', [(int)$_POST['id_prodi']]);
@@ -227,6 +234,30 @@ include __DIR__ . '/../includes/sidebar.php';
     </div>
     
   </div>
+
+  <?php if (tabelAda('sk_nomor')): require_once __DIR__ . '/../config/sk.php'; ?>
+  <div class="form-card" style="background:var(--white); padding:24px; border-radius:var(--radius); box-shadow:0 1px 3px rgba(0,0,0,0.05); margin-top:24px;">
+    <h2 style="font-size:18px; font-family:'Playfair Display',serif; margin-bottom:8px;">Kop & Penandatangan SK Bimbingan</h2>
+    <p style="font-size:13px; color:var(--slate); margin-bottom:20px;">Dipakai saat file SK dibuat otomatis di menu Relasi & SK. Nomor SK: <span class="mono"><?= e(SK_AWALAN) ?>/tahun/nomor</span>. SK yang sudah terbit baru berubah jika dibuat ulang.</p>
+    <form method="POST"><?= csrfField() ?>
+      <input type="hidden" name="aksi" value="simpan_sk">
+      <div class="form-row">
+        <?php foreach ([
+          'sk_institusi' => 'Nama institusi (kop)', 'sk_unit' => 'Fakultas / school',
+          'sk_alamat' => 'Alamat (kop)', 'sk_tempat' => 'Ditetapkan di',
+          'sk_penandatangan' => 'Nama penandatangan', 'sk_jabatan_ttd' => 'Jabatan penandatangan',
+        ] as $k => $lbl): ?>
+          <div class="form-group" style="flex:1 1 45%;">
+            <label for="f_<?= $k ?>" class="form-label"><?= $lbl ?></label>
+            <input id="f_<?= $k ?>" class="form-input" name="<?= $k ?>" maxlength="150" value="<?= e(pengaturanSk($k)) ?>" required>
+          </div>
+        <?php endforeach; ?>
+      </div>
+      <small class="meta" style="display:block; margin-bottom:16px;">Tahun akademik di SK mengikuti isian Tahun Akademik di atas. Logo kop diambil dari <code>assets/sk-logo.jpg</code>.</small>
+      <button type="submit" class="btn btn-gold">💾 Simpan Pengaturan SK</button>
+    </form>
+  </div>
+  <?php endif; ?>
 </div>
 
 <div class="modal-overlay" id="modalTambahProdi" style="display:none;">

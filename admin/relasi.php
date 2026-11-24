@@ -3,6 +3,7 @@
 require_once __DIR__ . '/../config/app.php';
 require_once __DIR__ . '/../config/db.php';
 require_once __DIR__ . '/../config/auth.php';
+require_once __DIR__ . '/../config/sk.php';
 requireRole('admin');
 
 $pageTitle  = 'Relasi Pembimbingan';
@@ -12,13 +13,13 @@ $activePage = 'relasi';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $aksi = $_POST['aksi'] ?? '';
     
-    // Logika ini menangani baik alur 'Ajuan' maupun 'Manual'
+    // Logika ini menangani baik alur 'Ajuan' maupun 'Manual'.
+    // Nomor SK dan file PDF SK dibuat otomatis (config/sk.php).
     if ($aksi === 'buat') {
         $id_mhs   = (int)($_POST['id_mahasiswa'] ?? 0);
         $id_dosen = (int)($_POST['id_dosen'] ?? 0);
         $id_judul = (int)($_POST['id_judul'] ?? 0);
         $semester = trim($_POST['semester'] ?? '');
-        $no_sk    = trim($_POST['no_sk'] ?? ''); // Tangkap No SK
 
         // Validasi: Pastikan mahasiswa tidak memiliki bimbingan aktif ganda
         $existing = countRows('SELECT COUNT(*) FROM bimbingan WHERE id_mahasiswa=? AND status="aktif"', [$id_mhs]);
@@ -27,7 +28,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $dosenOk = fetchOne('SELECT d.kuota_bimbingan, d.terisi FROM dosen d JOIN user u ON u.id_user=d.id_user WHERE d.id_dosen=? AND u.status="aktif"', [$id_dosen]);
         $mhsOk   = countRows('SELECT COUNT(*) FROM mahasiswa m JOIN user u ON u.id_user=m.id_user WHERE m.id_mahasiswa=? AND u.status="aktif"', [$id_mhs]);
 
-        if ($existing > 0) {
+        if (!skSiap()) {
+            setFlash('danger', 'Gagal: jalankan dulu database/migrasi_2026_11_sk.sql di phpMyAdmin agar SK bisa terbit otomatis.');
+        } elseif ($existing > 0) {
             setFlash('danger', 'Gagal: Mahasiswa tersebut sudah memiliki relasi bimbingan yang masih aktif.');
         } elseif (!$mhsOk) {
             setFlash('danger', 'Gagal: mahasiswa tidak ditemukan atau akunnya nonaktif.');
@@ -39,60 +42,56 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             setFlash('danger', 'Gagal: kuota bimbingan dosen tersebut sudah penuh.');
         } elseif ($semester === '' || mb_strlen($semester) > 20) {
             setFlash('danger', 'Gagal: semester wajib diisi (maksimal 20 karakter).');
-        } elseif (mb_strlen($no_sk) > 100) {
-            setFlash('danger', 'Gagal: nomor SK maksimal 100 karakter.');
-        } elseif (empty($no_sk) || empty($_FILES['file_sk']['name'])) {
-            setFlash('danger', 'Gagal: Nomor SK dan Dokumen SK Bimbingan wajib diisi!');
         } else {
             $db = getDB();
             $db->beginTransaction();
-            
+            $sk = null;
             try {
-                // Handle Upload File SK Bimbingan
-                $ext = strtolower(pathinfo($_FILES['file_sk']['name'], PATHINFO_EXTENSION));
-                if ($ext !== 'pdf') {
-                    throw new \Exception('Format SK Bimbingan harus PDF.');
-                }
-                if ($_FILES['file_sk']['size'] > (5 * 1024 * 1024)) {
-                    throw new \Exception('Ukuran file SK maksimal 5MB.');
-                }
-
-                $fname = 'SK_' . $id_mhs . '_' . uniqid() . '.pdf';
-                if (!is_dir(UPLOAD_DIR)) {
-                    mkdir(UPLOAD_DIR, 0755, true);
-                }
-                if (!move_uploaded_file($_FILES['file_sk']['tmp_name'], UPLOAD_DIR . $fname)) {
-                    throw new \Exception('Gagal menyimpan dokumen SK ke server.');
-                }
-                
-                $filePath = 'uploads/' . $fname;
-
-                // Insert relasi bimbingan beserta SK
-                execute('INSERT INTO bimbingan (id_mahasiswa, id_dosen, id_judul, semester, tgl_mulai, status, no_sk, file_sk)
-                         VALUES (?, ?, ?, ?, CURDATE(), "aktif", ?, ?)', 
-                         [$id_mhs, $id_dosen, $id_judul, $semester, $no_sk, $filePath]);
+                execute('INSERT INTO bimbingan (id_mahasiswa, id_dosen, id_judul, semester, tgl_mulai, status)
+                         VALUES (?, ?, ?, ?, CURDATE(), "aktif")',
+                         [$id_mhs, $id_dosen, $id_judul, $semester]);
+                $idBaru = (int)$db->lastInsertId();
+                // Nomor SK terbit otomatis + file PDF SK dibuat
+                $sk = terbitkanSk($idBaru);
                 // SK terbit: skripsi mahasiswa mulai berjalan
                 execute('UPDATE mahasiswa SET status_skripsi="proses" WHERE id_mahasiswa=?', [$id_mhs]);
-                
-                // Tambahkan notifikasi otomatis DENGAN LAMPIRAN SK
+
                 $dosen = fetchOne('SELECT id_user FROM dosen WHERE id_dosen=?', [$id_dosen]);
-                $mhs = fetchOne('SELECT id_user FROM mahasiswa WHERE id_mahasiswa=?', [$id_mhs]);
-                
-                if($dosen) {
-                    execute('INSERT INTO notifikasi (id_user, judul, pesan, tipe, tautan) VALUES (?, ?, ?, ?, ?)', 
-                        [$dosen['id_user'], 'Penugasan Bimbingan Baru', 'Anda telah ditunjuk sebagai Dosen Pembimbing untuk judul baru. SK Pembimbingan telah diterbitkan.', 'info', $filePath]);
-                }
-                if($mhs) {
-                    execute('INSERT INTO notifikasi (id_user, judul, pesan, tipe, tautan) VALUES (?, ?, ?, ?, ?)', 
-                        [$mhs['id_user'], 'SK Bimbingan Terbit!', 'Dosen pembimbing Anda telah ditetapkan. Silakan unduh SK Bimbingan terlampir. Akses ke menu Dokumen dan Jadwal kini telah dibuka.', 'sukses', $filePath]);
-                }
+                $mhs   = fetchOne('SELECT id_user FROM mahasiswa WHERE id_mahasiswa=?', [$id_mhs]);
+                kirimNotif((int)($dosen['id_user'] ?? 0), 'Penugasan Bimbingan Baru',
+                    'Anda ditunjuk sebagai dosen pembimbing berdasarkan SK ' . $sk['no_sk'] . '. SK dapat diunduh di menu Mahasiswa Bimbingan.',
+                    'info', 'relasi', 'dosen/mahasiswa.php');
+                kirimNotif((int)($mhs['id_user'] ?? 0), 'SK Bimbingan Terbit!',
+                    'SK ' . $sk['no_sk'] . ' telah terbit dan dosen pembimbing Anda sudah ditetapkan. Unduh SK di menu Usulan Pembimbing. Menu Dokumen dan Jadwal kini terbuka.',
+                    'sukses', 'relasi', 'mahasiswa/pengajuan_dosen.php');
 
                 $db->commit();
-                setFlash('success', 'Relasi berhasil dibuat. SK telah diterbitkan dan notifikasi dikirim.');
+                setFlash('success', 'Relasi berhasil dibuat. SK ' . $sk['no_sk'] . ' terbit otomatis dan notifikasi dikirim.');
             } catch (\Throwable $e) {
                 if ($db->inTransaction()) $db->rollBack();
-                hapusUpload($filePath ?? null);
+                hapusUpload($sk['path'] ?? null);
                 setFlash('danger', pesanGalat($e, 'Gagal memproses plotting'));
+            }
+        }
+    } elseif ($aksi === 'buat_ulang_sk') {
+        $idB = (int)($_POST['id_bimbingan'] ?? 0);
+        if (!skSiap()) {
+            setFlash('danger', 'Gagal: jalankan dulu database/migrasi_2026_11_sk.sql di phpMyAdmin.');
+        } elseif (!countRows('SELECT COUNT(*) FROM bimbingan WHERE id_bimbingan=?', [$idB])) {
+            setFlash('danger', 'Relasi bimbingan tidak ditemukan.');
+        } else {
+            $db = getDB();
+            $db->beginTransaction();
+            $sk = null;
+            try {
+                $sk = terbitkanSk($idB);
+                $db->commit();
+                if ($sk['lama'] && $sk['lama'] !== $sk['path']) hapusUpload($sk['lama']);
+                setFlash('success', 'File SK ' . $sk['no_sk'] . ' berhasil dibuat ulang dengan data terbaru.');
+            } catch (\Throwable $e) {
+                if ($db->inTransaction()) $db->rollBack();
+                hapusUpload($sk['path'] ?? null);
+                setFlash('danger', pesanGalat($e, 'Gagal membuat ulang SK'));
             }
         }
     } elseif ($aksi === 'hentikan' || $aksi === 'selesai') {
@@ -159,6 +158,8 @@ $relasi = fetchAll(
 );
 
 $semesterDefault = 'Genap ' . date('Y') . '/' . (date('Y')+1);
+$skSiap = skSiap();
+$nomorBerikut = $skSiap ? nomorSkBerikutnya() : null;
 
 include __DIR__ . '/../includes/header.php';
 include __DIR__ . '/../includes/sidebar.php';
@@ -178,6 +179,9 @@ include __DIR__ . '/../includes/sidebar.php';
 <?php include __DIR__ . '/../includes/topbar.php'; ?>
 <div class="content">
   <?= tampilFlash() ?>
+  <?php if (!$skSiap): ?>
+    <div class="alert alert-static danger">Database belum diperbarui untuk SK otomatis. Buka phpMyAdmin, pilih database <b><?= e(DB_NAME) ?></b>, lalu jalankan file <code>database/migrasi_2026_11_sk.sql</code> di tab SQL.</div>
+  <?php endif; ?>
   
   <div class="page-header" style="display:flex; justify-content:space-between; align-items:flex-end;">
       <div>
@@ -196,6 +200,13 @@ include __DIR__ . '/../includes/sidebar.php';
           <?php endforeach; ?>
       </div>
   </div>
+
+  <?php if ($skSiap): ?>
+  <div class="status-card status-card--blok" style="margin-bottom:16px;">
+    <div><strong>SK terbit otomatis.</strong> Saat Anda menekan Terbitkan, sistem memberi nomor SK berurutan per tahun dengan format <span class="mono">UOB/SCDT/SK-BIMBINGAN/tahun/nomor</span>, lalu membuat file PDF SK berisi data mahasiswa, judul, dosen pembimbing, dan kode verifikasi.
+      Nomor berikutnya: <strong class="mono"><?= e($nomorBerikut) ?></strong>. Kop surat & penandatangan bisa diubah di <a href="<?= BASE_URL ?>/admin/pengaturan.php" class="link">Pengaturan</a>.</div>
+  </div>
+  <?php endif; ?>
 
   <div class="card tab-container">
       <div class="card-body">
@@ -218,7 +229,7 @@ include __DIR__ . '/../includes/sidebar.php';
                               <tr>
                                   <th>Mahasiswa</th>
                                   <th>Judul Disetujui</th>
-                                  <th style="width:340px;">Pilih Dosen & Upload SK</th>
+                                  <th style="width:340px;">Pilih Dosen Pembimbing</th>
                                   <th style="width:100px;">Aksi</th>
                               </tr>
                           </thead>
@@ -242,7 +253,7 @@ include __DIR__ . '/../includes/sidebar.php';
                                           </div>
                                       <?php endif; ?>
                                   </td>
-                                  <form method="POST" enctype="multipart/form-data"><?= csrfField() ?>
+                                  <form method="POST"><?= csrfField() ?>
                                       <input type="hidden" name="aksi" value="buat">
                                       <input type="hidden" name="id_mahasiswa" value="<?= $ap['id_mahasiswa'] ?>">
                                       <input type="hidden" name="id_judul" value="<?= $ap['id_judul'] ?>">
@@ -281,13 +292,11 @@ include __DIR__ . '/../includes/sidebar.php';
                                               </optgroup>
                                           </select>
                                           
-                                          <input type="text" class="form-input" name="no_sk" placeholder="Nomor SK (Cth: 123/SK/UNPAM/2026)" style="padding:6px; font-size:12px; margin-bottom:8px;" required>
-                                          <div class="meta-sm mb-4">Unggah PDF SK Bimbingan:</div>
-                                          <input type="file" name="file_sk" accept=".pdf" class="form-input" style="padding:4px; font-size:12px;" required>
+                                          <div class="meta-sm">Nomor & file SK dibuat otomatis saat diterbitkan.</div>
                                       </td>
                                       
                                       <td>
-                                          <button type="submit" class="btn btn-primary" style="padding:8px 12px; font-size:12px; width: 100%; justify-content: center;">Terbitkan</button>
+                                          <button type="submit" class="btn btn-primary" style="padding:8px 12px; font-size:12px; width: 100%; justify-content: center;" <?= $skSiap ? '' : 'disabled' ?>>Terbitkan SK</button>
                                       </td>
                                   </form>
                               </tr>
@@ -300,9 +309,9 @@ include __DIR__ . '/../includes/sidebar.php';
 
           <div id="tab_manual" class="tab-content">
               <div style="max-width:600px;">
-                  <p style="font-size:13px; color:var(--slate); margin-bottom:16px;">Gunakan form bypass ini jika mahasiswa belum melakukan pengajuan lewat sistem namun SK sudah dicetak (misal: Pindahan).</p>
+                  <p style="font-size:13px; color:var(--slate); margin-bottom:16px;">Gunakan form bypass ini jika mahasiswa belum melakukan pengajuan dosen lewat sistem (misal: pindahan). Nomor & file SK tetap terbit otomatis.</p>
                   
-                  <form method="POST" enctype="multipart/form-data"><?= csrfField() ?>
+                  <form method="POST"><?= csrfField() ?>
                     <input type="hidden" name="aksi" value="buat">
                     <div class="form-group">
                       <label for="f_id_mahasiswa" class="form-label">1. Pilih Mahasiswa (Tanpa Bimbingan Aktif)</label>
@@ -326,23 +335,12 @@ include __DIR__ . '/../includes/sidebar.php';
                       </select>
                     </div>
                     
-                    <div class="form-row">
-                        <div class="form-group">
-                          <label for="f_no_sk" class="form-label">Nomor Surat Keputusan (SK)</label>
-                          <input id="f_no_sk" class="form-input" name="no_sk" placeholder="Cth: 001/SK/ILKOM/2026" required>
-                        </div>
-                        <div class="form-group">
-                          <label for="f_file_sk" class="form-label">Upload File SK (PDF)</label>
-                          <?= uploadZone('file_sk', 'Klik atau seret file PDF', '.pdf', 'Maksimal 5 MB', true) ?>
-                        </div>
-                    </div>
-                    
                     <div class="form-group">
                       <label for="f_semester" class="form-label">Semester Eksekusi</label>
                       <input id="f_semester" class="form-input" name="semester" value="<?= $semesterDefault ?>" required>
                     </div>
                     
-                    <button type="submit" class="btn btn-gold">🔗 Terbitkan & Buat Relasi</button>
+                    <button type="submit" class="btn btn-gold" <?= $skSiap ? '' : 'disabled' ?>>🔗 Terbitkan SK & Buat Relasi</button>
                   </form>
               </div>
           </div>
@@ -368,12 +366,22 @@ include __DIR__ . '/../includes/sidebar.php';
                 <td>
                     <?php if(!empty($r['no_sk'])): ?>
                         <div style="font-size:11px; font-weight:600; color:var(--navy);"><?= e($r['no_sk']) ?></div>
-                        <?php if(!empty($r['file_sk'])): ?>
-                            <a href="<?= e(fileUrl($r['file_sk'])) ?>" target="_blank" style="font-size:11px; color:var(--info-text); text-decoration:underline;">Lihat PDF</a>
-                        <?php endif; ?>
+                        <?php if(!empty($r['tgl_sk'])): ?><div class="meta-sm"><?= tgl($r['tgl_sk']) ?></div><?php endif; ?>
                     <?php else: ?>
-                        <span class="meta-sm">-</span>
+                        <div class="meta-sm">Belum ada SK</div>
                     <?php endif; ?>
+                    <div style="display:flex; gap:10px; align-items:center; margin-top:4px; flex-wrap:wrap;">
+                      <?php if(!empty($r['file_sk'])): ?>
+                        <a href="<?= e(fileUrl($r['file_sk'])) ?>" target="_blank" style="font-size:11px; color:var(--info-text); text-decoration:underline;">Unduh PDF</a>
+                      <?php endif; ?>
+                      <?php if ($skSiap): ?>
+                        <form method="POST" data-confirm="<?= !empty($r['sk_urut']) ? e('Buat ulang file SK ' . $r['no_sk'] . ' dengan data terbaru? Nomor SK, tanggal, dan kode verifikasi tetap sama.') : e('Terbitkan SK otomatis untuk ' . $r['nama_mhs'] . '? Relasi ini akan mendapat nomor SK baru (' . $nomorBerikut . ') dan file SK lama diganti.') ?>" data-confirm-ok="<?= !empty($r['sk_urut']) ? 'Buat ulang' : 'Terbitkan' ?>" data-confirm-tone="primary"><?= csrfField() ?>
+                          <input type="hidden" name="aksi" value="buat_ulang_sk">
+                          <input type="hidden" name="id_bimbingan" value="<?= $r['id_bimbingan'] ?>">
+                          <button class="btn btn-secondary" style="padding:2px 8px; font-size:11px;"><?= !empty($r['sk_urut']) ? '↻ Buat ulang' : '⚙️ Terbitkan otomatis' ?></button>
+                        </form>
+                      <?php endif; ?>
+                    </div>
                 </td>
 
                 <td class="nowrap fs-12"><?= tgl($r['tgl_mulai']) ?></td>
