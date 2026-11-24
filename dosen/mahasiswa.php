@@ -12,7 +12,7 @@ $q          = trim($_GET['q'] ?? '');
 
 $sql = 'SELECT m.nim,um.nama_lengkap,ps.nama_prodi,j.judul_indonesia,
                b.total_sesi,b.tgl_mulai,b.status AS status_bimbingan,m.status_skripsi,
-               b.id_bimbingan,m.id_mahasiswa
+               b.id_bimbingan,b.file_sk,b.no_sk,m.id_mahasiswa
         FROM bimbingan b
         JOIN mahasiswa m ON m.id_mahasiswa=b.id_mahasiswa
         JOIN user um ON um.id_user=m.id_user
@@ -69,6 +69,9 @@ include __DIR__ . '/../includes/sidebar.php';
                     <div style="display:flex;gap:6px;">
                       <a href="<?= BASE_URL ?>/dosen/catatan.php?id_bimbingan=<?= $m['id_bimbingan'] ?>" class="btn-icon" title="Catatan bimbingan" aria-label="Catatan bimbingan <?= e($m['nama_lengkap']) ?>"><?= icon('clipboard') ?></a>
                       <a href="<?= BASE_URL ?>/cetak/kartu-bimbingan.php?id=<?= (int)$m['id_bimbingan'] ?>" class="btn-icon" title="Cetak kartu bimbingan" aria-label="Cetak kartu bimbingan <?= e($m['nama_lengkap']) ?>"><?= icon('printer') ?></a>
+                      <?php if (!empty($m['file_sk'])): ?>
+                        <a href="<?= e(fileUrl($m['file_sk'])) ?>" target="_blank" class="btn-icon" title="Unduh SK <?= e($m['no_sk']) ?>" aria-label="Unduh SK bimbingan <?= e($m['nama_lengkap']) ?>"><?= icon('download') ?></a>
+                      <?php endif; ?>
                     </div>
                   </td>
                 </tr>

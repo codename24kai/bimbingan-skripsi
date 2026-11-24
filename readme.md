@@ -430,7 +430,7 @@ erDiagram
 
 ## 🆕 Fitur Tambahan (November 2026)
 
-> **Wajib:** jalankan `database/migrasi_2026_11_alur.sql` lalu `database/migrasi_2026_11_fitur.sql` di phpMyAdmin (tab SQL) pada database `db_bimbingan_skripsi`. Tanpa migrasi, halaman yang membutuhkan login menampilkan pesan untuk menjalankannya.
+> **Wajib:** jalankan `database/migrasi_2026_11_alur.sql`, `database/migrasi_2026_11_fitur.sql`, lalu `database/migrasi_2026_11_sk.sql` di phpMyAdmin (tab SQL) pada database `db_bimbingan_skripsi`. Tanpa migrasi, halaman yang membutuhkan login menampilkan pesan untuk menjalankannya.
 
 | Fitur | Peran | Halaman |
 |---|---|---|
@@ -438,6 +438,8 @@ erDiagram
 | Template dokumen (5 template bawaan + unggahan admin) | Semua | `info/template.php`, file di `assets/template/` |
 | Panduan alur skripsi dan cara pakai per peran, FAQ & bantuan | Semua | `info/panduan.php`, `info/faq.php` |
 | Kartu bimbingan (logbook) siap cetak / simpan PDF | Mahasiswa, dosen, admin | `cetak/kartu-bimbingan.php` |
+| SK bimbingan otomatis: nomor `UOB/SCDT/SK-BIMBINGAN/tahun/nomor` berurutan per tahun, file PDF dibuat tanpa library tambahan, bisa dibuat ulang | Admin terbitkan, mahasiswa & dosen unduh | `admin/relasi.php`, `config/sk.php`, `config/pdf.php` |
+| Verifikasi keaslian SK lewat kode di dokumen (tanpa login) | Publik | `verifikasi-sk.php` |
 | Diskusi per dokumen + tanggapan per catatan revisi | Mahasiswa, dosen | `diskusi.php?dok=ID` |
 | Bandingkan dua versi dokumen berdampingan | Mahasiswa, dosen | `bandingkan.php?dok=ID` |
 | Progres skripsi per tahap (judul → Bab I–V → seminar → sidang) | Semua | Dashboard mahasiswa, Mahasiswa Bimbingan, ekspor |
